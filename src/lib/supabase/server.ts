@@ -4,9 +4,9 @@ import { supabaseAnonKey, supabaseUrl } from "./env";
 
 // For Server Components and Server Actions that read the signed-in User's
 // session from cookies. Writing cookies from a Server Component is a no-op
-// in Next.js (and throws if not guarded) — that's fine here because the
-// middleware (see middleware.ts) is what actually refreshes the session
-// cookie on every request.
+// in Next.js (and throws if not guarded) — that's fine here because
+// src/proxy.ts (see lib/supabase/session.ts) is what actually refreshes the
+// session cookie on every request.
 export async function createClient() {
   const cookieStore = await cookies();
 

@@ -2,6 +2,17 @@ import { NextResponse, type NextRequest } from "next/server";
 import { isValidCurrencyCode } from "@/lib/currency/iso4217";
 import { createRouteClient, jsonWithCookies, requireUser } from "@/lib/supabase/route";
 
+/** Pulls `home_currency` out of a PATCH body, or `undefined` if it's missing
+ * or not a string — kept separate from the handler so PATCH itself reads as
+ * one level of orchestration rather than mixing in raw shape-checking. */
+function readHomeCurrency(body: unknown): string | undefined {
+  if (typeof body !== "object" || body === null || !("home_currency" in body)) {
+    return undefined;
+  }
+  const value = (body as { home_currency: unknown }).home_currency;
+  return typeof value === "string" ? value : undefined;
+}
+
 // GET /api/portfolio — the signed-in User's own Portfolio (created
 // automatically on first sign-in; see supabase/migrations for the trigger).
 // RLS (`user_id = auth.uid()`) is what actually enforces isolation here —
@@ -45,12 +56,9 @@ export async function PATCH(request: NextRequest) {
     return NextResponse.json({ error: "Invalid JSON body." }, { status: 400 });
   }
 
-  const homeCurrency =
-    typeof body === "object" && body !== null && "home_currency" in body
-      ? (body as { home_currency: unknown }).home_currency
-      : undefined;
+  const homeCurrency = readHomeCurrency(body);
 
-  if (typeof homeCurrency !== "string" || !isValidCurrencyCode(homeCurrency)) {
+  if (homeCurrency === undefined || !isValidCurrencyCode(homeCurrency)) {
     return NextResponse.json(
       { error: "home_currency must be a valid ISO 4217 currency code." },
       { status: 400 },
