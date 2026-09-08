@@ -1,0 +1,2969 @@
+<!-- PROTOTYPE — throwaway. Three variants of the FinAsset 360 app shell, switchable via ?variant=A|B|C. Not production code. -->
+<title>FinAsset 360 Tree Nav</title>
+<style>
+  :root {
+    --bg: #f7f8f9;
+    --surface: #edeff1;
+    --border: #dde1e5;
+    --text: #1b1e22;
+    --text-muted: #6b7580;
+    --accent: #4f6d8f;
+    --accent-soft: rgba(79,109,143,0.12);
+    --liability: #8a7361;
+    --row-hover: rgba(15,23,32,0.045);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #16181b;
+      --surface: #1e2126;
+      --border: #2b2f35;
+      --text: #e7e9ec;
+      --text-muted: #939aa4;
+      --accent: #8fb0d4;
+      --accent-soft: rgba(143,176,212,0.16);
+      --liability: #b09a86;
+      --row-hover: rgba(255,255,255,0.045);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #16181b;
+    --surface: #1e2126;
+    --border: #2b2f35;
+    --text: #e7e9ec;
+    --text-muted: #939aa4;
+    --accent: #8fb0d4;
+    --accent-soft: rgba(143,176,212,0.16);
+    --liability: #b09a86;
+    --row-hover: rgba(255,255,255,0.045);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, sans-serif;
+    font-size: 13px;
+    line-height: 1.45;
+    font-variant-numeric: tabular-nums;
+    -webkit-font-smoothing: antialiased;
+  }
+  #app { position: relative; min-height: 100vh; max-width: 100%; }
+  button { font: inherit; color: inherit; background: none; border: none; cursor: pointer; }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  table { font-variant-numeric: tabular-nums; }
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; }
+  }
+
+  /* ---- floating variant switcher (deliberately foreign chrome) ---- */
+  #switcher {
+    position: fixed;
+    left: 50%;
+    bottom: 16px;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: #14161a;
+    color: #f3f4f6;
+    border: 1px solid rgba(255,255,255,0.14);
+    border-radius: 999px;
+    padding: 6px 8px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 12px;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.35), 0 1px 2px rgba(0,0,0,0.3);
+    z-index: 1000;
+    user-select: none;
+  }
+  #switcher button {
+    width: 24px; height: 24px;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 50%;
+    color: #f3f4f6;
+    font-size: 13px;
+    transition: background-color 100ms ease;
+  }
+  #switcher button:hover { background: rgba(255,255,255,0.14); }
+  #switcher button:focus-visible { outline: 2px solid #f3f4f6; outline-offset: 2px; }
+  #switcher .switcher-label { padding: 0 4px; white-space: nowrap; }
+
+  /* ---- wordmark (identical trivial rule, declared once per variant) ---- */
+  .a-wordmark { font-size: 12px; color: var(--text-muted); padding: 14px 16px 0; letter-spacing: .02em; }
+  .b-wordmark { font-size: 12px; color: var(--text-muted); padding: 20px 0 0; letter-spacing: .02em; }
+  .c-wordmark { font-size: 12px; color: var(--text-muted); padding: 14px 20px 0; letter-spacing: .02em; }
+
+  /* ================= Variant A · Explorer ================= */
+  .variant-a { display: flex; align-items: stretch; min-height: 100vh; }
+  .a-sidebar {
+    width: 260px; flex: 0 0 260px;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    overflow-y: auto;
+    padding-bottom: 64px;
+  }
+  .a-tree { margin-top: 10px; padding: 0 6px; }
+  .a-row {
+    display: flex; align-items: center;
+    height: 27px;
+    padding: 0 8px;
+    border-left: 2px solid transparent;
+    cursor: pointer;
+    gap: 6px;
+    transition: background-color 100ms ease;
+  }
+  .a-row:hover { background: var(--row-hover); }
+  .a-row.is-selected { border-left-color: var(--accent); background: var(--accent-soft); }
+  .a-row.is-selected .a-label { color: var(--text); font-weight: 500; }
+  .a-row-root { font-size: 12px; margin-bottom: 2px; }
+  .a-row-class { font-size: 12px; padding-left: 8px; }
+  .a-row-holding { font-size: 12px; padding-left: 26px; }
+  .a-chevron { width: 10px; flex: 0 0 10px; font-size: 9px; color: var(--text-muted); display: inline-flex; justify-content: center; }
+  .a-label { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text); }
+  .a-meta { color: var(--text-muted); font-size: 11px; flex-shrink: 0; }
+  .a-liability .a-meta { color: var(--liability); }
+  .a-divider { height: 1px; background: var(--border); margin: 10px 12px; }
+  .a-main { flex: 1; min-width: 0; overflow-y: auto; }
+  .a-breadcrumb { padding: 16px 28px 0; font-size: 11px; color: var(--text-muted); }
+  .a-content { padding: 16px 28px 64px; max-width: 720px; }
+  .a-headline { font-size: 30px; font-weight: 500; margin: 8px 0 4px; }
+  .a-subline { font-size: 12px; color: var(--text-muted); margin-bottom: 2px; }
+  .a-section-title { font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--text-muted); margin: 28px 0 12px; }
+  .a-bars { display: flex; flex-direction: column; gap: 10px; }
+  .a-bar-row { display: flex; align-items: center; gap: 10px; }
+  .a-bar-name { width: 100px; flex: 0 0 100px; font-size: 12px; color: var(--text); }
+  .a-bar-track { position: relative; flex: 1; height: 10px; background: var(--border); border-radius: 2px; }
+  .a-bar-fill { position: absolute; left: 0; top: 0; bottom: 0; background: var(--accent); border-radius: 2px; }
+  .a-bar-target { position: absolute; top: -2px; bottom: -2px; width: 0; border-left: 2px dashed var(--text-muted); }
+  .a-bar-figures { font-size: 11px; color: var(--text-muted); width: 150px; flex: 0 0 150px; text-align: right; }
+  .a-proj-wrap { margin-top: 4px; }
+  .a-proj-note { font-size: 11px; color: var(--text-muted); margin-top: 6px; }
+  .a-table { width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 8px; }
+  .a-table th { text-align: left; font-weight: 400; font-size: 11px; color: var(--text-muted); padding: 6px 8px; border-bottom: 1px solid var(--border); }
+  .a-table td { padding: 6px 8px; border-bottom: 1px solid var(--border); }
+  .a-table td.num, .a-table th.num { text-align: right; }
+  .a-live-tag { font-size: 10px; color: var(--text-muted); border: 1px solid var(--border); border-radius: 3px; padding: 1px 4px; margin-left: 6px; }
+  .a-detail-row { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid var(--border); font-size: 12px; }
+  .a-detail-row .label { color: var(--text-muted); }
+  .a-sparkline-wrap { margin: 16px 0 8px; }
+  .a-history-list { font-size: 12px; }
+  .a-history-item { display: flex; justify-content: space-between; padding: 4px 0; color: var(--text-muted); }
+  .a-history-item .v { color: var(--text); }
+  .a-btn-outline { margin-top: 16px; border: 1px solid var(--border); color: var(--text-muted); padding: 6px 14px; border-radius: 3px; font-size: 12px; }
+  .a-btn-outline:hover { background: var(--row-hover); }
+
+  /* ================= Variant B · Outline ================= */
+  .variant-b { max-width: 720px; margin: 0 auto; padding: 0 20px 80px; }
+  .b-dashboard { padding: 12px 0 24px; border-bottom: 1px solid var(--border); margin-bottom: 8px; }
+  .b-headline { font-size: 30px; font-weight: 500; margin: 8px 0 4px; }
+  .b-subline { font-size: 12px; color: var(--text-muted); margin-bottom: 2px; }
+  .b-strip-wrap { margin-top: 20px; }
+  .b-strip { display: flex; width: 100%; height: 14px; border-radius: 2px; overflow: hidden; }
+  .b-strip.target { height: 4px; margin-top: 2px; border-radius: 2px; }
+  .b-strip-seg { height: 100%; }
+  .b-strip-labels { display: flex; margin-top: 8px; font-size: 11px; color: var(--text-muted); gap: 6px; }
+  .b-strip-label { flex: 1; min-width: 0; }
+  .b-strip-label .name { color: var(--text); display: block; margin-bottom: 1px; }
+  .b-section-title { font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--text-muted); margin: 20px 0 8px; }
+  .b-proj-note { font-size: 11px; color: var(--text-muted); margin-top: 6px; }
+  .b-outline { margin-top: 4px; }
+  .b-row { display: flex; align-items: center; height: 28px; cursor: pointer; gap: 8px; border-left: 2px solid transparent; padding-left: 6px; transition: background-color 100ms ease; }
+  .b-row:hover { background: var(--row-hover); }
+  .b-row.is-selected { border-left-color: var(--accent); background: var(--accent-soft); }
+  .b-row.is-selected .b-label { font-weight: 500; color: var(--text); }
+  .b-chevron { width: 10px; font-size: 9px; color: var(--text-muted); flex: 0 0 10px; text-align: center; }
+  .b-label { flex: 1; font-size: 12px; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .b-meta { font-size: 11px; color: var(--text-muted); flex-shrink: 0; }
+  .b-level-1 { }
+  .b-level-2 { padding-left: 24px; }
+  .b-level-3 { padding-left: 42px; }
+  .b-liability .b-meta { color: var(--liability); }
+  .b-net-position { padding-left: 42px; font-size: 11px; color: var(--text-muted); height: 24px; display: flex; align-items: center; }
+  .b-group-divider { height: 1px; background: var(--border); margin: 16px 0; }
+  .b-detail { margin: 2px 0 6px 24px; padding: 10px 0 10px 14px; border-left: 1px solid var(--border); font-size: 12px; }
+  .b-detail-row { display: flex; justify-content: space-between; gap: 12px; padding: 4px 0; border-bottom: 1px solid var(--border); }
+  .b-detail-row:last-child { border-bottom: none; }
+  .b-detail-row .label { color: var(--text-muted); flex-shrink: 0; }
+  .b-sparkline-wrap { margin: 10px 0 6px; }
+  .b-history-list { font-size: 11px; color: var(--text-muted); }
+  .b-btn-outline { margin-top: 10px; border: 1px solid var(--border); color: var(--text-muted); padding: 5px 12px; border-radius: 3px; font-size: 12px; }
+  .b-btn-outline:hover { background: var(--row-hover); }
+
+  /* ================= Variant C · Columns ================= */
+  .variant-c { display: flex; flex-direction: column; min-height: 100vh; }
+  .c-breadcrumb { font-size: 11px; color: var(--text-muted); padding: 10px 20px; border-bottom: 1px solid var(--border); }
+  .c-breadcrumb button { color: var(--text-muted); text-decoration: underline; text-underline-offset: 2px; text-decoration-color: var(--border); }
+  .c-breadcrumb button:hover { color: var(--text); }
+  .c-breadcrumb .sep { margin: 0 6px; color: var(--border); }
+  .c-columns { display: flex; flex: 1; overflow-x: auto; }
+  .c-col { width: 220px; flex: 0 0 220px; border-right: 1px solid var(--border); overflow-y: auto; padding: 6px 0 64px; }
+  .c-col-detail { flex: 1 1 auto; min-width: 360px; padding: 20px 28px 64px; overflow-y: auto; }
+  .c-row { display: flex; align-items: center; height: 28px; padding: 0 12px; gap: 6px; cursor: pointer; border-left: 2px solid transparent; transition: background-color 100ms ease; }
+  .c-row:hover { background: var(--row-hover); }
+  .c-row.is-selected { border-left-color: var(--accent); background: var(--accent-soft); }
+  .c-row.is-selected .c-label { color: var(--text); font-weight: 500; }
+  .c-label { flex: 1; font-size: 12px; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .c-meta { font-size: 11px; color: var(--text-muted); }
+  .c-liability .c-meta { color: var(--liability); }
+  .c-chevron-right { font-size: 11px; color: var(--text-muted); }
+  .c-gap { height: 10px; }
+  .c-headline { font-size: 30px; font-weight: 500; margin: 4px 0 4px; }
+  .c-subline { font-size: 12px; color: var(--text-muted); margin-bottom: 2px; }
+  .c-section-title { font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--text-muted); margin: 24px 0 10px; }
+  .c-alloc-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .c-alloc-table th { text-align: left; font-weight: 400; font-size: 11px; color: var(--text-muted); padding: 6px 4px; border-bottom: 1px solid var(--border); }
+  .c-alloc-table td { padding: 6px 4px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+  .c-alloc-table td.num, .c-alloc-table th.num { text-align: right; }
+  .c-inline-bar-track { width: 72px; height: 6px; background: var(--border); border-radius: 2px; position: relative; display: inline-block; vertical-align: middle; }
+  .c-inline-bar-fill { position: absolute; left: 0; top: 0; bottom: 0; background: var(--accent); border-radius: 2px; }
+  .c-delta-pos { color: var(--text-muted); }
+  .c-total-row td { font-weight: 500; border-top: 1px solid var(--border); border-bottom: none; }
+  .c-live-tag { font-size: 10px; color: var(--text-muted); border: 1px solid var(--border); border-radius: 3px; padding: 1px 4px; margin-left: 6px; }
+  .c-detail-row { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid var(--border); font-size: 12px; }
+  .c-detail-row .label { color: var(--text-muted); }
+  .c-btn-outline { margin-top: 16px; border: 1px solid var(--border); color: var(--text-muted); padding: 6px 14px; border-radius: 3px; font-size: 12px; }
+  .c-btn-outline:hover { background: var(--row-hover); }
+
+  /* ================= Variant D · Proposal ================= */
+  .variant-d { display: flex; height: 100vh; overflow: hidden; }
+  .d-sidebar { width: 272px; flex: 0 0 272px; display: flex; flex-direction: column; height: 100%; background: var(--surface); border-right: 1px solid var(--border); }
+  .d-wordmark { font-size: 12px; color: var(--text-muted); padding: 16px 16px 0; letter-spacing: .02em; flex: 0 0 auto; }
+  .d-tree-scroll { flex: 1 1 auto; overflow-y: auto; overflow-x: hidden; position: relative; padding: 10px 0 12px; }
+  .d-tree-scroll:focus-visible { outline: none; box-shadow: inset 0 0 0 2px var(--accent); }
+  .d-indicator { position: absolute; left: 0; top: 0; width: 2px; height: 28px; background: var(--accent); transform: translateY(0px); transition: transform 200ms cubic-bezier(.2,.8,.2,1); pointer-events: none; }
+  .d-row { display: flex; align-items: center; height: 28px; padding-right: 10px; gap: 6px; cursor: pointer; transition: background-color 120ms ease; }
+  .d-row:hover { background: var(--row-hover); }
+  .d-row.is-selected .d-row-label { color: var(--text); font-weight: 500; }
+  .d-row-label { flex: 1; font-size: 12px; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .d-row-value { font-size: 12px; color: var(--text-muted); flex-shrink: 0; font-variant-numeric: tabular-nums; }
+  .d-row-value.stale { opacity: 0.55; }
+  .d-row.d-liability .d-row-value { color: var(--liability); }
+  .d-chevron { width: 10px; flex: 0 0 10px; font-size: 10px; color: var(--text-muted); display: inline-flex; align-items: center; justify-content: center; transform: rotate(0deg); transition: transform 180ms cubic-bezier(.2,.8,.2,1); }
+  .d-chevron.is-expanded { transform: rotate(90deg); }
+  .d-chevron-spacer { width: 10px; flex: 0 0 10px; }
+  .d-children { overflow: hidden; }
+  .d-children.d-animatable { transition: height 180ms ease-out; }
+  .d-sep { padding: 0 12px; }
+  .d-sep-line { height: 1px; background: var(--border); margin: 12px 0; }
+  .d-sidebar-footer { flex: 0 0 auto; padding: 12px 16px; border-top: 1px solid var(--border); }
+  .d-why-link { font-size: 11px; color: var(--text-muted); background: none; border: none; cursor: pointer; padding: 0; text-decoration: underline; text-underline-offset: 2px; text-decoration-color: var(--border); }
+  .d-why-link:hover { color: var(--text); }
+
+  .d-main { flex: 1; min-width: 0; height: 100%; overflow-y: auto; position: relative; }
+  .d-topstrip { height: 44px; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 0 20px; position: sticky; top: 0; background: var(--bg); border-bottom: 1px solid var(--border); z-index: 2; }
+  .d-breadcrumb { font-size: 12px; color: var(--text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .d-breadcrumb button { color: var(--text-muted); }
+  .d-breadcrumb button:hover { color: var(--text); }
+  .d-breadcrumb .sep { margin: 0 5px; color: var(--border); }
+  .d-record-btn { border: 1px solid var(--border); color: var(--text-muted); padding: 5px 12px; border-radius: 4px; font-size: 12px; flex-shrink: 0; }
+  .d-record-btn:hover { background: var(--row-hover); }
+  .d-content-wrap { padding: 40px 48px; }
+  .d-content { max-width: 760px; }
+  .d-content.enter { animation: d-enter 180ms ease-out; }
+  @keyframes d-enter { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+
+  .d-section { margin-top: 40px; }
+  .d-section:first-child { margin-top: 0; }
+  .d-label-11 { font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--text-muted); }
+  .d-headline-figure { font-size: 32px; font-weight: 500; margin: 6px 0 4px; font-variant-numeric: tabular-nums; }
+  .d-subline { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+  .d-name-18 { font-size: 18px; font-weight: 500; }
+  .d-total-28 { font-size: 28px; font-weight: 500; margin: 6px 0 4px; font-variant-numeric: tabular-nums; }
+
+  .d-timeline-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px; }
+  .d-legend { display: flex; gap: 14px; font-size: 11px; color: var(--text-muted); align-items: center; }
+  .d-legend-item { display: flex; align-items: center; gap: 5px; }
+  .d-legend-swatch { width: 16px; height: 0; border-top: 1.5px solid var(--accent); display: inline-block; }
+  .d-legend-swatch.dashed { border-top-style: dashed; }
+  .d-timeline-svg-wrap { position: relative; }
+
+  .d-alloc-row { display: flex; align-items: center; height: 36px; gap: 12px; }
+  .d-alloc-name { width: 120px; flex: 0 0 120px; font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .d-alloc-track { position: relative; flex: 1 1 auto; height: 6px; background: var(--border); border-radius: 2px; }
+  .d-alloc-fill { position: absolute; left: 0; top: 0; bottom: 0; background: var(--accent); border-radius: 2px; width: 0%; transition: width 400ms ease-out; }
+  .d-alloc-target { position: absolute; top: -3px; width: 0; height: 12px; border-left: 1px dashed var(--text-muted); }
+  .d-alloc-figures { flex: 0 0 auto; text-align: right; }
+  .d-alloc-figures .l1 { font-size: 13px; font-variant-numeric: tabular-nums; }
+  .d-alloc-figures .l2 { font-size: 11px; color: var(--text-muted); font-variant-numeric: tabular-nums; }
+
+  .d-attn-item { font-size: 13px; padding: 6px 0; cursor: pointer; color: var(--text); }
+  .d-attn-item:hover { text-decoration: underline; text-decoration-color: var(--border); }
+  .d-attn-item .meta { color: var(--text-muted); font-variant-numeric: tabular-nums; }
+
+  .d-table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 8px; }
+  .d-table th { text-align: left; font-weight: 400; font-size: 11px; color: var(--text-muted); padding: 6px 4px; border-bottom: 1px solid var(--border); }
+  .d-table td { padding: 8px 4px; border-bottom: 1px solid var(--border); font-variant-numeric: tabular-nums; }
+  .d-table td.num, .d-table th.num { text-align: right; }
+  .d-table tr.clickable { cursor: pointer; }
+  .d-table tr.clickable:hover { background: var(--row-hover); }
+  .d-table .stale-cell { opacity: 0.55; }
+  .d-live-tag { font-size: 10px; color: var(--text-muted); border: 1px solid var(--border); border-radius: 3px; padding: 1px 4px; margin-left: 6px; }
+
+  .d-kv-row { display: flex; justify-content: space-between; gap: 12px; padding: 6px 0; border-bottom: 1px solid var(--border); font-size: 12px; }
+  .d-kv-row .label { color: var(--text-muted); }
+  .d-kv-row:last-child { border-bottom: none; }
+  .d-linked-line { font-size: 13px; cursor: pointer; padding: 4px 0; }
+  .d-linked-line:hover { text-decoration: underline; text-decoration-color: var(--border); }
+
+  .d-history-list { font-size: 12px; margin-top: 10px; }
+  .d-history-item { display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px solid var(--border); color: var(--text-muted); font-variant-numeric: tabular-nums; }
+  .d-history-item .v { color: var(--text); }
+  .d-history-item:last-child { border-bottom: none; }
+
+  .d-scrim { position: fixed; inset: 0; background: rgba(0,0,0,0.04); opacity: 0; pointer-events: none; transition: opacity 220ms ease-out; z-index: 50; }
+  .d-scrim.is-open { opacity: 1; pointer-events: auto; }
+  .d-panel { position: fixed; top: 0; right: 0; bottom: 0; width: 380px; max-width: 90vw; background: var(--surface); border-left: 1px solid var(--border); overflow-y: auto; transform: translateX(100%); transition: transform 220ms ease-out; z-index: 51; padding: 20px 24px 40px; }
+  .d-panel.is-open { transform: translateX(0); }
+  .d-panel-close { position: absolute; top: 16px; right: 20px; font-size: 14px; color: var(--text-muted); background: none; border: none; cursor: pointer; line-height: 1; }
+  .d-panel-close:hover { color: var(--text); }
+  .d-panel-title { font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--text-muted); margin: 28px 0 8px; }
+  .d-panel-title:first-of-type { margin-top: 8px; }
+  .d-panel p { font-size: 13px; line-height: 1.55; margin: 0 0 4px; color: var(--text); }
+
+  @media (prefers-reduced-motion: reduce) {
+    .d-content.enter { animation-duration: 0.01ms !important; }
+  }
+</style>
+
+<div id="app"></div>
+<div id="switcher" role="navigation" aria-label="Prototype variant switcher">
+  <button id="switcher-prev" type="button" aria-label="Previous variant">←</button>
+  <span id="switcher-label" class="switcher-label">A · Explorer</span>
+  <button id="switcher-next" type="button" aria-label="Next variant">→</button>
+</div>
+
+<script>
+/* ============================================================
+   SHARED: data, formatting, math, lookups (no layout/DOM code)
+   ============================================================ */
+
+function seededRandom(seed) {
+  var s = 0;
+  for (var i = 0; i < seed.length; i++) s = (s * 31 + seed.charCodeAt(i)) >>> 0;
+  return function () {
+    s = (s * 1664525 + 1013904223) >>> 0;
+    return s / 4294967296;
+  };
+}
+
+function genHistory(endValue, endDateISO, points, seedKey, volatility) {
+  var rand = seededRandom(seedKey);
+  var values = new Array(points);
+  values[points - 1] = endValue;
+  for (var i = points - 2; i >= 0; i--) {
+    var pct = (rand() - 0.5) * 2 * volatility;
+    values[i] = values[i + 1] / (1 + pct);
+  }
+  var end = new Date(endDateISO + 'T00:00:00');
+  var out = [];
+  for (var j = points - 1; j >= 0; j--) {
+    var d = new Date(end.getFullYear(), end.getMonth() - j, end.getDate());
+    out.push({ date: d.toISOString().slice(0, 10), value: Math.round(values[points - 1 - j]) });
+  }
+  return out;
+}
+
+var DATA = {
+  homeCurrency: 'USD',
+  today: '2026-09-07',
+  assetClasses: [
+    {
+      id: 'real-estate', name: 'Real Estate',
+      holdings: [
+        { id: 'house', name: '123 Main St', valuation: 620000, recordedAt: '2026-08-01', live: false, liveEstimate: null,
+          history: [
+            { date: '2026-02-01', value: 605000 },
+            { date: '2026-03-01', value: 608000 },
+            { date: '2026-04-01', value: 610000 },
+            { date: '2026-05-01', value: 613000 },
+            { date: '2026-06-01', value: 615000 },
+            { date: '2026-07-01', value: 617500 },
+            { date: '2026-08-01', value: 620000 }
+          ] }
+      ]
+    },
+    {
+      id: 'equity', name: 'Equity',
+      holdings: [
+        { id: 'aapl', name: 'AAPL · 40 sh', valuation: 9480, recordedAt: '2026-09-01', live: true, liveEstimate: 9612,
+          history: [
+            { date: '2026-03-01', value: 8200 },
+            { date: '2026-04-01', value: 8450 },
+            { date: '2026-05-01', value: 8900 },
+            { date: '2026-06-01', value: 8700 },
+            { date: '2026-07-01', value: 9100 },
+            { date: '2026-08-01', value: 9300 },
+            { date: '2026-09-01', value: 9480 }
+          ] },
+        { id: 'vti', name: 'VTI · 120 sh', valuation: 34560, recordedAt: '2026-09-01', live: true, liveEstimate: 34920,
+          history: genHistory(34560, '2026-09-01', 7, 'vti', 0.03) },
+        { id: 'k401', name: 'Vanguard 401(k)', valuation: 148200, recordedAt: '2026-08-31', live: false, liveEstimate: null,
+          history: genHistory(148200, '2026-08-31', 7, 'k401', 0.02) }
+      ]
+    },
+    {
+      id: 'precious-metal', name: 'Precious Metal',
+      holdings: [
+        { id: 'gold', name: 'Gold coins · 3 oz', valuation: 7350, recordedAt: '2026-09-01', live: true, liveEstimate: 7410,
+          history: genHistory(7350, '2026-09-01', 7, 'gold', 0.025) }
+      ]
+    },
+    {
+      id: 'cash', name: 'Cash',
+      holdings: [
+        { id: 'chase', name: 'Chase Checking', valuation: 6200, recordedAt: '2026-09-05', live: false, liveEstimate: null,
+          history: genHistory(6200, '2026-09-05', 7, 'chase', 0.08) },
+        { id: 'marcus', name: 'Marcus HYSA', valuation: 42000, recordedAt: '2026-09-05', live: false, liveEstimate: null,
+          history: genHistory(42000, '2026-09-05', 7, 'marcus', 0.01) }
+      ]
+    },
+    {
+      id: 'crypto', name: 'Crypto',
+      holdings: [
+        { id: 'btc', name: 'BTC · 0.5', valuation: 31000, recordedAt: '2026-09-01', live: true, liveEstimate: 30650,
+          history: [
+            { date: '2026-03-01', value: 24500 },
+            { date: '2026-04-01', value: 27800 },
+            { date: '2026-05-01', value: 26200 },
+            { date: '2026-06-01', value: 29500 },
+            { date: '2026-07-01', value: 33100 },
+            { date: '2026-08-01', value: 29800 },
+            { date: '2026-09-01', value: 31000 }
+          ] }
+      ]
+    }
+  ],
+  liabilityClasses: [
+    {
+      id: 'mortgage', name: 'Mortgage',
+      liabilities: [
+        { id: 'mortgage-main', name: 'Mortgage on 123 Main St', balance: 410000, recordedAt: '2026-08-01',
+          linkedHoldingId: 'house',
+          amortization: { rate: 0.0625, original: 480000, termMonths: 360, extra: 200 },
+          history: [
+            { date: '2026-02-01', value: 412600 },
+            { date: '2026-03-01', value: 412000 },
+            { date: '2026-04-01', value: 411500 },
+            { date: '2026-05-01', value: 411100 },
+            { date: '2026-06-01', value: 410700 },
+            { date: '2026-07-01', value: 410300 },
+            { date: '2026-08-01', value: 410000 }
+          ] }
+      ]
+    },
+    {
+      id: 'auto-loan', name: 'Auto Loan',
+      liabilities: [
+        { id: 'honda', name: 'Honda CR-V loan', balance: 18400, recordedAt: '2026-08-15',
+          linkedHoldingId: null, amortization: null,
+          history: [
+            { date: '2026-02-15', value: 19800 },
+            { date: '2026-03-15', value: 19500 },
+            { date: '2026-04-15', value: 19100 },
+            { date: '2026-05-15', value: 18900 },
+            { date: '2026-06-15', value: 18700 },
+            { date: '2026-07-15', value: 18550 },
+            { date: '2026-08-15', value: 18400 }
+          ] }
+      ]
+    },
+    {
+      id: 'credit-card', name: 'Credit Card',
+      liabilities: [
+        { id: 'amex', name: 'Amex Blue', balance: 2150, recordedAt: '2026-09-05',
+          linkedHoldingId: null, amortization: null,
+          history: genHistory(2150, '2026-09-05', 7, 'amex', 0.15) }
+      ]
+    }
+  ],
+  targetAllocation: { 'real-estate': 25, equity: 50, 'precious-metal': 10, cash: 10, crypto: 5 },
+  projectionAssumptions: { annualGrowth: 0.06, monthlyContribution: 1500, years: 20 }
+};
+
+function fmtMoney(n) {
+  var neg = n < 0;
+  var abs = Math.round(Math.abs(n));
+  var s = abs.toLocaleString('en-US');
+  return (neg ? '−' : '') + s;
+}
+function fmtPct(n, decimals) {
+  if (decimals === undefined) decimals = 1;
+  return n.toFixed(decimals) + '%';
+}
+function fmtDate(iso) {
+  var d = new Date(iso + 'T00:00:00');
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
+function fv(P, annualRate, monthlyContribution, years) {
+  var r = annualRate / 12;
+  var n = years * 12;
+  var growth = Math.pow(1 + r, n);
+  if (r === 0) return P + monthlyContribution * n;
+  return P * growth + monthlyContribution * ((growth - 1) / r);
+}
+function monthlyPayment(P0, annualRate, termMonths) {
+  var r = annualRate / 12;
+  return P0 * r / (1 - Math.pow(1 + r, -termMonths));
+}
+function amortizeBalance(currentBalance, annualRate, payment, k) {
+  var r = annualRate / 12;
+  var growth = Math.pow(1 + r, k);
+  var bal = currentBalance * growth - payment * ((growth - 1) / r);
+  return Math.max(0, bal);
+}
+function payoffMonths(currentBalance, annualRate, payment) {
+  var r = annualRate / 12;
+  var x = (payment / r) / (payment / r - currentBalance);
+  return Math.log(x) / Math.log(1 + r);
+}
+function computeAmortizationInfo(liability) {
+  var am = liability.amortization;
+  if (!am) return null;
+  var base = monthlyPayment(am.original, am.rate, am.termMonths);
+  var totalPayment = base + (am.extra || 0);
+  var kPayoff = payoffMonths(liability.balance, am.rate, totalPayment);
+  var start = new Date(DATA.today + 'T00:00:00');
+  var payoffDate = new Date(start.getFullYear(), start.getMonth() + Math.round(kPayoff), start.getDate());
+  return { monthlyPaymentBase: base, extra: am.extra, totalPayment: totalPayment, payoffMonths: kPayoff, payoffYear: payoffDate.getFullYear() };
+}
+
+function classTotal(cls) { return cls.holdings.reduce(function (s, h) { return s + h.valuation; }, 0); }
+function liabClassTotal(cls) { return cls.liabilities.reduce(function (s, l) { return s + l.balance; }, 0); }
+
+function computeDerived(data) {
+  var holdingsTotal = data.assetClasses.reduce(function (s, c) { return s + classTotal(c); }, 0);
+  var liabilitiesTotal = data.liabilityClasses.reduce(function (s, c) { return s + liabClassTotal(c); }, 0);
+  var netWorth = holdingsTotal - liabilitiesTotal;
+
+  var distribution = data.assetClasses.map(function (c) {
+    var total = classTotal(c);
+    return {
+      classId: c.id,
+      name: c.name,
+      total: total,
+      actualPct: holdingsTotal ? (total / holdingsTotal * 100) : 0,
+      targetPct: data.targetAllocation[c.id] || 0
+    };
+  });
+
+  var mostRecent = '';
+  data.assetClasses.forEach(function (c) { c.holdings.forEach(function (h) { if (h.recordedAt > mostRecent) mostRecent = h.recordedAt; }); });
+  data.liabilityClasses.forEach(function (c) { c.liabilities.forEach(function (l) { if (l.recordedAt > mostRecent) mostRecent = l.recordedAt; }); });
+
+  var mortgageLiab = data.liabilityClasses.filter(function (c) { return c.id === 'mortgage'; })[0].liabilities[0];
+  var mortgage = computeAmortizationInfo(mortgageLiab);
+
+  var years = data.projectionAssumptions.years;
+  var annualGrowth = data.projectionAssumptions.annualGrowth;
+  var monthlyContribution = data.projectionAssumptions.monthlyContribution;
+  var projectionSeries = [];
+  for (var y = 0; y <= years; y++) projectionSeries.push({ year: y, value: fv(netWorth, annualGrowth, monthlyContribution, y) });
+
+  var house = data.assetClasses.filter(function (c) { return c.id === 'real-estate'; })[0].holdings.filter(function (h) { return h.id === 'house'; })[0];
+  var netPositionSeries = [];
+  for (var y2 = 0; y2 <= years; y2++) {
+    var houseVal = fv(house.valuation, annualGrowth, 0, y2);
+    var mortgageBal = amortizeBalance(mortgageLiab.balance, mortgageLiab.amortization.rate, mortgage.totalPayment, y2 * 12);
+    netPositionSeries.push({ year: y2, houseValue: houseVal, mortgageBalance: mortgageBal, netPosition: houseVal - mortgageBal });
+  }
+
+  return { holdingsTotal: holdingsTotal, liabilitiesTotal: liabilitiesTotal, netWorth: netWorth, distribution: distribution, mostRecent: mostRecent, mortgage: mortgage, projectionSeries: projectionSeries, netPositionSeries: netPositionSeries };
+}
+
+var DERIVED = computeDerived(DATA);
+
+function findAssetClass(id) { for (var i = 0; i < DATA.assetClasses.length; i++) if (DATA.assetClasses[i].id === id) return DATA.assetClasses[i]; return null; }
+function findHoldingIn(cls, id) { for (var i = 0; i < cls.holdings.length; i++) if (cls.holdings[i].id === id) return cls.holdings[i]; return null; }
+function findLiabilityClass(id) { for (var i = 0; i < DATA.liabilityClasses.length; i++) if (DATA.liabilityClasses[i].id === id) return DATA.liabilityClasses[i]; return null; }
+function findLiabilityIn(cls, id) { for (var i = 0; i < cls.liabilities.length; i++) if (cls.liabilities[i].id === id) return cls.liabilities[i]; return null; }
+function findLinkedLiability(holdingId) {
+  for (var i = 0; i < DATA.liabilityClasses.length; i++) {
+    var lc = DATA.liabilityClasses[i];
+    for (var j = 0; j < lc.liabilities.length; j++) {
+      if (lc.liabilities[j].linkedHoldingId === holdingId) return { liability: lc.liabilities[j], liabilityClass: lc };
+    }
+  }
+  return null;
+}
+
+/* small generic event-wiring utility (click + keyboard activation); not a layout component */
+function onActivate(elm, fn) {
+  elm.addEventListener('click', fn);
+  elm.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fn(e); }
+  });
+  if (elm.tabIndex < 0 || elm.tabIndex === undefined) elm.tabIndex = 0;
+  if (!elm.getAttribute('role')) elm.setAttribute('role', 'button');
+}
+
+/* ============================================================
+   VARIANT A · Explorer — sidebar tree, Liabilities as own branch,
+   paired horizontal bars chart. Builds its own DOM from scratch.
+   ============================================================ */
+var aState = null;
+var aRootEl = null;
+
+function renderA(root) {
+  aRootEl = root;
+  aState = {
+    selection: { type: 'portfolio' },
+    expandedClasses: new Set(DATA.assetClasses.map(function (c) { return c.id; })),
+    liabilitiesExpanded: false,
+    expandedLiabClasses: new Set()
+  };
+  aRerender();
+}
+
+function aSelect(sel) { aState.selection = sel; aRerender(); }
+
+function aRerender() {
+  aRootEl.innerHTML = '';
+  aRootEl.appendChild(aBuildSidebar());
+  aRootEl.appendChild(aBuildMain());
+}
+
+function aMakeRow(opts) {
+  var row = document.createElement('div');
+  row.className = 'a-row' + (opts.rowClass ? ' ' + opts.rowClass : '') + (opts.selected ? ' is-selected' : '') + (opts.liability ? ' a-liability' : '');
+  var chev = document.createElement('span');
+  chev.className = 'a-chevron';
+  if (opts.chevronState) {
+    chev.textContent = opts.chevronState === 'expanded' ? '▾' : '▸';
+    onActivate(chev, function (e) { e.stopPropagation(); opts.onToggle(); });
+  }
+  var label = document.createElement('span');
+  label.className = 'a-label';
+  label.textContent = opts.label;
+  var meta = document.createElement('span');
+  meta.className = 'a-meta';
+  meta.textContent = opts.meta || '';
+  row.appendChild(chev);
+  row.appendChild(label);
+  row.appendChild(meta);
+  if (opts.onSelect) onActivate(row, opts.onSelect);
+  return row;
+}
+
+function aBuildSidebar() {
+  var sidebar = document.createElement('div');
+  sidebar.className = 'a-sidebar';
+  var wordmark = document.createElement('div');
+  wordmark.className = 'a-wordmark';
+  wordmark.textContent = 'FinAsset 360';
+  sidebar.appendChild(wordmark);
+
+  var tree = document.createElement('div');
+  tree.className = 'a-tree';
+  var sel = aState.selection;
+
+  tree.appendChild(aMakeRow({
+    rowClass: 'a-row-root',
+    label: 'Portfolio',
+    meta: fmtMoney(DERIVED.netWorth),
+    selected: sel.type === 'portfolio',
+    onSelect: function () { aSelect({ type: 'portfolio' }); }
+  }));
+
+  DATA.assetClasses.forEach(function (cls) {
+    var expanded = aState.expandedClasses.has(cls.id);
+    tree.appendChild(aMakeRow({
+      rowClass: 'a-row-class',
+      chevronState: expanded ? 'expanded' : 'collapsed',
+      label: cls.name,
+      meta: fmtMoney(classTotal(cls)),
+      selected: sel.type === 'class' && sel.classId === cls.id,
+      onSelect: function () { aSelect({ type: 'class', classId: cls.id }); },
+      onToggle: function () {
+        if (expanded) aState.expandedClasses.delete(cls.id); else aState.expandedClasses.add(cls.id);
+        aRerender();
+      }
+    }));
+    if (expanded) {
+      var children = document.createElement('div');
+      children.className = 'a-children';
+      cls.holdings.forEach(function (h) {
+        children.appendChild(aMakeRow({
+          rowClass: 'a-row-holding',
+          label: h.name,
+          meta: fmtMoney(h.valuation),
+          selected: sel.type === 'holding' && sel.classId === cls.id && sel.holdingId === h.id,
+          onSelect: function () { aSelect({ type: 'holding', classId: cls.id, holdingId: h.id }); }
+        }));
+      });
+      tree.appendChild(children);
+    }
+  });
+
+  var divider = document.createElement('div');
+  divider.className = 'a-divider';
+  tree.appendChild(divider);
+
+  var liabBranch = document.createElement('div');
+  liabBranch.className = 'a-branch a-branch-liabilities';
+  liabBranch.appendChild(aMakeRow({
+    rowClass: 'a-row-class',
+    liability: true,
+    chevronState: aState.liabilitiesExpanded ? 'expanded' : 'collapsed',
+    label: 'Liabilities',
+    meta: fmtMoney(-DERIVED.liabilitiesTotal),
+    selected: sel.type === 'liabilityRoot',
+    onSelect: function () { aSelect({ type: 'liabilityRoot' }); },
+    onToggle: function () { aState.liabilitiesExpanded = !aState.liabilitiesExpanded; aRerender(); }
+  }));
+  if (aState.liabilitiesExpanded) {
+    DATA.liabilityClasses.forEach(function (lc) {
+      var expanded = aState.expandedLiabClasses.has(lc.id);
+      liabBranch.appendChild(aMakeRow({
+        rowClass: 'a-row-class',
+        liability: true,
+        chevronState: expanded ? 'expanded' : 'collapsed',
+        label: lc.name,
+        meta: fmtMoney(-liabClassTotal(lc)),
+        selected: sel.type === 'liabilityClass' && sel.liabClassId === lc.id,
+        onSelect: function () { aSelect({ type: 'liabilityClass', liabClassId: lc.id }); },
+        onToggle: function () {
+          if (expanded) aState.expandedLiabClasses.delete(lc.id); else aState.expandedLiabClasses.add(lc.id);
+          aRerender();
+        }
+      }));
+      if (expanded) {
+        var children2 = document.createElement('div');
+        children2.className = 'a-children';
+        lc.liabilities.forEach(function (l) {
+          children2.appendChild(aMakeRow({
+            rowClass: 'a-row-holding',
+            liability: true,
+            label: l.name,
+            meta: fmtMoney(-l.balance),
+            selected: sel.type === 'liability' && sel.liabClassId === lc.id && sel.liabilityId === l.id,
+            onSelect: function () { aSelect({ type: 'liability', liabClassId: lc.id, liabilityId: l.id }); }
+          }));
+        });
+        liabBranch.appendChild(children2);
+      }
+    });
+  }
+  tree.appendChild(liabBranch);
+  sidebar.appendChild(tree);
+  return sidebar;
+}
+
+function aBreadcrumbText(sel) {
+  if (sel.type === 'portfolio') return 'Portfolio';
+  if (sel.type === 'class') { var c = findAssetClass(sel.classId); return 'Portfolio / ' + c.name; }
+  if (sel.type === 'holding') { var c2 = findAssetClass(sel.classId); var h = findHoldingIn(c2, sel.holdingId); return 'Portfolio / ' + c2.name + ' / ' + h.name; }
+  if (sel.type === 'liabilityRoot') return 'Portfolio / Liabilities';
+  if (sel.type === 'liabilityClass') { var lc = findLiabilityClass(sel.liabClassId); return 'Portfolio / Liabilities / ' + lc.name; }
+  if (sel.type === 'liability') { var lc2 = findLiabilityClass(sel.liabClassId); var l = findLiabilityIn(lc2, sel.liabilityId); return 'Portfolio / Liabilities / ' + lc2.name + ' / ' + l.name; }
+  return 'Portfolio';
+}
+
+function aBuildMain() {
+  var main = document.createElement('div');
+  main.className = 'a-main';
+  var bc = document.createElement('div');
+  bc.className = 'a-breadcrumb';
+  bc.textContent = aBreadcrumbText(aState.selection);
+  main.appendChild(bc);
+  var content = document.createElement('div');
+  content.className = 'a-content';
+  main.appendChild(content);
+
+  var sel = aState.selection;
+  if (sel.type === 'portfolio') aRenderDashboard(content);
+  else if (sel.type === 'class') aRenderClassView(content, findAssetClass(sel.classId));
+  else if (sel.type === 'holding') { var c = findAssetClass(sel.classId); aRenderHoldingView(content, c, findHoldingIn(c, sel.holdingId)); }
+  else if (sel.type === 'liabilityRoot') aRenderLiabilitiesOverview(content);
+  else if (sel.type === 'liabilityClass') aRenderLiabilityClassView(content, findLiabilityClass(sel.liabClassId));
+  else if (sel.type === 'liability') { var lc = findLiabilityClass(sel.liabClassId); aRenderLiabilityView(content, lc, findLiabilityIn(lc, sel.liabilityId)); }
+
+  return main;
+}
+
+function aSectionTitle(text) {
+  var t = document.createElement('div');
+  t.className = 'a-section-title';
+  t.textContent = text;
+  return t;
+}
+
+function aProjectionSVG(series) {
+  var w = 640, h = 72, padL = 2, padR = 2, padT = 8, padB = 14;
+  var ys = series.map(function (p) { return p.value; });
+  var minY = Math.min.apply(null, ys), maxY = Math.max.apply(null, ys);
+  function x(year) { return padL + (year / 20) * (w - padL - padR); }
+  function y(val) { return h - padB - ((val - minY) / ((maxY - minY) || 1)) * (h - padT - padB); }
+  var pts = series.map(function (p) { return x(p.year) + ',' + y(p.value); }).join(' ');
+  var last = series[series.length - 1];
+  var lx = x(last.year), ly = y(last.value);
+  return '<svg viewBox="0 0 ' + w + ' ' + h + '" width="100%" height="' + h + '" preserveAspectRatio="none" role="img" aria-label="Net worth projection over 20 years">' +
+    '<line x1="' + padL + '" y1="' + (h - padB) + '" x2="' + (w - padR) + '" y2="' + (h - padB) + '" style="stroke:var(--border);stroke-width:1"></line>' +
+    '<polyline points="' + pts + '" style="fill:none;stroke:var(--accent);stroke-width:1.5"></polyline>' +
+    '<circle cx="' + lx + '" cy="' + ly + '" r="2.5" style="fill:var(--accent)"></circle>' +
+    '</svg>';
+}
+
+function aRenderDashboard(container) {
+  var headline = document.createElement('div');
+  headline.className = 'a-headline';
+  headline.textContent = fmtMoney(DERIVED.netWorth);
+  container.appendChild(headline);
+
+  var sub1 = document.createElement('div');
+  sub1.className = 'a-subline';
+  sub1.textContent = 'Holdings ' + fmtMoney(DERIVED.holdingsTotal) + ' − Liabilities ' + fmtMoney(DERIVED.liabilitiesTotal);
+  container.appendChild(sub1);
+
+  var sub2 = document.createElement('div');
+  sub2.className = 'a-subline';
+  sub2.textContent = 'as of ' + fmtDate(DERIVED.mostRecent);
+  container.appendChild(sub2);
+
+  container.appendChild(aSectionTitle('Target vs Actual'));
+  var bars = document.createElement('div');
+  bars.className = 'a-bars';
+  var sorted = DERIVED.distribution.slice().sort(function (a, b) { return b.actualPct - a.actualPct; });
+  sorted.forEach(function (d) {
+    var row = document.createElement('div');
+    row.className = 'a-bar-row';
+    var name = document.createElement('div');
+    name.className = 'a-bar-name';
+    name.textContent = d.name;
+    var track = document.createElement('div');
+    track.className = 'a-bar-track';
+    var fill = document.createElement('div');
+    fill.className = 'a-bar-fill';
+    fill.style.width = Math.min(100, d.actualPct) + '%';
+    var target = document.createElement('div');
+    target.className = 'a-bar-target';
+    target.style.left = Math.min(100, d.targetPct) + '%';
+    track.appendChild(fill);
+    track.appendChild(target);
+    var figures = document.createElement('div');
+    figures.className = 'a-bar-figures';
+    figures.textContent = fmtPct(d.actualPct) + ' · target ' + d.targetPct + '%';
+    row.appendChild(name);
+    row.appendChild(track);
+    row.appendChild(figures);
+    bars.appendChild(row);
+  });
+  container.appendChild(bars);
+
+  container.appendChild(aSectionTitle('Projection'));
+  var projWrap = document.createElement('div');
+  projWrap.className = 'a-proj-wrap';
+  projWrap.innerHTML = aProjectionSVG(DERIVED.projectionSeries);
+  container.appendChild(projWrap);
+  var note = document.createElement('div');
+  note.className = 'a-proj-note';
+  var y20 = DERIVED.projectionSeries[DERIVED.projectionSeries.length - 1];
+  note.textContent = '6.0% growth · 1,500/mo · 20 yrs — year 20: ' + fmtMoney(y20.value);
+  container.appendChild(note);
+}
+
+function aRenderClassView(container, cls) {
+  var total = classTotal(cls);
+  var actualPct = DERIVED.holdingsTotal ? total / DERIVED.holdingsTotal * 100 : 0;
+  var targetPct = DATA.targetAllocation[cls.id] || 0;
+
+  var headline = document.createElement('div');
+  headline.className = 'a-headline';
+  headline.textContent = fmtMoney(total);
+  container.appendChild(headline);
+
+  var sub = document.createElement('div');
+  sub.className = 'a-subline';
+  sub.textContent = 'share of Portfolio ' + fmtPct(actualPct) + ' · target ' + targetPct + '%';
+  container.appendChild(sub);
+
+  container.appendChild(aSectionTitle('Holdings'));
+  var table = document.createElement('table');
+  table.className = 'a-table';
+  var thead = document.createElement('thead');
+  thead.innerHTML = '<tr><th>Holding</th><th class="num">Valuation</th><th class="num">As of</th><th>Live Estimate</th></tr>';
+  table.appendChild(thead);
+  var tbody = document.createElement('tbody');
+  cls.holdings.forEach(function (h) {
+    var tr = document.createElement('tr');
+    var tdName = document.createElement('td'); tdName.textContent = h.name;
+    var tdVal = document.createElement('td'); tdVal.className = 'num'; tdVal.textContent = fmtMoney(h.valuation);
+    var tdDate = document.createElement('td'); tdDate.className = 'num'; tdDate.textContent = fmtDate(h.recordedAt);
+    var tdLive = document.createElement('td'); tdLive.style.color = 'var(--text-muted)';
+    if (h.live) {
+      tdLive.textContent = fmtMoney(h.liveEstimate) + ' ';
+      var tag = document.createElement('span'); tag.className = 'a-live-tag'; tag.textContent = 'live';
+      tdLive.appendChild(tag);
+    } else {
+      tdLive.textContent = '—';
+    }
+    tr.appendChild(tdName); tr.appendChild(tdVal); tr.appendChild(tdDate); tr.appendChild(tdLive);
+    tbody.appendChild(tr);
+  });
+  table.appendChild(tbody);
+  container.appendChild(table);
+}
+
+function aSparklineSVG(history) {
+  var w = 320, h = 44, pad = 4;
+  var vals = history.map(function (p) { return p.value; });
+  var minV = Math.min.apply(null, vals), maxV = Math.max.apply(null, vals);
+  function x(i) { return pad + (i / (history.length - 1)) * (w - pad * 2); }
+  function y(v) { return h - pad - ((v - minV) / ((maxV - minV) || 1)) * (h - pad * 2); }
+  var pts = history.map(function (p, i) { return x(i) + ',' + y(p.value); }).join(' ');
+  var last = history[history.length - 1];
+  return '<svg viewBox="0 0 ' + w + ' ' + h + '" width="100%" height="' + h + '" preserveAspectRatio="none" role="img" aria-label="Valuation history">' +
+    '<polyline points="' + pts + '" style="fill:none;stroke:var(--accent);stroke-width:1.5"></polyline>' +
+    '<circle cx="' + x(history.length - 1) + '" cy="' + y(last.value) + '" r="2.5" style="fill:var(--accent)"></circle>' +
+    '</svg>';
+}
+
+function aDetailRow(label, value) {
+  var row = document.createElement('div');
+  row.className = 'a-detail-row';
+  var l = document.createElement('span'); l.className = 'label'; l.textContent = label;
+  var v = document.createElement('span'); v.textContent = value;
+  row.appendChild(l); row.appendChild(v);
+  return row;
+}
+
+function aRenderHistorySection(container, history) {
+  container.appendChild(aSectionTitle('Valuation History'));
+  var wrap = document.createElement('div');
+  wrap.className = 'a-sparkline-wrap';
+  wrap.innerHTML = aSparklineSVG(history);
+  container.appendChild(wrap);
+  var list = document.createElement('div');
+  list.className = 'a-history-list';
+  history.slice().reverse().forEach(function (p) {
+    var item = document.createElement('div');
+    item.className = 'a-history-item';
+    var d = document.createElement('span'); d.textContent = fmtDate(p.date);
+    var v = document.createElement('span'); v.className = 'v'; v.textContent = fmtMoney(p.value);
+    item.appendChild(d); item.appendChild(v);
+    list.appendChild(item);
+  });
+  container.appendChild(list);
+}
+
+function aRenderRecordButton(container) {
+  var btn = document.createElement('button');
+  btn.type = 'button';
+  btn.className = 'a-btn-outline';
+  btn.textContent = 'Record Valuation';
+  container.appendChild(btn);
+}
+
+function aRenderHoldingView(container, cls, holding) {
+  var headline = document.createElement('div');
+  headline.className = 'a-headline';
+  headline.textContent = fmtMoney(holding.valuation);
+  container.appendChild(headline);
+
+  var sub = document.createElement('div');
+  sub.className = 'a-subline';
+  sub.textContent = 'as of ' + fmtDate(holding.recordedAt);
+  container.appendChild(sub);
+
+  if (holding.live) {
+    var liveLine = document.createElement('div');
+    liveLine.className = 'a-subline';
+    liveLine.textContent = 'Live Estimate ' + fmtMoney(holding.liveEstimate) + ' — not a Valuation';
+    container.appendChild(liveLine);
+  }
+
+  if (holding.id === 'house') {
+    var link = findLinkedLiability(holding.id);
+    if (link) {
+      container.appendChild(aSectionTitle('Linked Liability'));
+      container.appendChild(aDetailRow(link.liability.name, fmtMoney(-link.liability.balance)));
+      container.appendChild(aSectionTitle('Projected Net Position'));
+      var todayPos = DERIVED.netPositionSeries[0].netPosition;
+      var y20Pos = DERIVED.netPositionSeries[DERIVED.netPositionSeries.length - 1].netPosition;
+      container.appendChild(aDetailRow('Today', fmtMoney(todayPos)));
+      container.appendChild(aDetailRow('Year 20', fmtMoney(y20Pos)));
+    }
+  }
+
+  aRenderHistorySection(container, holding.history);
+  aRenderRecordButton(container);
+}
+
+function aRenderLiabilityView(container, liabClass, liability) {
+  var headline = document.createElement('div');
+  headline.className = 'a-headline';
+  headline.style.color = 'var(--liability)';
+  headline.textContent = fmtMoney(-liability.balance);
+  container.appendChild(headline);
+
+  var sub = document.createElement('div');
+  sub.className = 'a-subline';
+  sub.textContent = 'as of ' + fmtDate(liability.recordedAt);
+  container.appendChild(sub);
+
+  if (liability.amortization) {
+    container.appendChild(aSectionTitle('Amortization Assumptions'));
+    var am = liability.amortization;
+    container.appendChild(aDetailRow('Rate', (am.rate * 100).toFixed(2) + '%'));
+    container.appendChild(aDetailRow('Original', fmtMoney(am.original)));
+    container.appendChild(aDetailRow('Term', am.termMonths + ' months'));
+    container.appendChild(aDetailRow('Extra payment', fmtMoney(am.extra) + '/mo'));
+    var info = computeAmortizationInfo(liability);
+    container.appendChild(aDetailRow('Projected payoff', String(info.payoffYear)));
+  }
+
+  aRenderHistorySection(container, liability.history);
+}
+
+function aRenderLiabilitiesOverview(container) {
+  var headline = document.createElement('div');
+  headline.className = 'a-headline';
+  headline.style.color = 'var(--liability)';
+  headline.textContent = fmtMoney(-DERIVED.liabilitiesTotal);
+  container.appendChild(headline);
+  var sub = document.createElement('div');
+  sub.className = 'a-subline';
+  sub.textContent = 'as of ' + fmtDate(DERIVED.mostRecent);
+  container.appendChild(sub);
+
+  container.appendChild(aSectionTitle('Liability Classes'));
+  var table = document.createElement('table');
+  table.className = 'a-table';
+  var thead = document.createElement('thead');
+  thead.innerHTML = '<tr><th>Liability Class</th><th class="num">Balance</th></tr>';
+  table.appendChild(thead);
+  var tbody = document.createElement('tbody');
+  DATA.liabilityClasses.forEach(function (lc) {
+    var tr = document.createElement('tr');
+    var tdName = document.createElement('td'); tdName.textContent = lc.name;
+    var tdVal = document.createElement('td'); tdVal.className = 'num'; tdVal.style.color = 'var(--liability)'; tdVal.textContent = fmtMoney(-liabClassTotal(lc));
+    tr.appendChild(tdName); tr.appendChild(tdVal);
+    tbody.appendChild(tr);
+  });
+  table.appendChild(tbody);
+  container.appendChild(table);
+}
+
+function aRenderLiabilityClassView(container, liabClass) {
+  var total = liabClassTotal(liabClass);
+  var headline = document.createElement('div');
+  headline.className = 'a-headline';
+  headline.style.color = 'var(--liability)';
+  headline.textContent = fmtMoney(-total);
+  container.appendChild(headline);
+  var sub = document.createElement('div');
+  sub.className = 'a-subline';
+  sub.textContent = liabClass.liabilities.length + (liabClass.liabilities.length === 1 ? ' Liability' : ' Liabilities');
+  container.appendChild(sub);
+
+  container.appendChild(aSectionTitle('Liabilities'));
+  var table = document.createElement('table');
+  table.className = 'a-table';
+  var thead = document.createElement('thead');
+  thead.innerHTML = '<tr><th>Liability</th><th class="num">Balance</th><th class="num">As of</th></tr>';
+  table.appendChild(thead);
+  var tbody = document.createElement('tbody');
+  liabClass.liabilities.forEach(function (l) {
+    var tr = document.createElement('tr');
+    var tdName = document.createElement('td'); tdName.textContent = l.name;
+    var tdVal = document.createElement('td'); tdVal.className = 'num'; tdVal.style.color = 'var(--liability)'; tdVal.textContent = fmtMoney(-l.balance);
+    var tdDate = document.createElement('td'); tdDate.className = 'num'; tdDate.textContent = fmtDate(l.recordedAt);
+    tr.appendChild(tdName); tr.appendChild(tdVal); tr.appendChild(tdDate);
+    tbody.appendChild(tr);
+  });
+  table.appendChild(tbody);
+  container.appendChild(table);
+}
+
+/* ============================================================
+   VARIANT B · Outline — no sidebar, dashboard always on top,
+   collapsible outline with inline detail blocks, linked
+   Liability folded under its Holding. Own DOM, own state.
+   ============================================================ */
+var bState = null;
+var bRootEl = null;
+
+function hexToRgb(hex) {
+  hex = hex.trim().replace('#', '');
+  if (hex.length === 3) hex = hex.split('').map(function (c) { return c + c; }).join('');
+  var num = parseInt(hex, 16);
+  return [(num >> 16) & 255, (num >> 8) & 255, num & 255];
+}
+function blendHex(hexA, hexB, t) {
+  var a = hexToRgb(hexA), b = hexToRgb(hexB);
+  var r = Math.round(a[0] * t + b[0] * (1 - t));
+  var g = Math.round(a[1] * t + b[1] * (1 - t));
+  var bl = Math.round(a[2] * t + b[2] * (1 - t));
+  return 'rgb(' + r + ',' + g + ',' + bl + ')';
+}
+function bBlend(pct) {
+  var cs = getComputedStyle(document.documentElement);
+  var accent = cs.getPropertyValue('--accent').trim();
+  var surface = cs.getPropertyValue('--surface').trim();
+  return blendHex(accent, surface, pct / 100);
+}
+
+function renderB(root) {
+  bRootEl = root;
+  bState = {
+    expandedClasses: new Set(['real-estate']),
+    selected: null,
+    liabilitiesGroupExpanded: false,
+    expandedLiabClasses: new Set()
+  };
+  bRerender();
+}
+
+function bSelKey(sel) {
+  if (!sel) return '';
+  if (sel.type === 'class') return 'class:' + sel.classId;
+  if (sel.type === 'holding') return 'holding:' + sel.classId + ':' + sel.holdingId;
+  if (sel.type === 'liability') return 'liability:' + sel.liabClassId + ':' + sel.liabilityId;
+  if (sel.type === 'liabilityClass') return 'liabclass:' + sel.liabClassId;
+  return '';
+}
+function bToggleSelect(sel) {
+  var key = bSelKey(sel);
+  var curKey = bSelKey(bState.selected);
+  bState.selected = (curKey === key) ? null : sel;
+  bRerender();
+}
+
+function bProjectionSVG(series) {
+  var w = 680, h = 64, padL = 2, padR = 2, padT = 6, padB = 12;
+  var ys = series.map(function (p) { return p.value; });
+  var minY = Math.min.apply(null, ys), maxY = Math.max.apply(null, ys);
+  function x(year) { return padL + (year / 20) * (w - padL - padR); }
+  function y(val) { return h - padB - ((val - minY) / ((maxY - minY) || 1)) * (h - padT - padB); }
+  var pts = series.map(function (p) { return x(p.year) + ',' + y(p.value); }).join(' ');
+  var last = series[series.length - 1];
+  return '<svg viewBox="0 0 ' + w + ' ' + h + '" width="100%" height="' + h + '" preserveAspectRatio="none" role="img" aria-label="Net worth projection over 20 years">' +
+    '<line x1="' + padL + '" y1="' + (h - padB) + '" x2="' + (w - padR) + '" y2="' + (h - padB) + '" style="stroke:var(--border);stroke-width:1"></line>' +
+    '<polyline points="' + pts + '" style="fill:none;stroke:var(--accent);stroke-width:1.5"></polyline>' +
+    '<circle cx="' + x(last.year) + '" cy="' + y(last.value) + '" r="2.5" style="fill:var(--accent)"></circle>' +
+    '</svg>';
+}
+
+function bBuildDashboard() {
+  var wrap = document.createElement('div');
+  wrap.className = 'b-dashboard';
+
+  var headline = document.createElement('div');
+  headline.className = 'b-headline';
+  headline.textContent = fmtMoney(DERIVED.netWorth);
+  wrap.appendChild(headline);
+
+  var sub1 = document.createElement('div');
+  sub1.className = 'b-subline';
+  sub1.textContent = 'Holdings ' + fmtMoney(DERIVED.holdingsTotal) + ' − Liabilities ' + fmtMoney(DERIVED.liabilitiesTotal);
+  wrap.appendChild(sub1);
+
+  var sub2 = document.createElement('div');
+  sub2.className = 'b-subline';
+  sub2.textContent = 'as of ' + fmtDate(DERIVED.mostRecent);
+  wrap.appendChild(sub2);
+
+  var stripWrap = document.createElement('div');
+  stripWrap.className = 'b-strip-wrap';
+  var sorted = DERIVED.distribution.slice().sort(function (a, b) { return b.actualPct - a.actualPct; });
+  var n = sorted.length;
+  function stepFor(i) { return n > 1 ? 82 - (82 - 20) * (i / (n - 1)) : 60; }
+
+  var actualStrip = document.createElement('div');
+  actualStrip.className = 'b-strip';
+  sorted.forEach(function (d, i) {
+    var seg = document.createElement('div');
+    seg.className = 'b-strip-seg';
+    seg.style.width = d.actualPct + '%';
+    seg.style.background = bBlend(stepFor(i));
+    seg.style.borderRight = '1px solid var(--bg)';
+    actualStrip.appendChild(seg);
+  });
+  var targetStrip = document.createElement('div');
+  targetStrip.className = 'b-strip target';
+  sorted.forEach(function (d, i) {
+    var seg = document.createElement('div');
+    seg.className = 'b-strip-seg';
+    seg.style.width = d.targetPct + '%';
+    seg.style.background = bBlend(stepFor(i));
+    seg.style.borderRight = '1px solid var(--bg)';
+    targetStrip.appendChild(seg);
+  });
+  stripWrap.appendChild(actualStrip);
+  stripWrap.appendChild(targetStrip);
+
+  var labels = document.createElement('div');
+  labels.className = 'b-strip-labels';
+  sorted.forEach(function (d) {
+    var lab = document.createElement('div');
+    lab.className = 'b-strip-label';
+    var name = document.createElement('span'); name.className = 'name'; name.textContent = d.name;
+    var pct = document.createElement('span'); pct.textContent = fmtPct(d.actualPct) + ' / ' + d.targetPct + '%';
+    lab.appendChild(name);
+    lab.appendChild(pct);
+    labels.appendChild(lab);
+  });
+  stripWrap.appendChild(labels);
+  wrap.appendChild(stripWrap);
+
+  wrap.appendChild((function () { var t = document.createElement('div'); t.className = 'b-section-title'; t.textContent = 'Projection'; return t; })());
+  var projWrap = document.createElement('div');
+  projWrap.innerHTML = bProjectionSVG(DERIVED.projectionSeries);
+  wrap.appendChild(projWrap);
+  var note = document.createElement('div');
+  note.className = 'b-proj-note';
+  var y20 = DERIVED.projectionSeries[DERIVED.projectionSeries.length - 1];
+  note.textContent = '6.0% growth · 1,500/mo · 20 yrs — year 20: ' + fmtMoney(y20.value);
+  wrap.appendChild(note);
+
+  return wrap;
+}
+
+function bRow(opts) {
+  var row = document.createElement('div');
+  row.className = 'b-row ' + opts.levelClass + (opts.selected ? ' is-selected' : '') + (opts.liability ? ' b-liability' : '');
+  var chev = document.createElement('span');
+  chev.className = 'b-chevron';
+  if (opts.chevronState) {
+    chev.textContent = opts.chevronState === 'expanded' ? '▾' : '▸';
+    onActivate(chev, function (e) { e.stopPropagation(); opts.onToggle(); });
+  }
+  row.appendChild(chev);
+  var label = document.createElement('span');
+  label.className = 'b-label';
+  label.textContent = opts.label;
+  row.appendChild(label);
+  var meta = document.createElement('span');
+  meta.className = 'b-meta';
+  meta.textContent = opts.meta || '';
+  row.appendChild(meta);
+  if (opts.onSelect) onActivate(row, opts.onSelect);
+  return row;
+}
+
+function bDetailRow(label, value) {
+  var row = document.createElement('div');
+  row.className = 'b-detail-row';
+  var l = document.createElement('span'); l.className = 'label'; l.textContent = label;
+  var v = document.createElement('span'); v.textContent = value;
+  row.appendChild(l); row.appendChild(v);
+  return row;
+}
+
+function bSparklineSVG(history) {
+  var w = 260, h = 36, pad = 4;
+  var vals = history.map(function (p) { return p.value; });
+  var minV = Math.min.apply(null, vals), maxV = Math.max.apply(null, vals);
+  function x(i) { return pad + (i / (history.length - 1)) * (w - pad * 2); }
+  function y(v) { return h - pad - ((v - minV) / ((maxV - minV) || 1)) * (h - pad * 2); }
+  var pts = history.map(function (p, i) { return x(i) + ',' + y(p.value); }).join(' ');
+  var last = history[history.length - 1];
+  return '<svg viewBox="0 0 ' + w + ' ' + h + '" width="100%" height="' + h + '" preserveAspectRatio="none" role="img" aria-label="Valuation history">' +
+    '<polyline points="' + pts + '" style="fill:none;stroke:var(--accent);stroke-width:1.5"></polyline>' +
+    '<circle cx="' + x(history.length - 1) + '" cy="' + y(last.value) + '" r="2.5" style="fill:var(--accent)"></circle>' +
+    '</svg>';
+}
+
+function bBuildClassDetail(cls) {
+  var total = classTotal(cls);
+  var pct = DERIVED.holdingsTotal ? total / DERIVED.holdingsTotal * 100 : 0;
+  var targetPct = DATA.targetAllocation[cls.id] || 0;
+  var det = document.createElement('div');
+  det.className = 'b-detail';
+  det.appendChild(bDetailRow('Total', fmtMoney(total)));
+  det.appendChild(bDetailRow('Share of Portfolio', fmtPct(pct) + ' · target ' + targetPct + '%'));
+  cls.holdings.forEach(function (h) {
+    var val = fmtMoney(h.valuation) + '  (' + fmtDate(h.recordedAt) + ')';
+    if (h.live) val += '  · live ' + fmtMoney(h.liveEstimate);
+    det.appendChild(bDetailRow(h.name, val));
+  });
+  return det;
+}
+
+function bBuildHoldingDetail(cls, holding) {
+  var det = document.createElement('div');
+  det.className = 'b-detail';
+  det.appendChild(bDetailRow('Valuation', fmtMoney(holding.valuation) + '  (' + fmtDate(holding.recordedAt) + ')'));
+  if (holding.live) det.appendChild(bDetailRow('Live Estimate', fmtMoney(holding.liveEstimate) + ' — not a Valuation'));
+  if (holding.id === 'house') {
+    var link = findLinkedLiability(holding.id);
+    if (link) {
+      det.appendChild(bDetailRow('Linked Liability', link.liability.name + '  ' + fmtMoney(-link.liability.balance)));
+      det.appendChild(bDetailRow('Net Position today', fmtMoney(DERIVED.netPositionSeries[0].netPosition)));
+      det.appendChild(bDetailRow('Net Position year 20', fmtMoney(DERIVED.netPositionSeries[DERIVED.netPositionSeries.length - 1].netPosition)));
+    }
+  }
+  var sparkWrap = document.createElement('div');
+  sparkWrap.className = 'b-sparkline-wrap';
+  sparkWrap.innerHTML = bSparklineSVG(holding.history);
+  det.appendChild(sparkWrap);
+  var list = document.createElement('div');
+  list.className = 'b-history-list';
+  list.textContent = holding.history.slice().reverse().map(function (p) { return fmtDate(p.date) + ': ' + fmtMoney(p.value); }).join('   ·   ');
+  det.appendChild(list);
+  var btn = document.createElement('button');
+  btn.type = 'button'; btn.className = 'b-btn-outline'; btn.textContent = 'Record Valuation';
+  det.appendChild(btn);
+  return det;
+}
+
+function bBuildLiabilityDetail(liabClass, liability) {
+  var det = document.createElement('div');
+  det.className = 'b-detail';
+  det.appendChild(bDetailRow('Balance', fmtMoney(-liability.balance) + '  (' + fmtDate(liability.recordedAt) + ')'));
+  if (liability.amortization) {
+    var am = liability.amortization;
+    det.appendChild(bDetailRow('Rate', (am.rate * 100).toFixed(2) + '%'));
+    det.appendChild(bDetailRow('Original', fmtMoney(am.original)));
+    det.appendChild(bDetailRow('Term', am.termMonths + ' months'));
+    det.appendChild(bDetailRow('Extra payment', fmtMoney(am.extra) + '/mo'));
+    var info = computeAmortizationInfo(liability);
+    det.appendChild(bDetailRow('Projected payoff', String(info.payoffYear)));
+  }
+  var sparkWrap = document.createElement('div');
+  sparkWrap.className = 'b-sparkline-wrap';
+  sparkWrap.innerHTML = bSparklineSVG(liability.history);
+  det.appendChild(sparkWrap);
+  return det;
+}
+
+function bBuildLiabilityClassDetail(liabClass) {
+  var det = document.createElement('div');
+  det.className = 'b-detail';
+  det.appendChild(bDetailRow('Total', fmtMoney(-liabClassTotal(liabClass))));
+  liabClass.liabilities.forEach(function (l) {
+    det.appendChild(bDetailRow(l.name, fmtMoney(-l.balance) + '  (' + fmtDate(l.recordedAt) + ')'));
+  });
+  return det;
+}
+
+function bBuildOutline() {
+  var outline = document.createElement('div');
+  outline.className = 'b-outline';
+
+  DATA.assetClasses.forEach(function (cls) {
+    var total = classTotal(cls);
+    var pct = DERIVED.holdingsTotal ? total / DERIVED.holdingsTotal * 100 : 0;
+    var expanded = bState.expandedClasses.has(cls.id);
+    var isSelected = bState.selected && bState.selected.type === 'class' && bState.selected.classId === cls.id;
+    outline.appendChild(bRow({
+      levelClass: 'b-level-1',
+      chevronState: expanded ? 'expanded' : 'collapsed',
+      label: cls.name,
+      meta: fmtMoney(total) + '   ' + fmtPct(pct),
+      selected: isSelected,
+      onToggle: function () { if (expanded) bState.expandedClasses.delete(cls.id); else bState.expandedClasses.add(cls.id); bRerender(); },
+      onSelect: function () { bToggleSelect({ type: 'class', classId: cls.id }); }
+    }));
+    if (isSelected) outline.appendChild(bBuildClassDetail(cls));
+    if (expanded) {
+      cls.holdings.forEach(function (h) {
+        var hSelected = bState.selected && bState.selected.type === 'holding' && bState.selected.classId === cls.id && bState.selected.holdingId === h.id;
+        outline.appendChild(bRow({
+          levelClass: 'b-level-2',
+          label: h.name,
+          meta: fmtMoney(h.valuation),
+          selected: hSelected,
+          onSelect: function () { bToggleSelect({ type: 'holding', classId: cls.id, holdingId: h.id }); }
+        }));
+        if (hSelected) outline.appendChild(bBuildHoldingDetail(cls, h));
+        if (h.id === 'house') {
+          var link = findLinkedLiability(h.id);
+          if (link) {
+            var lSelected = bState.selected && bState.selected.type === 'liability' && bState.selected.liabilityId === link.liability.id;
+            outline.appendChild(bRow({
+              levelClass: 'b-level-3',
+              liability: true,
+              label: link.liability.name,
+              meta: fmtMoney(-link.liability.balance),
+              selected: lSelected,
+              onSelect: function () { bToggleSelect({ type: 'liability', liabClassId: link.liabilityClass.id, liabilityId: link.liability.id }); }
+            }));
+            if (lSelected) outline.appendChild(bBuildLiabilityDetail(link.liabilityClass, link.liability));
+            var netRow = document.createElement('div');
+            netRow.className = 'b-net-position';
+            netRow.textContent = 'Net position ' + fmtMoney(h.valuation - link.liability.balance);
+            outline.appendChild(netRow);
+          }
+        }
+      });
+    }
+  });
+
+  var divider = document.createElement('div');
+  divider.className = 'b-group-divider';
+  outline.appendChild(divider);
+
+  var groupTitleRow = document.createElement('div');
+  groupTitleRow.className = 'b-row b-level-1';
+  var gChev = document.createElement('span');
+  gChev.className = 'b-chevron';
+  gChev.textContent = bState.liabilitiesGroupExpanded ? '▾' : '▸';
+  groupTitleRow.appendChild(gChev);
+  var gLabel = document.createElement('span');
+  gLabel.className = 'b-label';
+  gLabel.textContent = 'Liabilities';
+  groupTitleRow.appendChild(gLabel);
+  var gMeta = document.createElement('span');
+  gMeta.className = 'b-meta';
+  var residualTotal = DATA.liabilityClasses.filter(function (lc) { return lc.id !== 'mortgage'; }).reduce(function (s, lc) { return s + liabClassTotal(lc); }, 0);
+  gMeta.textContent = fmtMoney(-residualTotal);
+  groupTitleRow.appendChild(gMeta);
+  onActivate(groupTitleRow, function () { bState.liabilitiesGroupExpanded = !bState.liabilitiesGroupExpanded; bRerender(); });
+  outline.appendChild(groupTitleRow);
+
+  if (bState.liabilitiesGroupExpanded) {
+    DATA.liabilityClasses.filter(function (lc) { return lc.id !== 'mortgage'; }).forEach(function (lc) {
+      var expanded = bState.expandedLiabClasses.has(lc.id);
+      var isSelected = bState.selected && bState.selected.type === 'liabilityClass' && bState.selected.liabClassId === lc.id;
+      outline.appendChild(bRow({
+        levelClass: 'b-level-2',
+        liability: true,
+        chevronState: expanded ? 'expanded' : 'collapsed',
+        label: lc.name,
+        meta: fmtMoney(-liabClassTotal(lc)),
+        selected: isSelected,
+        onToggle: function () { if (expanded) bState.expandedLiabClasses.delete(lc.id); else bState.expandedLiabClasses.add(lc.id); bRerender(); },
+        onSelect: function () { bToggleSelect({ type: 'liabilityClass', liabClassId: lc.id }); }
+      }));
+      if (isSelected) outline.appendChild(bBuildLiabilityClassDetail(lc));
+      if (expanded) {
+        lc.liabilities.forEach(function (l) {
+          var lSelected = bState.selected && bState.selected.type === 'liability' && bState.selected.liabClassId === lc.id && bState.selected.liabilityId === l.id;
+          outline.appendChild(bRow({
+            levelClass: 'b-level-3',
+            liability: true,
+            label: l.name,
+            meta: fmtMoney(-l.balance),
+            selected: lSelected,
+            onSelect: function () { bToggleSelect({ type: 'liability', liabClassId: lc.id, liabilityId: l.id }); }
+          }));
+          if (lSelected) outline.appendChild(bBuildLiabilityDetail(lc, l));
+        });
+      }
+    });
+  }
+
+  return outline;
+}
+
+function bRerender() {
+  bRootEl.innerHTML = '';
+  var wordmark = document.createElement('div');
+  wordmark.className = 'b-wordmark';
+  wordmark.textContent = 'FinAsset 360';
+  bRootEl.appendChild(wordmark);
+  bRootEl.appendChild(bBuildDashboard());
+  bRootEl.appendChild(bBuildOutline());
+}
+
+/* ============================================================
+   VARIANT C · Columns — Miller columns, Liabilities as own
+   branch AND surfaced on the linked Holding, table+inline-bars
+   chart. Own DOM, own state.
+   ============================================================ */
+var cState = null;
+var cRootEl = null;
+
+function renderC(root) {
+  cRootEl = root;
+  cState = { path: [] };
+  cRerender();
+}
+
+function cRow(opts) {
+  var row = document.createElement('div');
+  row.className = 'c-row' + (opts.selected ? ' is-selected' : '') + (opts.liability ? ' c-liability' : '');
+  var label = document.createElement('span');
+  label.className = 'c-label'; label.textContent = opts.label;
+  row.appendChild(label);
+  var meta = document.createElement('span');
+  meta.className = 'c-meta'; meta.textContent = opts.meta || '';
+  row.appendChild(meta);
+  if (opts.hasChildren) {
+    var chev = document.createElement('span');
+    chev.className = 'c-chevron-right'; chev.textContent = '›';
+    row.appendChild(chev);
+  }
+  onActivate(row, opts.onSelect);
+  return row;
+}
+
+function cBuildBreadcrumb() {
+  var bar = document.createElement('div');
+  bar.className = 'c-breadcrumb';
+  var path = cState.path;
+  var segs = [{ label: 'Portfolio', depth: 0 }];
+  if (path[0]) {
+    var label0 = path[0].kind === 'class' ? findAssetClass(path[0].id).name : 'Liabilities';
+    segs.push({ label: label0, depth: 1 });
+  }
+  if (path[1]) {
+    var label1;
+    if (path[1].kind === 'holding') label1 = findHoldingIn(findAssetClass(path[0].id), path[1].id).name;
+    else label1 = findLiabilityClass(path[1].id).name;
+    segs.push({ label: label1, depth: 2 });
+  }
+  if (path[2]) {
+    var label2 = findLiabilityIn(findLiabilityClass(path[1].id), path[2].id).name;
+    segs.push({ label: label2, depth: 3 });
+  }
+  segs.forEach(function (s, i) {
+    if (i > 0) {
+      var sep = document.createElement('span'); sep.className = 'sep'; sep.textContent = '›';
+      bar.appendChild(sep);
+    }
+    var btn = document.createElement('button');
+    btn.type = 'button';
+    btn.textContent = s.label;
+    onActivate(btn, function () { cState.path = cState.path.slice(0, s.depth); cRerender(); });
+    bar.appendChild(btn);
+  });
+  return bar;
+}
+
+function cBuildCol1() {
+  var col = document.createElement('div');
+  col.className = 'c-col';
+  var path = cState.path;
+  DATA.assetClasses.forEach(function (cls) {
+    var selected = path[0] && path[0].kind === 'class' && path[0].id === cls.id;
+    col.appendChild(cRow({
+      label: cls.name,
+      meta: fmtMoney(classTotal(cls)),
+      hasChildren: true,
+      selected: selected,
+      onSelect: function () { cState.path = [{ kind: 'class', id: cls.id }]; cRerender(); }
+    }));
+  });
+  var gap = document.createElement('div'); gap.className = 'c-gap';
+  col.appendChild(gap);
+  var liabSelected = path[0] && path[0].kind === 'liabilities';
+  col.appendChild(cRow({
+    label: 'Liabilities',
+    meta: fmtMoney(-DERIVED.liabilitiesTotal),
+    hasChildren: true,
+    liability: true,
+    selected: liabSelected,
+    onSelect: function () { cState.path = [{ kind: 'liabilities' }]; cRerender(); }
+  }));
+  return col;
+}
+
+function cBuildCol2() {
+  var col = document.createElement('div');
+  col.className = 'c-col';
+  var path = cState.path;
+  if (path[0].kind === 'class') {
+    var cls = findAssetClass(path[0].id);
+    cls.holdings.forEach(function (h) {
+      var selected = path[1] && path[1].kind === 'holding' && path[1].id === h.id;
+      col.appendChild(cRow({
+        label: h.name,
+        meta: fmtMoney(h.valuation),
+        hasChildren: false,
+        selected: selected,
+        onSelect: function () { cState.path = [path[0], { kind: 'holding', classId: cls.id, id: h.id }]; cRerender(); }
+      }));
+    });
+  } else {
+    DATA.liabilityClasses.forEach(function (lc) {
+      var selected = path[1] && path[1].kind === 'liabilityClass' && path[1].id === lc.id;
+      col.appendChild(cRow({
+        label: lc.name,
+        meta: fmtMoney(-liabClassTotal(lc)),
+        hasChildren: true,
+        liability: true,
+        selected: selected,
+        onSelect: function () { cState.path = [path[0], { kind: 'liabilityClass', id: lc.id }]; cRerender(); }
+      }));
+    });
+  }
+  return col;
+}
+
+function cBuildCol3() {
+  var col = document.createElement('div');
+  col.className = 'c-col';
+  var path = cState.path;
+  var lc = findLiabilityClass(path[1].id);
+  lc.liabilities.forEach(function (l) {
+    var selected = path[2] && path[2].id === l.id;
+    col.appendChild(cRow({
+      label: l.name,
+      meta: fmtMoney(-l.balance),
+      hasChildren: false,
+      liability: true,
+      selected: selected,
+      onSelect: function () { cState.path = [path[0], path[1], { kind: 'liability', liabClassId: lc.id, id: l.id }]; cRerender(); }
+    }));
+  });
+  return col;
+}
+
+function cSectionTitle(text) {
+  var t = document.createElement('div');
+  t.className = 'c-section-title';
+  t.textContent = text;
+  return t;
+}
+function cDetailRow(label, value) {
+  var row = document.createElement('div');
+  row.className = 'c-detail-row';
+  var l = document.createElement('span'); l.className = 'label'; l.textContent = label;
+  var v = document.createElement('span'); v.textContent = value;
+  row.appendChild(l); row.appendChild(v);
+  return row;
+}
+
+function cProjectionSVG(series) {
+  var w = 600, h = 68, padL = 2, padR = 2, padT = 8, padB = 14;
+  var ys = series.map(function (p) { return p.value; });
+  var minY = Math.min.apply(null, ys), maxY = Math.max.apply(null, ys);
+  function x(year) { return padL + (year / 20) * (w - padL - padR); }
+  function y(val) { return h - padB - ((val - minY) / ((maxY - minY) || 1)) * (h - padT - padB); }
+  var pts = series.map(function (p) { return x(p.year) + ',' + y(p.value); }).join(' ');
+  var last = series[series.length - 1];
+  return '<svg viewBox="0 0 ' + w + ' ' + h + '" width="100%" height="' + h + '" preserveAspectRatio="none" role="img" aria-label="Net worth projection over 20 years">' +
+    '<line x1="' + padL + '" y1="' + (h - padB) + '" x2="' + (w - padR) + '" y2="' + (h - padB) + '" style="stroke:var(--border);stroke-width:1"></line>' +
+    '<polyline points="' + pts + '" style="fill:none;stroke:var(--accent);stroke-width:1.5"></polyline>' +
+    '<circle cx="' + x(last.year) + '" cy="' + y(last.value) + '" r="2.5" style="fill:var(--accent)"></circle>' +
+    '</svg>';
+}
+function cSparklineSVG(history) {
+  var w = 300, h = 42, pad = 4;
+  var vals = history.map(function (p) { return p.value; });
+  var minV = Math.min.apply(null, vals), maxV = Math.max.apply(null, vals);
+  function x(i) { return pad + (i / (history.length - 1)) * (w - pad * 2); }
+  function y(v) { return h - pad - ((v - minV) / ((maxV - minV) || 1)) * (h - pad * 2); }
+  var pts = history.map(function (p, i) { return x(i) + ',' + y(p.value); }).join(' ');
+  var last = history[history.length - 1];
+  return '<svg viewBox="0 0 ' + w + ' ' + h + '" width="100%" height="' + h + '" preserveAspectRatio="none" role="img" aria-label="Valuation history">' +
+    '<polyline points="' + pts + '" style="fill:none;stroke:var(--accent);stroke-width:1.5"></polyline>' +
+    '<circle cx="' + x(history.length - 1) + '" cy="' + y(last.value) + '" r="2.5" style="fill:var(--accent)"></circle>' +
+    '</svg>';
+}
+
+function cRenderHistorySection(container, history) {
+  container.appendChild(cSectionTitle('Valuation History'));
+  var wrap = document.createElement('div');
+  wrap.innerHTML = cSparklineSVG(history);
+  container.appendChild(wrap);
+  var list = document.createElement('div');
+  list.style.fontSize = '12px'; list.style.color = 'var(--text-muted)'; list.style.marginTop = '6px';
+  list.textContent = history.slice().reverse().map(function (p) { return fmtDate(p.date) + ': ' + fmtMoney(p.value); }).join('   ·   ');
+  container.appendChild(list);
+}
+
+function cBuildDashboard(container) {
+  var headline = document.createElement('div'); headline.className = 'c-headline'; headline.textContent = fmtMoney(DERIVED.netWorth);
+  container.appendChild(headline);
+  var sub1 = document.createElement('div'); sub1.className = 'c-subline';
+  sub1.textContent = 'Holdings ' + fmtMoney(DERIVED.holdingsTotal) + ' − Liabilities ' + fmtMoney(DERIVED.liabilitiesTotal);
+  container.appendChild(sub1);
+  var sub2 = document.createElement('div'); sub2.className = 'c-subline'; sub2.textContent = 'as of ' + fmtDate(DERIVED.mostRecent);
+  container.appendChild(sub2);
+
+  container.appendChild(cSectionTitle('Target vs Actual'));
+  var table = document.createElement('table');
+  table.className = 'c-alloc-table';
+  var thead = document.createElement('thead');
+  thead.innerHTML = '<tr><th>Asset Class</th><th class="num">Actual</th><th></th><th class="num">Target</th><th class="num">Δ</th></tr>';
+  table.appendChild(thead);
+  var tbody = document.createElement('tbody');
+  var rows = DERIVED.distribution.map(function (d) { return { d: d, delta: d.actualPct - d.targetPct }; });
+  rows.sort(function (a, b) { return Math.abs(b.delta) - Math.abs(a.delta); });
+  rows.forEach(function (r) {
+    var tr = document.createElement('tr');
+    var tdName = document.createElement('td'); tdName.textContent = r.d.name;
+    var tdActual = document.createElement('td'); tdActual.className = 'num'; tdActual.textContent = fmtPct(r.d.actualPct);
+    var tdBar = document.createElement('td');
+    var track = document.createElement('span'); track.className = 'c-inline-bar-track';
+    var fill = document.createElement('span'); fill.className = 'c-inline-bar-fill'; fill.style.width = Math.min(100, r.d.actualPct) + '%';
+    track.appendChild(fill); tdBar.appendChild(track);
+    var tdTarget = document.createElement('td'); tdTarget.className = 'num'; tdTarget.textContent = r.d.targetPct + '%';
+    var tdDelta = document.createElement('td'); tdDelta.className = 'num c-delta-pos';
+    tdDelta.textContent = (r.delta >= 0 ? '+' : '−') + Math.abs(r.delta).toFixed(1);
+    tr.appendChild(tdName); tr.appendChild(tdActual); tr.appendChild(tdBar); tr.appendChild(tdTarget); tr.appendChild(tdDelta);
+    tbody.appendChild(tr);
+  });
+  var trTotal = document.createElement('tr'); trTotal.className = 'c-total-row';
+  var tdN = document.createElement('td'); tdN.textContent = 'Total';
+  var tdA = document.createElement('td'); tdA.className = 'num'; tdA.textContent = '100.0%';
+  var tdB = document.createElement('td');
+  var tdT = document.createElement('td'); tdT.className = 'num'; tdT.textContent = '100%';
+  var tdD = document.createElement('td'); tdD.className = 'num'; tdD.textContent = '0.0';
+  trTotal.appendChild(tdN); trTotal.appendChild(tdA); trTotal.appendChild(tdB); trTotal.appendChild(tdT); trTotal.appendChild(tdD);
+  tbody.appendChild(trTotal);
+  table.appendChild(tbody);
+  container.appendChild(table);
+
+  container.appendChild(cSectionTitle('Projection'));
+  var projWrap = document.createElement('div');
+  projWrap.innerHTML = cProjectionSVG(DERIVED.projectionSeries);
+  container.appendChild(projWrap);
+  var note = document.createElement('div'); note.className = 'c-subline'; note.style.marginTop = '6px';
+  var y20 = DERIVED.projectionSeries[DERIVED.projectionSeries.length - 1];
+  note.textContent = '6.0% growth · 1,500/mo · 20 yrs — year 20: ' + fmtMoney(y20.value);
+  container.appendChild(note);
+}
+
+function cBuildClassView(container, cls) {
+  var total = classTotal(cls);
+  var pct = DERIVED.holdingsTotal ? total / DERIVED.holdingsTotal * 100 : 0;
+  var targetPct = DATA.targetAllocation[cls.id] || 0;
+  var headline = document.createElement('div'); headline.className = 'c-headline'; headline.textContent = fmtMoney(total);
+  container.appendChild(headline);
+  var sub = document.createElement('div'); sub.className = 'c-subline'; sub.textContent = 'share of Portfolio ' + fmtPct(pct) + ' · target ' + targetPct + '%';
+  container.appendChild(sub);
+  container.appendChild(cSectionTitle('Holdings'));
+  var table = document.createElement('table'); table.className = 'c-alloc-table';
+  var thead = document.createElement('thead');
+  thead.innerHTML = '<tr><th>Holding</th><th class="num">Valuation</th><th class="num">As of</th><th>Live Estimate</th></tr>';
+  table.appendChild(thead);
+  var tbody = document.createElement('tbody');
+  cls.holdings.forEach(function (h) {
+    var tr = document.createElement('tr');
+    var tdN = document.createElement('td'); tdN.textContent = h.name;
+    var tdV = document.createElement('td'); tdV.className = 'num'; tdV.textContent = fmtMoney(h.valuation);
+    var tdD = document.createElement('td'); tdD.className = 'num'; tdD.textContent = fmtDate(h.recordedAt);
+    var tdL = document.createElement('td'); tdL.style.color = 'var(--text-muted)';
+    if (h.live) {
+      tdL.textContent = fmtMoney(h.liveEstimate) + ' ';
+      var tag = document.createElement('span'); tag.className = 'c-live-tag'; tag.textContent = 'live';
+      tdL.appendChild(tag);
+    } else { tdL.textContent = '—'; }
+    tr.appendChild(tdN); tr.appendChild(tdV); tr.appendChild(tdD); tr.appendChild(tdL);
+    tbody.appendChild(tr);
+  });
+  table.appendChild(tbody);
+  container.appendChild(table);
+}
+
+function cBuildHoldingView(container, cls, holding) {
+  var headline = document.createElement('div'); headline.className = 'c-headline'; headline.textContent = fmtMoney(holding.valuation);
+  container.appendChild(headline);
+  var sub = document.createElement('div'); sub.className = 'c-subline'; sub.textContent = 'as of ' + fmtDate(holding.recordedAt);
+  container.appendChild(sub);
+  if (holding.live) {
+    var lv = document.createElement('div'); lv.className = 'c-subline'; lv.textContent = 'Live Estimate ' + fmtMoney(holding.liveEstimate) + ' — not a Valuation';
+    container.appendChild(lv);
+  }
+  if (holding.id === 'house') {
+    var link = findLinkedLiability(holding.id);
+    if (link) {
+      container.appendChild(cSectionTitle('Linked Liability'));
+      container.appendChild(cDetailRow(link.liability.name, fmtMoney(-link.liability.balance)));
+      container.appendChild(cSectionTitle('Projected Net Position'));
+      container.appendChild(cDetailRow('Today', fmtMoney(DERIVED.netPositionSeries[0].netPosition)));
+      container.appendChild(cDetailRow('Year 20', fmtMoney(DERIVED.netPositionSeries[DERIVED.netPositionSeries.length - 1].netPosition)));
+    }
+  }
+  cRenderHistorySection(container, holding.history);
+  var btn = document.createElement('button'); btn.type = 'button'; btn.className = 'c-btn-outline'; btn.textContent = 'Record Valuation';
+  container.appendChild(btn);
+}
+
+function cBuildLiabilitiesOverview(container) {
+  var headline = document.createElement('div'); headline.className = 'c-headline'; headline.style.color = 'var(--liability)'; headline.textContent = fmtMoney(-DERIVED.liabilitiesTotal);
+  container.appendChild(headline);
+  var sub = document.createElement('div'); sub.className = 'c-subline'; sub.textContent = 'as of ' + fmtDate(DERIVED.mostRecent);
+  container.appendChild(sub);
+  container.appendChild(cSectionTitle('Liability Classes'));
+  var table = document.createElement('table'); table.className = 'c-alloc-table';
+  var thead = document.createElement('thead');
+  thead.innerHTML = '<tr><th>Liability Class</th><th class="num">Balance</th></tr>';
+  table.appendChild(thead);
+  var tbody = document.createElement('tbody');
+  DATA.liabilityClasses.forEach(function (lc) {
+    var tr = document.createElement('tr');
+    var tdN = document.createElement('td'); tdN.textContent = lc.name;
+    var tdV = document.createElement('td'); tdV.className = 'num'; tdV.style.color = 'var(--liability)'; tdV.textContent = fmtMoney(-liabClassTotal(lc));
+    tr.appendChild(tdN); tr.appendChild(tdV);
+    tbody.appendChild(tr);
+  });
+  table.appendChild(tbody);
+  container.appendChild(table);
+}
+
+function cBuildLiabilityClassView(container, lc) {
+  var total = liabClassTotal(lc);
+  var headline = document.createElement('div'); headline.className = 'c-headline'; headline.style.color = 'var(--liability)'; headline.textContent = fmtMoney(-total);
+  container.appendChild(headline);
+  container.appendChild(cSectionTitle('Liabilities'));
+  var table = document.createElement('table'); table.className = 'c-alloc-table';
+  var thead = document.createElement('thead');
+  thead.innerHTML = '<tr><th>Liability</th><th class="num">Balance</th><th class="num">As of</th></tr>';
+  table.appendChild(thead);
+  var tbody = document.createElement('tbody');
+  lc.liabilities.forEach(function (l) {
+    var tr = document.createElement('tr');
+    var tdN = document.createElement('td'); tdN.textContent = l.name;
+    var tdV = document.createElement('td'); tdV.className = 'num'; tdV.style.color = 'var(--liability)'; tdV.textContent = fmtMoney(-l.balance);
+    var tdD = document.createElement('td'); tdD.className = 'num'; tdD.textContent = fmtDate(l.recordedAt);
+    tr.appendChild(tdN); tr.appendChild(tdV); tr.appendChild(tdD);
+    tbody.appendChild(tr);
+  });
+  table.appendChild(tbody);
+  container.appendChild(table);
+}
+
+function cBuildLiabilityView(container, lc, liability) {
+  var headline = document.createElement('div'); headline.className = 'c-headline'; headline.style.color = 'var(--liability)'; headline.textContent = fmtMoney(-liability.balance);
+  container.appendChild(headline);
+  var sub = document.createElement('div'); sub.className = 'c-subline'; sub.textContent = 'as of ' + fmtDate(liability.recordedAt);
+  container.appendChild(sub);
+  if (liability.amortization) {
+    container.appendChild(cSectionTitle('Amortization Assumptions'));
+    var am = liability.amortization;
+    container.appendChild(cDetailRow('Rate', (am.rate * 100).toFixed(2) + '%'));
+    container.appendChild(cDetailRow('Original', fmtMoney(am.original)));
+    container.appendChild(cDetailRow('Term', am.termMonths + ' months'));
+    container.appendChild(cDetailRow('Extra payment', fmtMoney(am.extra) + '/mo'));
+    var info = computeAmortizationInfo(liability);
+    container.appendChild(cDetailRow('Projected payoff', String(info.payoffYear)));
+  }
+  cRenderHistorySection(container, liability.history);
+}
+
+function cBuildDetail() {
+  var panel = document.createElement('div');
+  panel.className = 'c-col-detail';
+  var path = cState.path;
+  if (path.length === 0) {
+    cBuildDashboard(panel);
+  } else if (path[0].kind === 'class' && path.length === 1) {
+    cBuildClassView(panel, findAssetClass(path[0].id));
+  } else if (path[0].kind === 'class' && path.length === 2) {
+    var cls = findAssetClass(path[0].id);
+    cBuildHoldingView(panel, cls, findHoldingIn(cls, path[1].id));
+  } else if (path[0].kind === 'liabilities' && path.length === 1) {
+    cBuildLiabilitiesOverview(panel);
+  } else if (path[0].kind === 'liabilities' && path.length === 2) {
+    cBuildLiabilityClassView(panel, findLiabilityClass(path[1].id));
+  } else if (path[0].kind === 'liabilities' && path.length === 3) {
+    var lc = findLiabilityClass(path[1].id);
+    cBuildLiabilityView(panel, lc, findLiabilityIn(lc, path[2].id));
+  }
+  return panel;
+}
+
+function cRerender() {
+  cRootEl.innerHTML = '';
+  var wordmark = document.createElement('div');
+  wordmark.className = 'c-wordmark'; wordmark.textContent = 'FinAsset 360';
+  cRootEl.appendChild(wordmark);
+  cRootEl.appendChild(cBuildBreadcrumb());
+  var cols = document.createElement('div');
+  cols.className = 'c-columns';
+  cols.appendChild(cBuildCol1());
+  var path = cState.path;
+  if (path.length >= 1) cols.appendChild(cBuildCol2());
+  if (path.length >= 2 && path[0].kind === 'liabilities') cols.appendChild(cBuildCol3());
+  cols.appendChild(cBuildDetail());
+  cRootEl.appendChild(cols);
+}
+
+/* ============================================================
+   VARIANT D · Proposal — persistent sidebar tree (own DOM,
+   mutated in place so expand/collapse and the selection bar can
+   animate), joined recorded/projected timeline, money gaps to
+   Target Allocation, quiet staleness, a "why this design" panel.
+   Shares only data/math/formatters/onActivate with A/B/C.
+   ============================================================ */
+var dState = null;
+var dRootEl = null;
+var dTreeEl = null;
+var dMainEl = null;
+var dPanelEl = null;
+var dScrimEl = null;
+var dBarsDrawnOnce = false;
+var dTimelineDrawnOnce = false;
+
+function dReducedMotion() {
+  try { return !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches); }
+  catch (e) { return false; }
+}
+
+function dDaysAgo(iso) {
+  var rec = new Date(iso + 'T00:00:00');
+  var today = new Date(DATA.today + 'T00:00:00');
+  return Math.round((today.getTime() - rec.getTime()) / 86400000);
+}
+function dIsStale(iso) { return dDaysAgo(iso) > 30; }
+
+function dFmtCompact(n, decimals) {
+  if (decimals === undefined) decimals = 1;
+  if (n === 0) return '0';
+  var abs = Math.abs(n);
+  if (abs >= 1000000) return (n / 1000000).toFixed(decimals) + 'M';
+  if (abs >= 1000) return Math.round(n / 1000) + 'K';
+  return String(Math.round(n));
+}
+function dFmtMonthShort(iso) {
+  var d = new Date(iso + 'T00:00:00');
+  return d.toLocaleDateString('en-US', { month: 'short' }) + ' ' + String(d.getFullYear()).slice(2);
+}
+
+/* ---------- selection keys / model ---------- */
+function dSelKey(sel) {
+  if (!sel) return '';
+  if (sel.type === 'portfolio') return 'portfolio';
+  if (sel.type === 'class') return 'class:' + sel.classId;
+  if (sel.type === 'holding') return 'holding:' + sel.classId + ':' + sel.holdingId;
+  if (sel.type === 'liabilityRoot') return 'liabilityRoot';
+  if (sel.type === 'liabilityClass') return 'liabilityClass:' + sel.liabClassId;
+  if (sel.type === 'liability') return 'liability:' + sel.liabClassId + ':' + sel.liabilityId;
+  return '';
+}
+
+function dVisibleRows() {
+  var rows = [];
+  rows.push({ key: 'portfolio', sel: { type: 'portfolio' }, parentKey: null, expandable: false });
+  DATA.assetClasses.forEach(function (cls) {
+    var key = 'class:' + cls.id;
+    var expanded = dState.expandedClasses.has(cls.id);
+    rows.push({ key: key, sel: { type: 'class', classId: cls.id }, parentKey: 'portfolio', expandable: true, expanded: expanded });
+    if (expanded) {
+      cls.holdings.forEach(function (h) {
+        rows.push({ key: 'holding:' + cls.id + ':' + h.id, sel: { type: 'holding', classId: cls.id, holdingId: h.id }, parentKey: key, expandable: false });
+      });
+    }
+  });
+  var lrExpanded = dState.liabilitiesExpanded;
+  rows.push({ key: 'liabilityRoot', sel: { type: 'liabilityRoot' }, parentKey: null, expandable: true, expanded: lrExpanded });
+  if (lrExpanded) {
+    DATA.liabilityClasses.forEach(function (lc) {
+      var lckey = 'liabilityClass:' + lc.id;
+      var lcExpanded = dState.expandedLiabClasses.has(lc.id);
+      rows.push({ key: lckey, sel: { type: 'liabilityClass', liabClassId: lc.id }, parentKey: 'liabilityRoot', expandable: true, expanded: lcExpanded });
+      if (lcExpanded) {
+        lc.liabilities.forEach(function (l) {
+          rows.push({ key: 'liability:' + lc.id + ':' + l.id, sel: { type: 'liability', liabClassId: lc.id, liabilityId: l.id }, parentKey: lckey, expandable: false });
+        });
+      }
+    });
+  }
+  return rows;
+}
+
+/* ---------- height animation for expand/collapse ---------- */
+function dAnimateHeight(el, expand, onDone) {
+  if (dReducedMotion()) {
+    el.style.height = expand ? 'auto' : '0px';
+    if (onDone) onDone();
+    return;
+  }
+  if (expand) {
+    var target = el.scrollHeight;
+    el.style.height = '0px';
+    void el.offsetHeight;
+    el.style.height = target + 'px';
+    var h1 = function (ev) {
+      if (ev.target === el && ev.propertyName === 'height') {
+        el.style.height = 'auto';
+        el.removeEventListener('transitionend', h1);
+        if (onDone) onDone();
+      }
+    };
+    el.addEventListener('transitionend', h1);
+  } else {
+    var current = el.scrollHeight;
+    el.style.height = current + 'px';
+    void el.offsetHeight;
+    el.style.height = '0px';
+    var h2 = function (ev) {
+      if (ev.target === el && ev.propertyName === 'height') {
+        el.removeEventListener('transitionend', h2);
+        if (onDone) onDone();
+      }
+    };
+    el.addEventListener('transitionend', h2);
+  }
+}
+
+function dQueryKey(key) { return dTreeEl.querySelector('[data-key="' + key + '"]'); }
+function dQueryChildrenFor(key) { return dTreeEl.querySelector('[data-children-for="' + key + '"]'); }
+
+function dSetGroupExpanded(key, expanding, set, id) {
+  if (set) { if (expanding) set.add(id); else set.delete(id); }
+  var rowEl = dQueryKey(key);
+  if (rowEl) {
+    var chev = rowEl.querySelector('.d-chevron');
+    if (chev) chev.classList.toggle('is-expanded', expanding);
+    rowEl.setAttribute('aria-expanded', expanding ? 'true' : 'false');
+  }
+  var childrenWrap = dQueryChildrenFor(key);
+  if (childrenWrap) dAnimateHeight(childrenWrap, expanding, function () { dRepositionIndicator(); });
+}
+
+function dToggleClass(classId) { dSetGroupExpanded('class:' + classId, !dState.expandedClasses.has(classId), dState.expandedClasses, classId); }
+function dToggleLiabClass(lcId) { dSetGroupExpanded('liabilityClass:' + lcId, !dState.expandedLiabClasses.has(lcId), dState.expandedLiabClasses, lcId); }
+function dToggleLiabilityRoot() { var expanding = !dState.liabilitiesExpanded; dState.liabilitiesExpanded = expanding; dSetGroupExpanded('liabilityRoot', expanding, null, null); }
+
+function dExpandIfCollapsed(key) {
+  if (key.indexOf('class:') === 0) { var id = key.slice(6); if (!dState.expandedClasses.has(id)) dToggleClass(id); }
+  else if (key === 'liabilityRoot') { if (!dState.liabilitiesExpanded) dToggleLiabilityRoot(); }
+  else if (key.indexOf('liabilityClass:') === 0) { var id2 = key.slice(15); if (!dState.expandedLiabClasses.has(id2)) dToggleLiabClass(id2); }
+}
+function dCollapseIfExpanded(key) {
+  if (key.indexOf('class:') === 0) { var id = key.slice(6); if (dState.expandedClasses.has(id)) dToggleClass(id); }
+  else if (key === 'liabilityRoot') { if (dState.liabilitiesExpanded) dToggleLiabilityRoot(); }
+  else if (key.indexOf('liabilityClass:') === 0) { var id2 = key.slice(15); if (dState.expandedLiabClasses.has(id2)) dToggleLiabClass(id2); }
+}
+
+/* ---------- ensure a target node's ancestors are expanded ---------- */
+function dEnsureVisible(sel) {
+  var didExpand = false;
+  if (sel.type === 'holding') { if (!dState.expandedClasses.has(sel.classId)) { dToggleClass(sel.classId); didExpand = true; } }
+  else if (sel.type === 'liabilityClass') { if (!dState.liabilitiesExpanded) { dToggleLiabilityRoot(); didExpand = true; } }
+  else if (sel.type === 'liability') {
+    if (!dState.liabilitiesExpanded) { dToggleLiabilityRoot(); didExpand = true; }
+    if (!dState.expandedLiabClasses.has(sel.liabClassId)) { dToggleLiabClass(sel.liabClassId); didExpand = true; }
+  }
+  return didExpand;
+}
+
+/* ---------- selection indicator ---------- */
+function dRepositionIndicator() {
+  if (!dTreeEl || !document.body.contains(dTreeEl)) return;
+  var indicator = dTreeEl.querySelector('.d-indicator');
+  if (!indicator) return;
+  var key = dSelKey(dState.selected);
+  var rowEl = dQueryKey(key);
+  if (!rowEl) { indicator.style.opacity = '0'; return; }
+  indicator.style.opacity = '1';
+  var treeRect = dTreeEl.getBoundingClientRect();
+  var rowRect = rowEl.getBoundingClientRect();
+  var top = rowRect.top - treeRect.top + dTreeEl.scrollTop;
+  indicator.style.transform = 'translateY(' + top + 'px)';
+}
+
+/* ---------- selection ---------- */
+function dSelect(sel) {
+  var prevKey = dSelKey(dState.selected);
+  var expandedSomething = dEnsureVisible(sel);
+  dState.selected = sel;
+  var newKey = dSelKey(sel);
+  if (prevKey !== newKey) {
+    var prevEl = dQueryKey(prevKey);
+    if (prevEl) { prevEl.classList.remove('is-selected'); prevEl.setAttribute('aria-selected', 'false'); }
+  }
+  var newEl = dQueryKey(newKey);
+  if (newEl) {
+    newEl.classList.add('is-selected');
+    newEl.setAttribute('aria-selected', 'true');
+    newEl.scrollIntoView({ block: 'nearest' });
+  }
+  if (!expandedSomething) dRepositionIndicator();
+  dRenderMain();
+}
+
+function dSelectAndMaybeExpandClass(classId) { if (!dState.expandedClasses.has(classId)) dToggleClass(classId); dSelect({ type: 'class', classId: classId }); }
+function dSelectAndMaybeExpandLiabilityRoot() { if (!dState.liabilitiesExpanded) dToggleLiabilityRoot(); dSelect({ type: 'liabilityRoot' }); }
+function dSelectAndMaybeExpandLiabClass(lcId) { if (!dState.expandedLiabClasses.has(lcId)) dToggleLiabClass(lcId); dSelect({ type: 'liabilityClass', liabClassId: lcId }); }
+
+/* ---------- sidebar row builder ---------- */
+function dRowEl(opts) {
+  var row = document.createElement('div');
+  row.className = 'd-row' + (opts.liability ? ' d-liability' : '') + (opts.selected ? ' is-selected' : '');
+  row.setAttribute('role', 'treeitem');
+  row.setAttribute('aria-level', String(opts.depth + 1));
+  if (opts.expandable) row.setAttribute('aria-expanded', opts.expanded ? 'true' : 'false');
+  row.setAttribute('aria-selected', opts.selected ? 'true' : 'false');
+  row.dataset.key = opts.key;
+  row.style.paddingLeft = ([12, 28, 44][opts.depth] || 12) + 'px';
+  var chev = document.createElement('span');
+  if (opts.expandable) {
+    chev.className = 'd-chevron' + (opts.expanded ? ' is-expanded' : '');
+    chev.textContent = '▸';
+    chev.setAttribute('aria-hidden', 'true');
+    onActivate(chev, function (e) { e.stopPropagation(); opts.onToggle(); });
+  } else {
+    chev.className = 'd-chevron-spacer';
+  }
+  row.appendChild(chev);
+  var label = document.createElement('span');
+  label.className = 'd-row-label';
+  label.textContent = opts.label;
+  row.appendChild(label);
+  var val = document.createElement('span');
+  val.className = 'd-row-value' + (opts.stale ? ' stale' : '');
+  val.textContent = opts.value;
+  if (opts.stale) val.title = 'Valuation recorded ' + opts.staleDays + ' days ago';
+  row.appendChild(val);
+  onActivate(row, opts.onSelect);
+  return row;
+}
+
+function dBuildSidebarTree() {
+  var wrap = document.createElement('div');
+  wrap.className = 'd-tree-scroll';
+  wrap.setAttribute('role', 'tree');
+  wrap.setAttribute('tabindex', '0');
+  wrap.setAttribute('aria-label', 'Portfolio and Liabilities');
+
+  var indicator = document.createElement('div');
+  indicator.className = 'd-indicator';
+  wrap.appendChild(indicator);
+
+  var curKey = dSelKey(dState.selected);
+
+  wrap.appendChild(dRowEl({
+    key: 'portfolio', depth: 0, label: 'Portfolio', value: fmtMoney(DERIVED.netWorth),
+    expandable: false, selected: curKey === 'portfolio',
+    onSelect: function () { dSelect({ type: 'portfolio' }); }
+  }));
+
+  DATA.assetClasses.forEach(function (cls) {
+    var key = 'class:' + cls.id;
+    var expanded = dState.expandedClasses.has(cls.id);
+    wrap.appendChild(dRowEl({
+      key: key, depth: 1, label: cls.name, value: fmtMoney(classTotal(cls)),
+      expandable: true, expanded: expanded, selected: curKey === key,
+      onToggle: function () { dToggleClass(cls.id); },
+      onSelect: function () { dSelectAndMaybeExpandClass(cls.id); }
+    }));
+    var childrenWrap = document.createElement('div');
+    childrenWrap.className = 'd-children d-animatable';
+    childrenWrap.style.height = expanded ? 'auto' : '0px';
+    childrenWrap.dataset.childrenFor = key;
+    cls.holdings.forEach(function (h) {
+      var hkey = 'holding:' + cls.id + ':' + h.id;
+      var stale = dIsStale(h.recordedAt);
+      childrenWrap.appendChild(dRowEl({
+        key: hkey, depth: 2, label: h.name, value: fmtMoney(h.valuation),
+        expandable: false, stale: stale, staleDays: dDaysAgo(h.recordedAt), selected: curKey === hkey,
+        onSelect: function () { dSelect({ type: 'holding', classId: cls.id, holdingId: h.id }); }
+      }));
+    });
+    wrap.appendChild(childrenWrap);
+  });
+
+  var sep = document.createElement('div'); sep.className = 'd-sep';
+  var sepLine = document.createElement('div'); sepLine.className = 'd-sep-line';
+  sep.appendChild(sepLine);
+  wrap.appendChild(sep);
+
+  var lrExpanded = dState.liabilitiesExpanded;
+  wrap.appendChild(dRowEl({
+    key: 'liabilityRoot', depth: 0, label: 'Liabilities', value: fmtMoney(-DERIVED.liabilitiesTotal),
+    expandable: true, expanded: lrExpanded, liability: true, selected: curKey === 'liabilityRoot',
+    onToggle: function () { dToggleLiabilityRoot(); },
+    onSelect: function () { dSelectAndMaybeExpandLiabilityRoot(); }
+  }));
+  var lrChildren = document.createElement('div');
+  lrChildren.className = 'd-children d-animatable';
+  lrChildren.style.height = lrExpanded ? 'auto' : '0px';
+  lrChildren.dataset.childrenFor = 'liabilityRoot';
+  DATA.liabilityClasses.forEach(function (lc) {
+    var lckey = 'liabilityClass:' + lc.id;
+    var lcExpanded = dState.expandedLiabClasses.has(lc.id);
+    lrChildren.appendChild(dRowEl({
+      key: lckey, depth: 1, label: lc.name, value: fmtMoney(-liabClassTotal(lc)),
+      expandable: true, expanded: lcExpanded, liability: true, selected: curKey === lckey,
+      onToggle: function () { dToggleLiabClass(lc.id); },
+      onSelect: function () { dSelectAndMaybeExpandLiabClass(lc.id); }
+    }));
+    var lcChildren = document.createElement('div');
+    lcChildren.className = 'd-children d-animatable';
+    lcChildren.style.height = lcExpanded ? 'auto' : '0px';
+    lcChildren.dataset.childrenFor = lckey;
+    lc.liabilities.forEach(function (l) {
+      var lkey = 'liability:' + lc.id + ':' + l.id;
+      var stale = dIsStale(l.recordedAt);
+      lcChildren.appendChild(dRowEl({
+        key: lkey, depth: 2, label: l.name, value: fmtMoney(-l.balance),
+        expandable: false, liability: true, stale: stale, staleDays: dDaysAgo(l.recordedAt), selected: curKey === lkey,
+        onSelect: function () { dSelect({ type: 'liability', liabClassId: lc.id, liabilityId: l.id }); }
+      }));
+    });
+    lrChildren.appendChild(lcChildren);
+  });
+  wrap.appendChild(lrChildren);
+
+  wrap.addEventListener('keydown', function (e) {
+    var key = e.key;
+    if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Enter', ' '].indexOf(key) === -1) return;
+    e.preventDefault();
+    var rows = dVisibleRows();
+    var curK = dSelKey(dState.selected);
+    var idx = rows.findIndex(function (r) { return r.key === curK; });
+    if (key === 'ArrowDown') {
+      var next = rows[idx < 0 ? 0 : Math.min(rows.length - 1, idx + 1)];
+      if (next) dSelect(next.sel);
+    } else if (key === 'ArrowUp') {
+      var prev = rows[idx < 0 ? 0 : Math.max(0, idx - 1)];
+      if (prev) dSelect(prev.sel);
+    } else if (key === 'ArrowRight') {
+      var node = rows[idx];
+      if (node && node.expandable) {
+        if (!node.expanded) { dExpandIfCollapsed(node.key); }
+        else {
+          var child = rows[idx + 1];
+          if (child && child.parentKey === node.key) dSelect(child.sel);
+        }
+      }
+    } else if (key === 'ArrowLeft') {
+      var node2 = rows[idx];
+      if (node2 && node2.expandable && node2.expanded) {
+        dCollapseIfExpanded(node2.key);
+      } else if (node2 && node2.parentKey) {
+        var parentRow = rows.filter(function (r) { return r.key === node2.parentKey; })[0];
+        if (parentRow) dSelect(parentRow.sel);
+      }
+    } else if (key === 'Enter' || key === ' ') {
+      var node3 = rows[idx];
+      if (node3 && node3.expandable && !node3.expanded) dExpandIfCollapsed(node3.key);
+    }
+  });
+
+  dTreeEl = wrap;
+  return wrap;
+}
+
+/* ---------- Target Allocation gap math (D's own, per brief) ---------- */
+function dAllocGapMoney(dist) { return (dist.targetPct / 100) * DERIVED.holdingsTotal - dist.total; }
+function dAllocGapText(dist) {
+  var gap = dAllocGapMoney(dist);
+  var threshold = DERIVED.holdingsTotal * 0.01;
+  if (Math.abs(gap) < threshold) return 'on target';
+  return gap > 0 ? (fmtMoney(gap) + ' below target') : (fmtMoney(Math.abs(gap)) + ' above target');
+}
+function dBuildAllocRow(dist, showName, animateDelay) {
+  var row = document.createElement('div');
+  row.className = 'd-alloc-row';
+  if (showName) {
+    var name = document.createElement('div');
+    name.className = 'd-alloc-name';
+    name.textContent = dist.name;
+    row.appendChild(name);
+  }
+  var track = document.createElement('div');
+  track.className = 'd-alloc-track';
+  var fill = document.createElement('div');
+  fill.className = 'd-alloc-fill';
+  var tick = document.createElement('div');
+  tick.className = 'd-alloc-target';
+  tick.style.left = Math.min(100, dist.targetPct) + '%';
+  track.appendChild(fill);
+  track.appendChild(tick);
+  row.appendChild(track);
+  var figures = document.createElement('div');
+  figures.className = 'd-alloc-figures';
+  var l1 = document.createElement('div'); l1.className = 'l1'; l1.textContent = fmtPct(dist.actualPct) + ' · target ' + dist.targetPct + '%';
+  var l2 = document.createElement('div'); l2.className = 'l2'; l2.textContent = dAllocGapText(dist);
+  figures.appendChild(l1); figures.appendChild(l2);
+  row.appendChild(figures);
+  var targetWidth = Math.min(100, dist.actualPct) + '%';
+  if (dBarsDrawnOnce || dReducedMotion()) {
+    fill.style.width = targetWidth;
+  } else {
+    fill.style.width = '0%';
+    setTimeout(function () { fill.style.width = targetWidth; }, animateDelay || 0);
+  }
+  return row;
+}
+
+/* ---------- recorded net-worth series (joins into the projection) ---------- */
+function dRecordedSeries() {
+  var todayDate = new Date(DATA.today + 'T00:00:00');
+  var dates = [];
+  for (var k = 7; k >= 1; k--) dates.push(new Date(todayDate.getFullYear(), todayDate.getMonth() - k, 1));
+  dates.push(todayDate);
+  function valueAtOrBefore(history, targetDate) {
+    var best = null, bestTime = -Infinity;
+    for (var i = 0; i < history.length; i++) {
+      var t = new Date(history[i].date + 'T00:00:00').getTime();
+      if (t <= targetDate.getTime() && t > bestTime) { best = history[i]; bestTime = t; }
+    }
+    if (!best) best = history[0]; /* extend/synthesize: fall back to earliest known point */
+    return best.value;
+  }
+  var series = dates.map(function (d) {
+    var hSum = 0;
+    DATA.assetClasses.forEach(function (cls) { cls.holdings.forEach(function (h) { hSum += valueAtOrBefore(h.history, d); }); });
+    var lSum = 0;
+    DATA.liabilityClasses.forEach(function (lc) { lc.liabilities.forEach(function (l) { lSum += valueAtOrBefore(l.history, d); }); });
+    return { date: d.toISOString().slice(0, 10), value: hSum - lSum };
+  });
+  series[series.length - 1] = { date: DATA.today, value: DERIVED.netWorth }; /* seam: matches projection's year-0 exactly */
+  return series;
+}
+
+/* ---------- the hero timeline: recorded + projected on one scale ---------- */
+function dBuildTimeline() {
+  var wrapDiv = document.createElement('div');
+  wrapDiv.className = 'd-timeline-svg-wrap';
+
+  var recorded = dRecordedSeries();
+  var projected = DERIVED.projectionSeries; /* years 0..20 */
+  var W = 720, H = 240, padL = 46, padR = 14, padT = 30, padB = 26;
+  var plotW = W - padL - padR, plotH = H - padT - padB;
+  var recordedFrac = 0.30;
+  var recordedWidth = plotW * recordedFrac;
+  var projectedWidth = plotW * (1 - recordedFrac);
+  var todayX = padL + recordedWidth;
+
+  var maxRaw = projected[projected.length - 1].value;
+  var maxY = Math.ceil(maxRaw / 200000) * 200000;
+  var midY = maxY / 2;
+
+  function xRec(i) { return padL + (i / (recorded.length - 1)) * recordedWidth; }
+  function xProj(year) { return todayX + (year / 20) * projectedWidth; }
+  function yOf(v) { return padT + plotH - (v / maxY) * plotH; }
+
+  var svgNS = 'http://www.w3.org/2000/svg';
+  var svg = document.createElementNS(svgNS, 'svg');
+  svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
+  svg.setAttribute('width', '100%');
+  svg.setAttribute('height', String(H));
+  svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+  svg.setAttribute('role', 'img');
+  svg.setAttribute('aria-label', 'Net worth, recorded and projected, over time');
+
+  function el(tag, attrs) {
+    var e = document.createElementNS(svgNS, tag);
+    for (var k in attrs) e.setAttribute(k, attrs[k]);
+    return e;
+  }
+
+  /* gridlines + y labels */
+  [0, midY, maxY].forEach(function (v) {
+    var y = yOf(v);
+    svg.appendChild(el('line', { x1: padL, y1: y, x2: W - padR, y2: y, stroke: 'var(--border)', 'stroke-width': '1' }));
+    var t = el('text', { x: padL - 8, y: y + 3, 'text-anchor': 'end', 'font-size': '11', fill: 'var(--text-muted)' });
+    t.textContent = dFmtCompact(v);
+    svg.appendChild(t);
+  });
+
+  /* today seam */
+  svg.appendChild(el('line', { x1: todayX, y1: padT, x2: todayX, y2: padT + plotH, stroke: 'var(--border)', 'stroke-width': '1' }));
+  var todayLabel = el('text', { x: todayX, y: padT - 12, 'text-anchor': 'middle', 'font-size': '11', fill: 'var(--text-muted)' });
+  todayLabel.textContent = 'Today';
+  svg.appendChild(todayLabel);
+
+  /* x labels: recorded (2 month labels) */
+  [0, 4].forEach(function (i) {
+    var t = el('text', { x: xRec(i), y: padT + plotH + 16, 'text-anchor': 'middle', 'font-size': '11', fill: 'var(--text-muted)' });
+    t.textContent = dFmtMonthShort(recorded[i].date);
+    svg.appendChild(t);
+  });
+  /* x labels: projected (2031/2036/2041/2046) */
+  var startYear = new Date(DATA.today + 'T00:00:00').getFullYear();
+  [5, 10, 15, 20].forEach(function (yr) {
+    var t = el('text', { x: xProj(yr), y: padT + plotH + 16, 'text-anchor': 'middle', 'font-size': '11', fill: 'var(--text-muted)' });
+    t.textContent = String(startYear + yr);
+    svg.appendChild(t);
+  });
+
+  /* recorded line */
+  var recPts = recorded.map(function (p, i) { return xRec(i) + ',' + yOf(p.value); }).join(' ');
+  var recLine = el('polyline', { points: recPts, fill: 'none', stroke: 'var(--accent)', 'stroke-width': '1.5' });
+  svg.appendChild(recLine);
+
+  /* projected line, clipped by an animated-width rect so dashes don't crawl */
+  var clipId = 'd-proj-clip-' + Math.random().toString(36).slice(2);
+  var clipPath = el('clipPath', { id: clipId });
+  var clipRect = el('rect', { x: todayX, y: padT - 4, width: '0', height: plotH + 8 });
+  clipPath.appendChild(clipRect);
+  svg.appendChild(clipPath);
+  var projPts = [];
+  for (var yy = 0; yy <= 20; yy++) projPts.push(xProj(yy) + ',' + yOf(projected[yy].value));
+  var projLine = el('polyline', { points: projPts.join(' '), fill: 'none', stroke: 'var(--accent)', 'stroke-width': '1.25', 'stroke-dasharray': '4 3', 'clip-path': 'url(#' + clipId + ')' });
+  svg.appendChild(projLine);
+
+  /* mortgage payoff annotation */
+  var payoffYearsFrac = DERIVED.mortgage.payoffMonths / 12;
+  var payoffVal = fv(DERIVED.netWorth, DATA.projectionAssumptions.annualGrowth, DATA.projectionAssumptions.monthlyContribution, payoffYearsFrac);
+  var pax = xProj(payoffYearsFrac), pay = yOf(payoffVal);
+  var payoffDot = el('circle', { cx: pax, cy: pay, r: '4', fill: 'var(--bg)', stroke: 'var(--accent)', 'stroke-width': '1.5' });
+  svg.appendChild(payoffDot);
+  var payoffLabel = el('text', { x: Math.min(pax + 8, W - padR - 4), y: pay - 8, 'text-anchor': pax > W - padR - 90 ? 'end' : 'start', 'font-size': '11', fill: 'var(--text-muted)' });
+  payoffLabel.textContent = 'Mortgage paid off';
+  svg.appendChild(payoffLabel);
+
+  /* endpoint marker (year 20) */
+  var endX = xProj(20), endY = yOf(projected[20].value);
+  svg.appendChild(el('circle', { cx: endX, cy: endY, r: '3', fill: 'var(--accent)' }));
+  var endLabel = el('text', { x: endX - 8, y: endY - 8, 'text-anchor': 'end', 'font-size': '11', fill: 'var(--text-muted)' });
+  endLabel.textContent = (startYear + 20) + ' · ' + dFmtCompact(projected[20].value, 2);
+  svg.appendChild(endLabel);
+
+  /* hover guide */
+  var guideLine = el('line', { x1: '0', y1: padT, x2: '0', y2: padT + plotH, stroke: 'var(--border)', 'stroke-width': '1', opacity: '0' });
+  var readout = el('text', { x: '0', y: padT - 12, 'font-size': '11', fill: 'var(--text-muted)', opacity: '0' });
+  svg.appendChild(guideLine);
+  svg.appendChild(readout);
+  var overlay = el('rect', { x: padL, y: padT, width: plotW, height: plotH, fill: 'transparent' });
+  overlay.addEventListener('mousemove', function (e) {
+    var rect = svg.getBoundingClientRect();
+    var scale = W / rect.width;
+    var x = (e.clientX - rect.left) * scale;
+    var label, gx;
+    if (x < todayX) {
+      var frac = Math.max(0, Math.min(1, (x - padL) / recordedWidth));
+      var idx = Math.round(frac * (recorded.length - 1));
+      gx = xRec(idx);
+      label = fmtDate(recorded[idx].date) + ' · ' + fmtMoney(recorded[idx].value);
+    } else {
+      var yf = Math.max(0, Math.min(20, ((x - todayX) / projectedWidth) * 20));
+      gx = xProj(yf);
+      var v = fv(DERIVED.netWorth, DATA.projectionAssumptions.annualGrowth, DATA.projectionAssumptions.monthlyContribution, yf);
+      label = Math.round(startYear + yf) + ' · ' + fmtMoney(v);
+    }
+    guideLine.setAttribute('x1', gx); guideLine.setAttribute('x2', gx); guideLine.setAttribute('opacity', '1');
+    readout.setAttribute('x', Math.min(Math.max(gx, padL + 2), W - padR - 90));
+    readout.textContent = label;
+    readout.setAttribute('opacity', '1');
+  });
+  overlay.addEventListener('mouseleave', function () {
+    guideLine.setAttribute('opacity', '0');
+    readout.setAttribute('opacity', '0');
+  });
+  svg.appendChild(overlay);
+
+  wrapDiv.appendChild(svg);
+
+  /* draw-in, first render only. Measuring a polyline only works once the SVG is in the
+     document, so defer to the next frame (dRenderMain attaches the content synchronously).
+     Any failure falls back to drawing both lines complete. */
+  if (!dTimelineDrawnOnce && !dReducedMotion()) {
+    dTimelineDrawnOnce = true;
+    clipRect.setAttribute('width', '0');
+    requestAnimationFrame(function () {
+      try {
+        var len = recLine.getTotalLength();
+        if (!len || !isFinite(len)) throw new Error('no length');
+        recLine.style.strokeDasharray = String(len);
+        recLine.style.strokeDashoffset = String(len);
+        recLine.getBoundingClientRect(); /* force layout before transition */
+        recLine.style.transition = 'stroke-dashoffset 600ms ease-out';
+        clipRect.style.transition = 'width 600ms ease-out';
+        clipRect.style.transitionDelay = '850ms';
+        requestAnimationFrame(function () {
+          recLine.style.strokeDashoffset = '0';
+          clipRect.setAttribute('width', String(W));
+        });
+      } catch (err) {
+        recLine.style.strokeDasharray = '';
+        recLine.style.strokeDashoffset = '';
+        clipRect.setAttribute('width', String(W));
+      }
+    });
+  } else {
+    clipRect.setAttribute('width', String(W));
+  }
+
+  return wrapDiv;
+}
+
+/* ---------- section builders shared within D ---------- */
+function dLabel11(text) { var d = document.createElement('div'); d.className = 'd-label-11'; d.textContent = text; return d; }
+function dSection() { var d = document.createElement('div'); d.className = 'd-section'; return d; }
+function dKvRow(label, value) {
+  var row = document.createElement('div');
+  row.className = 'd-kv-row';
+  var l = document.createElement('span'); l.className = 'label'; l.textContent = label;
+  var v = document.createElement('span'); v.textContent = value;
+  row.appendChild(l); row.appendChild(v);
+  return row;
+}
+function dSparklineSVG(history, dashed) {
+  var w = 320, h = 72, pad = 6;
+  var vals = history.map(function (p) { return p.value; });
+  var minV = Math.min.apply(null, vals), maxV = Math.max.apply(null, vals);
+  function x(i) { return pad + (i / (history.length - 1)) * (w - pad * 2); }
+  function y(v) { return h - pad - ((v - minV) / ((maxV - minV) || 1)) * (h - pad * 2); }
+  var pts = history.map(function (p, i) { return x(i) + ',' + y(p.value); }).join(' ');
+  var last = history[history.length - 1];
+  var dash = dashed ? ' stroke-dasharray="4 3"' : '';
+  var dot = dashed ? '' : '<circle cx="' + x(history.length - 1) + '" cy="' + y(last.value) + '" r="3" style="fill:var(--accent)"></circle>';
+  return '<svg viewBox="0 0 ' + w + ' ' + h + '" width="100%" height="' + h + '" preserveAspectRatio="none" role="img" aria-label="Valuation history">' +
+    '<polyline points="' + pts + '" style="fill:none;stroke:var(--accent);stroke-width:' + (dashed ? '1.25' : '1.5') + '"' + dash + '></polyline>' + dot +
+    '</svg>';
+}
+function dBuildHistorySection(history) {
+  var section = dSection();
+  section.appendChild(dLabel11('Valuation History'));
+  var sparkWrap = document.createElement('div');
+  sparkWrap.style.marginTop = '10px';
+  sparkWrap.innerHTML = dSparklineSVG(history, false);
+  section.appendChild(sparkWrap);
+  var list = document.createElement('div');
+  list.className = 'd-history-list';
+  history.slice().reverse().slice(0, 8).forEach(function (p) {
+    var item = document.createElement('div');
+    item.className = 'd-history-item';
+    var d = document.createElement('span'); d.textContent = fmtDate(p.date);
+    var v = document.createElement('span'); v.className = 'v'; v.textContent = fmtMoney(p.value);
+    item.appendChild(d); item.appendChild(v);
+    list.appendChild(item);
+  });
+  section.appendChild(list);
+  return section;
+}
+
+/* ---------- Attention (stale valuations) ---------- */
+function dBuildAttentionSection() {
+  var staleItems = [];
+  DATA.assetClasses.forEach(function (cls) {
+    cls.holdings.forEach(function (h) {
+      var days = dDaysAgo(h.recordedAt);
+      if (days > 30) staleItems.push({ label: h.name, days: days, amount: h.valuation, sel: { type: 'holding', classId: cls.id, holdingId: h.id } });
+    });
+  });
+  DATA.liabilityClasses.forEach(function (lc) {
+    lc.liabilities.forEach(function (l) {
+      var days = dDaysAgo(l.recordedAt);
+      if (days > 30) staleItems.push({ label: l.name, days: days, amount: l.balance, sel: { type: 'liability', liabClassId: lc.id, liabilityId: l.id } });
+    });
+  });
+  if (!staleItems.length) return null;
+  var section = dSection();
+  section.appendChild(dLabel11('Valuations older than 30 days'));
+  var list = document.createElement('div');
+  list.style.marginTop = '6px';
+  staleItems.forEach(function (item) {
+    var row = document.createElement('div');
+    row.className = 'd-attn-item';
+    row.appendChild(document.createTextNode(item.label + ' · '));
+    var meta = document.createElement('span');
+    meta.className = 'meta';
+    meta.textContent = item.days + ' days · ' + fmtMoney(item.amount);
+    row.appendChild(meta);
+    onActivate(row, function () { dSelect(item.sel); });
+    list.appendChild(row);
+  });
+  section.appendChild(list);
+  return section;
+}
+
+/* ---------- Portfolio dashboard ---------- */
+function dRenderPortfolioView(container) {
+  container.appendChild(dLabel11('Net Worth'));
+  var fig = document.createElement('div'); fig.className = 'd-headline-figure'; fig.textContent = fmtMoney(DERIVED.netWorth);
+  container.appendChild(fig);
+  var sub = document.createElement('div'); sub.className = 'd-subline';
+  sub.textContent = 'Holdings ' + fmtMoney(DERIVED.holdingsTotal) + ' − Liabilities ' + fmtMoney(DERIVED.liabilitiesTotal) + ' · as of ' + fmtDate(DERIVED.mostRecent);
+  container.appendChild(sub);
+
+  var timelineSection = dSection();
+  var head = document.createElement('div'); head.className = 'd-timeline-head';
+  head.appendChild(dLabel11('Net Worth · recorded and projected'));
+  var legend = document.createElement('div'); legend.className = 'd-legend';
+  var li1 = document.createElement('span'); li1.className = 'd-legend-item';
+  li1.appendChild((function () { var s = document.createElement('span'); s.className = 'd-legend-swatch'; return s; })());
+  li1.appendChild(document.createTextNode('Recorded'));
+  var li2 = document.createElement('span'); li2.className = 'd-legend-item';
+  li2.appendChild((function () { var s = document.createElement('span'); s.className = 'd-legend-swatch dashed'; return s; })());
+  li2.appendChild(document.createTextNode('Projected'));
+  legend.appendChild(li1); legend.appendChild(li2);
+  head.appendChild(legend);
+  timelineSection.appendChild(head);
+  timelineSection.appendChild(dBuildTimeline());
+  container.appendChild(timelineSection);
+
+  var allocSection = dSection();
+  allocSection.appendChild(dLabel11('Target Allocation vs actual'));
+  var rowsWrap = document.createElement('div');
+  rowsWrap.style.marginTop = '8px';
+  DERIVED.distribution.forEach(function (dist, i) {
+    rowsWrap.appendChild(dBuildAllocRow(dist, true, i * 40));
+  });
+  dBarsDrawnOnce = true;
+  allocSection.appendChild(rowsWrap);
+  container.appendChild(allocSection);
+
+  var attn = dBuildAttentionSection();
+  if (attn) container.appendChild(attn);
+}
+
+/* ---------- Asset Class view ---------- */
+function dRenderClassView(container, cls) {
+  var dist = DERIVED.distribution.filter(function (d) { return d.classId === cls.id; })[0];
+  var name = document.createElement('div'); name.className = 'd-name-18'; name.textContent = cls.name;
+  container.appendChild(name);
+  var total = document.createElement('div'); total.className = 'd-total-28'; total.textContent = fmtMoney(dist.total);
+  container.appendChild(total);
+  var line = document.createElement('div'); line.className = 'd-subline';
+  line.textContent = fmtPct(dist.actualPct) + ' of Holdings · target ' + dist.targetPct + '% · ' + dAllocGapText(dist);
+  container.appendChild(line);
+  var barWrap = document.createElement('div'); barWrap.style.marginTop = '16px';
+  barWrap.appendChild(dBuildAllocRow(dist, false, 0));
+  container.appendChild(barWrap);
+
+  var section = dSection();
+  section.appendChild(dLabel11('Holdings'));
+  var table = document.createElement('table'); table.className = 'd-table';
+  var thead = document.createElement('thead');
+  thead.innerHTML = '<tr><th>Holding</th><th class="num">Valuation</th><th class="num">As of</th><th>Live Estimate</th></tr>';
+  table.appendChild(thead);
+  var tbody = document.createElement('tbody');
+  cls.holdings.forEach(function (h) {
+    var stale = dIsStale(h.recordedAt);
+    var tr = document.createElement('tr'); tr.className = 'clickable';
+    var tdN = document.createElement('td'); tdN.textContent = h.name;
+    var tdV = document.createElement('td'); tdV.className = 'num' + (stale ? ' stale-cell' : ''); tdV.textContent = fmtMoney(h.valuation);
+    if (stale) tdV.title = 'Valuation recorded ' + dDaysAgo(h.recordedAt) + ' days ago';
+    var tdD = document.createElement('td'); tdD.className = 'num'; tdD.textContent = fmtDate(h.recordedAt);
+    var tdL = document.createElement('td'); tdL.style.color = 'var(--text-muted)';
+    if (h.live) {
+      tdL.textContent = fmtMoney(h.liveEstimate) + ' ';
+      var tag = document.createElement('span'); tag.className = 'd-live-tag'; tag.textContent = 'live';
+      tdL.appendChild(tag);
+    } else { tdL.textContent = '—'; }
+    tr.appendChild(tdN); tr.appendChild(tdV); tr.appendChild(tdD); tr.appendChild(tdL);
+    onActivate(tr, function () { dSelect({ type: 'holding', classId: cls.id, holdingId: h.id }); });
+    tbody.appendChild(tr);
+  });
+  table.appendChild(tbody);
+  section.appendChild(table);
+  container.appendChild(section);
+}
+
+/* ---------- Holding view ---------- */
+function dRenderHoldingView(container, cls, holding) {
+  var name = document.createElement('div'); name.className = 'd-name-18'; name.textContent = holding.name;
+  container.appendChild(name);
+  var classSub = document.createElement('div'); classSub.className = 'd-subline'; classSub.textContent = cls.name;
+  container.appendChild(classSub);
+  var total = document.createElement('div'); total.className = 'd-total-28'; total.style.marginTop = '10px'; total.textContent = fmtMoney(holding.valuation);
+  container.appendChild(total);
+  var days = dDaysAgo(holding.recordedAt);
+  var recLine = document.createElement('div'); recLine.className = 'd-subline';
+  recLine.textContent = 'recorded ' + fmtDate(holding.recordedAt) + ' · ' + days + ' days ago' + (days > 30 ? ' · older than 30 days' : '');
+  container.appendChild(recLine);
+
+  if (holding.live) {
+    var liveLine = document.createElement('div'); liveLine.style.fontSize = '13px'; liveLine.style.marginTop = '10px';
+    liveLine.textContent = 'Live Estimate ' + fmtMoney(holding.liveEstimate);
+    container.appendChild(liveLine);
+    var pctDelta = ((holding.liveEstimate - holding.valuation) / holding.valuation) * 100;
+    var sign = pctDelta >= 0 ? '+' : '−';
+    var deltaLine = document.createElement('div'); deltaLine.className = 'd-subline';
+    deltaLine.textContent = sign + Math.abs(pctDelta).toFixed(1) + '% vs last Valuation · not a Valuation until you record it';
+    container.appendChild(deltaLine);
+  }
+
+  container.appendChild(dBuildHistorySection(holding.history));
+
+  var link = findLinkedLiability(holding.id);
+  if (link) {
+    var section = dSection();
+    section.appendChild(dLabel11('Linked Liability'));
+    var lline = document.createElement('div'); lline.className = 'd-linked-line'; lline.style.marginTop = '8px';
+    lline.textContent = link.liability.name + ' · ' + fmtMoney(-link.liability.balance);
+    onActivate(lline, function () { dSelect({ type: 'liability', liabClassId: link.liabilityClass.id, liabilityId: link.liability.id }); });
+    section.appendChild(lline);
+    var todayPos = DERIVED.netPositionSeries[0].netPosition;
+    var y20Pos = DERIVED.netPositionSeries[DERIVED.netPositionSeries.length - 1].netPosition;
+    var posLine = document.createElement('div'); posLine.style.fontSize = '13px'; posLine.style.marginTop = '8px';
+    posLine.style.fontVariantNumeric = 'tabular-nums';
+    posLine.textContent = 'Projected Net Position · today ' + fmtMoney(todayPos) + ' · ' + (new Date(DATA.today).getFullYear() + 20) + ' ' + fmtMoney(y20Pos);
+    section.appendChild(posLine);
+    container.appendChild(section);
+  }
+}
+
+/* ---------- Liability view ---------- */
+function dRenderLiabilityView(container, lc, liability) {
+  var name = document.createElement('div'); name.className = 'd-name-18'; name.textContent = liability.name;
+  container.appendChild(name);
+  var classSub = document.createElement('div'); classSub.className = 'd-subline'; classSub.textContent = lc.name;
+  container.appendChild(classSub);
+  container.appendChild(dLabel11('Balance'));
+  var total = document.createElement('div'); total.className = 'd-total-28'; total.textContent = fmtMoney(liability.balance);
+  container.appendChild(total);
+  var days = dDaysAgo(liability.recordedAt);
+  var recLine = document.createElement('div'); recLine.className = 'd-subline';
+  recLine.textContent = 'recorded ' + fmtDate(liability.recordedAt) + ' · ' + days + ' days ago' + (days > 30 ? ' · older than 30 days' : '');
+  container.appendChild(recLine);
+
+  container.appendChild(dBuildHistorySection(liability.history));
+
+  if (liability.amortization) {
+    var am = liability.amortization;
+    var info = computeAmortizationInfo(liability);
+    var section = dSection();
+    section.appendChild(dLabel11('Amortization Assumptions'));
+    var kv = document.createElement('div'); kv.style.marginTop = '8px';
+    kv.appendChild(dKvRow('Interest rate', (am.rate * 100).toFixed(2) + '%'));
+    kv.appendChild(dKvRow('Original amount', fmtMoney(am.original)));
+    kv.appendChild(dKvRow('Term', am.termMonths + ' months'));
+    kv.appendChild(dKvRow('Derived payment', fmtMoney(info.monthlyPaymentBase) + '/mo'));
+    kv.appendChild(dKvRow('Extra payment', fmtMoney(am.extra) + '/mo'));
+    kv.appendChild(dKvRow('Projected payoff', String(info.payoffYear)));
+    section.appendChild(kv);
+
+    var payoffYearsCeil = Math.min(20, Math.ceil(info.payoffMonths / 12));
+    var balSeries = [];
+    for (var yy = 0; yy <= payoffYearsCeil; yy++) {
+      balSeries.push({ date: String(new Date(DATA.today).getFullYear() + yy), value: amortizeBalance(liability.balance, am.rate, info.totalPayment, yy * 12) });
+    }
+    var sparkLabel = document.createElement('div'); sparkLabel.style.marginTop = '16px';
+    sparkLabel.appendChild(dLabel11('Projected balance'));
+    section.appendChild(sparkLabel);
+    var sparkWrap = document.createElement('div'); sparkWrap.style.marginTop = '8px';
+    sparkWrap.innerHTML = dSparklineSVG(balSeries, true);
+    section.appendChild(sparkWrap);
+    container.appendChild(section);
+  }
+
+  if (liability.linkedHoldingId) {
+    var holdingCls = findAssetClass('real-estate');
+    var linkedHolding = findHoldingIn(holdingCls, liability.linkedHoldingId);
+    if (linkedHolding) {
+      var fSection = dSection();
+      fSection.appendChild(dLabel11('Financed Holding'));
+      var fline = document.createElement('div'); fline.className = 'd-linked-line'; fline.style.marginTop = '8px';
+      fline.textContent = linkedHolding.name + ' · ' + fmtMoney(linkedHolding.valuation);
+      onActivate(fline, function () { dSelect({ type: 'holding', classId: holdingCls.id, holdingId: linkedHolding.id }); });
+      fSection.appendChild(fline);
+      container.appendChild(fSection);
+    }
+  }
+}
+
+/* ---------- Liabilities root / Liability Class aggregate views ---------- */
+function dRenderLiabilityRootView(container) {
+  container.appendChild(dLabel11('Liabilities'));
+  var total = document.createElement('div'); total.className = 'd-total-28'; total.textContent = fmtMoney(-DERIVED.liabilitiesTotal);
+  container.appendChild(total);
+  var section = dSection();
+  section.appendChild(dLabel11('Liability Classes'));
+  var table = document.createElement('table'); table.className = 'd-table';
+  table.innerHTML = '<thead><tr><th>Liability Class</th><th class="num">Balance</th><th class="num">As of</th></tr></thead>';
+  var tbody = document.createElement('tbody');
+  DATA.liabilityClasses.forEach(function (lc) {
+    var mostRecent = lc.liabilities.reduce(function (m, l) { return l.recordedAt > m ? l.recordedAt : m; }, '');
+    var tr = document.createElement('tr'); tr.className = 'clickable';
+    var tdN = document.createElement('td'); tdN.textContent = lc.name;
+    var tdV = document.createElement('td'); tdV.className = 'num'; tdV.style.color = 'var(--liability)'; tdV.textContent = fmtMoney(-liabClassTotal(lc));
+    var tdD = document.createElement('td'); tdD.className = 'num'; tdD.textContent = fmtDate(mostRecent);
+    tr.appendChild(tdN); tr.appendChild(tdV); tr.appendChild(tdD);
+    onActivate(tr, function () { dSelectAndMaybeExpandLiabClass(lc.id); });
+    tbody.appendChild(tr);
+  });
+  table.appendChild(tbody);
+  section.appendChild(table);
+  container.appendChild(section);
+}
+function dRenderLiabilityClassView(container, lc) {
+  container.appendChild(dLabel11(lc.name));
+  var total = document.createElement('div'); total.className = 'd-total-28'; total.textContent = fmtMoney(-liabClassTotal(lc));
+  container.appendChild(total);
+  var section = dSection();
+  section.appendChild(dLabel11('Liabilities'));
+  var table = document.createElement('table'); table.className = 'd-table';
+  table.innerHTML = '<thead><tr><th>Liability</th><th class="num">Balance</th><th class="num">As of</th></tr></thead>';
+  var tbody = document.createElement('tbody');
+  lc.liabilities.forEach(function (l) {
+    var tr = document.createElement('tr'); tr.className = 'clickable';
+    var tdN = document.createElement('td'); tdN.textContent = l.name;
+    var tdV = document.createElement('td'); tdV.className = 'num'; tdV.style.color = 'var(--liability)'; tdV.textContent = fmtMoney(-l.balance);
+    var tdD = document.createElement('td'); tdD.className = 'num'; tdD.textContent = fmtDate(l.recordedAt);
+    tr.appendChild(tdN); tr.appendChild(tdV); tr.appendChild(tdD);
+    onActivate(tr, function () { dSelect({ type: 'liability', liabClassId: lc.id, liabilityId: l.id }); });
+    tbody.appendChild(tr);
+  });
+  table.appendChild(tbody);
+  section.appendChild(table);
+  container.appendChild(section);
+}
+
+/* ---------- breadcrumb + top strip ---------- */
+function dBreadcrumbSegments(sel) {
+  var segs = [{ label: 'Portfolio', sel: { type: 'portfolio' } }];
+  if (sel.type === 'class') {
+    var c = findAssetClass(sel.classId);
+    segs.push({ label: c.name, sel: sel });
+  } else if (sel.type === 'holding') {
+    var c2 = findAssetClass(sel.classId);
+    var h = findHoldingIn(c2, sel.holdingId);
+    segs.push({ label: c2.name, sel: { type: 'class', classId: c2.id } });
+    segs.push({ label: h.name, sel: sel });
+  } else if (sel.type === 'liabilityRoot') {
+    segs.push({ label: 'Liabilities', sel: sel });
+  } else if (sel.type === 'liabilityClass') {
+    var lc = findLiabilityClass(sel.liabClassId);
+    segs.push({ label: 'Liabilities', sel: { type: 'liabilityRoot' } });
+    segs.push({ label: lc.name, sel: sel });
+  } else if (sel.type === 'liability') {
+    var lc2 = findLiabilityClass(sel.liabClassId);
+    var l = findLiabilityIn(lc2, sel.liabilityId);
+    segs.push({ label: 'Liabilities', sel: { type: 'liabilityRoot' } });
+    segs.push({ label: lc2.name, sel: { type: 'liabilityClass', liabClassId: lc2.id } });
+    segs.push({ label: l.name, sel: sel });
+  }
+  return segs;
+}
+function dBuildTopStrip() {
+  var strip = document.createElement('div'); strip.className = 'd-topstrip';
+  var bc = document.createElement('div'); bc.className = 'd-breadcrumb';
+  dBreadcrumbSegments(dState.selected).forEach(function (s, i) {
+    if (i > 0) { var sep = document.createElement('span'); sep.className = 'sep'; sep.textContent = '›'; bc.appendChild(sep); }
+    var btn = document.createElement('button'); btn.type = 'button'; btn.textContent = s.label;
+    onActivate(btn, function () { dSelect(s.sel); });
+    bc.appendChild(btn);
+  });
+  strip.appendChild(bc);
+  var sel = dState.selected;
+  if (sel.type === 'holding' || sel.type === 'liability') {
+    var btn2 = document.createElement('button'); btn2.type = 'button'; btn2.className = 'd-record-btn'; btn2.textContent = 'Record Valuation';
+    strip.appendChild(btn2);
+  }
+  return strip;
+}
+
+/* ---------- main pane ---------- */
+function dRenderMain() {
+  dMainEl.innerHTML = '';
+  dMainEl.appendChild(dBuildTopStrip());
+  var contentWrap = document.createElement('div'); contentWrap.className = 'd-content-wrap';
+  var content = document.createElement('div');
+  content.className = 'd-content' + (dReducedMotion() ? '' : ' enter');
+  var sel = dState.selected;
+  if (sel.type === 'portfolio') dRenderPortfolioView(content);
+  else if (sel.type === 'class') dRenderClassView(content, findAssetClass(sel.classId));
+  else if (sel.type === 'holding') { var c = findAssetClass(sel.classId); dRenderHoldingView(content, c, findHoldingIn(c, sel.holdingId)); }
+  else if (sel.type === 'liabilityRoot') dRenderLiabilityRootView(content);
+  else if (sel.type === 'liabilityClass') dRenderLiabilityClassView(content, findLiabilityClass(sel.liabClassId));
+  else if (sel.type === 'liability') { var lc = findLiabilityClass(sel.liabClassId); dRenderLiabilityView(content, lc, findLiabilityIn(lc, sel.liabilityId)); }
+  contentWrap.appendChild(content);
+  dMainEl.appendChild(contentWrap);
+}
+
+/* ---------- design notes panel ("Why this design") ---------- */
+var D_WHY_COPY = [
+  { title: 'Why a sidebar tree', body: 'Your data is three levels deep and small: a handful of Asset Classes, a few dozen Holdings at most. A persistent tree holds the whole thing in view and never moves, so the only thing that changes when you click is the right-hand pane. That spatial stability is most of what "file-explorer-like" means. The values in the rows make the tree a balance sheet you can read without clicking anything.' },
+  { title: 'Why Liabilities are their own branch', body: 'The model has Asset Class ↔ Liability Class as mirrors, and the tree shows that mirror. Folding a mortgage under the house it financed hides the link inside one Asset Class and leaves loans with no linked Holding in an awkward leftover group. Instead the link is shown where you\'d look for it: on the Holding\'s own page, with the Projected Net Position.' },
+  { title: 'Why one timeline', body: 'This app has two ideas of time. Valuations you recorded are the past; a Projection is the future. Putting them on one continuous scale with a seam at today shows both in one glance, and the change from a solid to a dashed line says "this part is real, this part is an assumption" without a word of explanation. The mortgage payoff marker turns the Amortization Assumptions into a visible event instead of a number in a form.' },
+  { title: 'Why bars, not a pie', body: 'The question on this page is "how far is each class from its target", and a bar with a tick answers it directly. A pie can\'t show a target, needs a legend, and asks you to compare angles. The bars keep the sidebar\'s order so your eye maps rows to rows, and the money gap below each row tells you what to actually do about it.' },
+  { title: 'Why staleness is visible but quiet', body: 'The one thing you need to do regularly is record Valuations. A faded value and a short list on the dashboard nudge you toward the stale ones without turning your net worth into a to-do list. No warning colors: nothing here is wrong, just old.' },
+  { title: 'Why the motion is the way it is', body: 'Every animation here shows structure: the selection bar slides so you can see where you came from, branches unfold so you see what opened, bars and lines draw in once so the chart reads as a shape before it reads as numbers. Nothing loops, bounces, or counts up. If your system asks for reduced motion, it all becomes instant.' }
+];
+function dBuildPanel() {
+  var scrim = document.createElement('div'); scrim.className = 'd-scrim';
+  var panel = document.createElement('div'); panel.className = 'd-panel';
+  var close = document.createElement('button'); close.type = 'button'; close.className = 'd-panel-close'; close.textContent = '×';
+  close.setAttribute('aria-label', 'Close');
+  panel.appendChild(close);
+  D_WHY_COPY.forEach(function (sec) {
+    var h = document.createElement('div'); h.className = 'd-panel-title'; h.textContent = sec.title;
+    var p = document.createElement('p'); p.textContent = sec.body;
+    panel.appendChild(h); panel.appendChild(p);
+  });
+  function closePanel() { panel.classList.remove('is-open'); scrim.classList.remove('is-open'); }
+  function openPanel() { panel.classList.add('is-open'); scrim.classList.add('is-open'); }
+  onActivate(close, closePanel);
+  scrim.addEventListener('click', closePanel);
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && panel.classList.contains('is-open')) closePanel(); });
+  dPanelEl = panel; dScrimEl = scrim; dPanelEl.openPanel = openPanel;
+  return { scrim: scrim, panel: panel, openPanel: openPanel };
+}
+
+/* ---------- boot ---------- */
+function renderD(root) {
+  dTimelineDrawnOnce = false;
+  dBarsDrawnOnce = false;
+  dState = {
+    selected: { type: 'portfolio' },
+    expandedClasses: new Set(DATA.assetClasses.map(function (c) { return c.id; })),
+    liabilitiesExpanded: true,
+    expandedLiabClasses: new Set()
+  };
+  dRootEl = root;
+
+  var sidebar = document.createElement('div'); sidebar.className = 'd-sidebar';
+  var wordmark = document.createElement('div'); wordmark.className = 'd-wordmark'; wordmark.textContent = 'FinAsset 360';
+  sidebar.appendChild(wordmark);
+  var treeEl = dBuildSidebarTree();
+  sidebar.appendChild(treeEl);
+  var footer = document.createElement('div'); footer.className = 'd-sidebar-footer';
+  var whyLink = document.createElement('button'); whyLink.type = 'button'; whyLink.className = 'd-why-link'; whyLink.textContent = 'Why this design';
+  footer.appendChild(whyLink);
+  sidebar.appendChild(footer);
+
+  var main = document.createElement('div'); main.className = 'd-main';
+  dMainEl = main;
+
+  root.appendChild(sidebar);
+  root.appendChild(main);
+
+  var panelBits = dBuildPanel();
+  root.appendChild(panelBits.scrim);
+  root.appendChild(panelBits.panel);
+  onActivate(whyLink, panelBits.openPanel);
+
+  dRenderMain();
+  dRepositionIndicator();
+
+  window.addEventListener('resize', function () { dRepositionIndicator(); });
+}
+
+/* ============================================================
+   BOOT: read ?variant=, wire the floating switcher, dispatch.
+   ============================================================ */
+var VARIANT_ORDER = ['A', 'B', 'C', 'D'];
+var VARIANT_NAMES = { A: 'Explorer', B: 'Outline', C: 'Columns', D: 'Proposal' };
+
+function getInitialVariant() {
+  try {
+    var params = new URLSearchParams(location.search);
+    var v = (params.get('variant') || 'D').toUpperCase();
+    if (VARIANT_ORDER.indexOf(v) !== -1) return v;
+  } catch (err) { /* ignore — fall back to default */ }
+  return 'D';
+}
+
+function setVariantInURL(v) {
+  try {
+    var url = new URL(location.href);
+    url.searchParams.set('variant', v);
+    history.replaceState(null, '', url.toString());
+  } catch (err) {
+    /* sandboxed iframe / file:// edge case — currentVariant (in-memory) still drives rendering */
+  }
+}
+
+var currentVariant = getInitialVariant();
+
+function renderApp() {
+  var root = document.getElementById('app');
+  root.innerHTML = '';
+  if (currentVariant === 'A') { root.className = 'variant-a'; renderA(root); }
+  else if (currentVariant === 'B') { root.className = 'variant-b'; renderB(root); }
+  else if (currentVariant === 'C') { root.className = 'variant-c'; renderC(root); }
+  else { root.className = 'variant-d'; renderD(root); }
+  updateSwitcherLabel();
+}
+
+function updateSwitcherLabel() {
+  var label = document.getElementById('switcher-label');
+  if (label) label.textContent = currentVariant + ' · ' + VARIANT_NAMES[currentVariant];
+}
+
+function switchVariant(delta) {
+  var idx = VARIANT_ORDER.indexOf(currentVariant);
+  currentVariant = VARIANT_ORDER[(idx + delta + VARIANT_ORDER.length) % VARIANT_ORDER.length];
+  setVariantInURL(currentVariant);
+  renderApp();
+}
+
+document.getElementById('switcher-prev').addEventListener('click', function () { switchVariant(-1); });
+document.getElementById('switcher-next').addEventListener('click', function () { switchVariant(1); });
+
+document.addEventListener('keydown', function (e) {
+  if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+  var ae = document.activeElement;
+  if (ae) {
+    var tag = ae.tagName;
+    if (tag === 'INPUT' || tag === 'TEXTAREA' || ae.isContentEditable) return;
+    if (ae.closest && ae.closest('[role="tree"]')) return; /* D uses arrow keys for tree navigation */
+  }
+  switchVariant(e.key === 'ArrowLeft' ? -1 : 1);
+});
+
+renderApp();
+</script>

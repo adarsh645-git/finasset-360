@@ -1,0 +1,1667 @@
+<!-- PROTOTYPE — throwaway. FinAsset 360 Balance Sheet shape. Not production code. Brief: BRIEF.md -->
+<meta charset="utf-8">
+<title>FinAsset 360 Balance Sheet</title>
+<style>
+  :root {
+    --bg: #f7f8f9;
+    --surface: #edeff1;
+    --border: #dde1e5;
+    --text: #1b1e22;
+    --text-muted: #6b7580;
+    --accent: #4f6d8f;
+    --accent-soft: rgba(79,109,143,0.12);
+    --liability: #8a7361;
+    --row-hover: rgba(15,23,32,0.045);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #16181b;
+      --surface: #1e2126;
+      --border: #2b2f35;
+      --text: #e7e9ec;
+      --text-muted: #939aa4;
+      --accent: #8fb0d4;
+      --accent-soft: rgba(143,176,212,0.16);
+      --liability: #b09a86;
+      --row-hover: rgba(255,255,255,0.045);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #16181b;
+    --surface: #1e2126;
+    --border: #2b2f35;
+    --text: #e7e9ec;
+    --text-muted: #939aa4;
+    --accent: #8fb0d4;
+    --accent-soft: rgba(143,176,212,0.16);
+    --liability: #b09a86;
+    --row-hover: rgba(255,255,255,0.045);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, sans-serif;
+    font-size: 13px;
+    line-height: 1.45;
+    font-variant-numeric: tabular-nums;
+    -webkit-font-smoothing: antialiased;
+  }
+  button { font: inherit; color: inherit; background: none; border: none; cursor: pointer; }
+  input { font: inherit; color: inherit; }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  table { font-variant-numeric: tabular-nums; border-collapse: collapse; width: 100%; }
+  a { color: inherit; }
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; animation: none !important; }
+  }
+
+  /* ---------------- top bar ---------------- */
+  .topbar {
+    position: sticky; top: 0; z-index: 30;
+    height: 44px; display: flex; align-items: center;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg);
+    padding: 0 40px;
+  }
+  .wordmark { font-size: 12px; color: var(--text-muted); letter-spacing: .02em; margin-right: 28px; white-space: nowrap; }
+  .topnav { display: flex; gap: 18px; flex: 1; }
+  .nav-btn { font-size: 13px; color: var(--text-muted); padding: 4px 0; border-bottom: 2px solid transparent; }
+  .nav-btn.active { color: var(--text); border-bottom-color: var(--accent); }
+  .topbar-right { display: flex; align-items: center; gap: 12px; }
+  .chip { font-size: 11px; border: 1px solid var(--border); border-radius: 3px; padding: 2px 6px; color: var(--text-muted); }
+  .avatar { width: 24px; height: 24px; border-radius: 50%; background: var(--surface); color: var(--text-muted); font-size: 10px; display: flex; align-items: center; justify-content: center; }
+  .why-link { font-size: 11px; color: var(--text-muted); text-decoration: underline; }
+  @media (max-width: 719px) { .avatar, .why-link { display: none; } }
+
+  /* ---------------- page shell ---------------- */
+  .page { max-width: 1120px; margin: 0 auto; padding: 32px 40px; opacity: 0; transform: translateY(4px); transition: opacity 180ms ease, transform 180ms ease; }
+  .page.show { opacity: 1; transform: translateY(0); }
+  @media (max-width: 719px) { .page { padding: 20px 16px; } }
+
+  /* ---------------- header band ---------------- */
+  .header-band { display: grid; grid-template-columns: 320px 1fr; gap: 48px; align-items: start; margin-bottom: 40px; }
+  @media (max-width: 719px) { .header-band { grid-template-columns: 1fr; gap: 24px; } }
+  .nw-label { font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--text-muted); }
+  .nw-figure { font-size: 36px; font-weight: 500; margin-top: 4px; }
+  .nw-subline { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+  .nw-controls { display: flex; gap: 8px; margin-top: 16px; }
+  .btn-hairline { border: 1px solid var(--border); border-radius: 4px; padding: 6px 14px; font-size: 12px; }
+  .btn-hairline:hover { background: var(--row-hover); }
+  .stale-btn { font-size: 12px; color: var(--text-muted); text-decoration: underline; text-decoration-color: var(--border); }
+  .stale-btn:hover { color: var(--text); }
+  .last-checkin { font-size: 11px; color: var(--text-muted); margin-top: 8px; }
+
+  .dist-caption { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px; }
+  .dist-caption-label { font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--text-muted); }
+  .dist-caption-legend { font-size: 11px; color: var(--text-muted); }
+  .dist-row { display: flex; align-items: center; height: 34px; gap: 10px; }
+  .dist-name { width: 120px; font-size: 13px; flex-shrink: 0; }
+  @media (max-width: 719px) { .dist-name { width: 96px; } }
+  .dist-track { position: relative; flex: 1; height: 6px; border-radius: 2px; background: var(--border); }
+  .dist-fill { position: absolute; left: 0; top: 0; height: 100%; border-radius: 2px; background: var(--accent); width: 0; transition: width 300ms ease-out; }
+  .dist-tick { position: absolute; top: -3px; width: 0; height: 12px; border-left: 1px dashed var(--text-muted); }
+  .dist-figures { width: 140px; text-align: right; flex-shrink: 0; }
+  .dist-line1 { font-size: 13px; }
+  .dist-line1 .target { color: var(--text-muted); font-weight: 400; }
+  .dist-line1 .actual { font-weight: 500; }
+  .dist-line2 { font-size: 11px; color: var(--text-muted); }
+
+  /* ---------------- sheet table ---------------- */
+  .sheet-wrap { position: relative; }
+  .checkin-indicator { position: absolute; left: 0; width: 2px; height: 40px; background: var(--accent); transform: translateY(-999px); transition: transform 200ms cubic-bezier(.2,.8,.2,1); pointer-events: none; }
+  table.sheet-table { table-layout: fixed; }
+  .col-name { width: auto; }
+  .col-value { width: 160px; }
+  .col-usd { width: 130px; }
+  .col-asof { width: 90px; }
+  .col-share { width: 70px; }
+  @media (max-width: 719px) {
+    .col-usd, .col-share, td.usd-cell, td.share-cell, th.usd-cell, th.share-cell { display: none; }
+    .col-value { width: 132px; }
+    .col-asof { width: 64px; }
+  }
+  .sheet-table th { font-size: 11px; font-weight: 400; color: var(--text-muted); border-bottom: 1px solid var(--border); padding: 6px 8px; text-align: right; }
+  .sheet-table th.col-name { text-align: left; }
+  .sheet-table td { padding: 0 8px; text-align: right; }
+  .sheet-table td.col-name { text-align: left; }
+  tr.block-heading-row td { padding-top: 22px; padding-bottom: 4px; font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--text-muted); border-bottom: 1px solid var(--border); }
+  tr.section-row td { padding-top: 22px; padding-bottom: 6px; font-size: 13px; font-weight: 500; border-bottom: 1px solid var(--border); }
+  tr.section-row td.section-share { font-size: 12px; font-weight: 400; color: var(--text-muted); }
+  tr.item-row { height: 40px; border-bottom: 1px solid var(--border); cursor: pointer; }
+  tr.item-row:hover { background: var(--row-hover); }
+  tr.item-row.checkin-current { background: var(--row-hover); }
+  tr.item-row td { vertical-align: middle; }
+  .name-primary { font-size: 13px; }
+  .name-hint { font-size: 11px; color: var(--text-muted); margin-top: 1px; }
+  .link-glyph { color: var(--text-muted); margin-left: 4px; vertical-align: -1px; }
+  .value-cell { cursor: default; }
+  .val-btn { font-size: 13px; text-align: right; width: 100%; padding: 2px 6px; border-radius: 3px; font-variant-numeric: tabular-nums; }
+  .val-btn.is-liability { color: var(--liability); }
+  .val-ccy { font-size: 11px; color: var(--text-muted); margin-left: 4px; }
+  .val-input { font-size: 13px; text-align: right; width: 100%; padding: 2px 6px; border: none; border-radius: 3px; background: var(--accent-soft); font-variant-numeric: tabular-nums; }
+  .val-caption { font-size: 11px; color: var(--text-muted); margin-top: 2px; text-align: right; }
+  .val-caption button { text-decoration: none; }
+  .val-date-input { font-size: 11px; color: var(--text-muted); text-align: right; width: 100%; border: none; background: transparent; margin-top: 2px; }
+  .live-hint { font-size: 11px; color: var(--text-muted); margin-top: 2px; text-align: right; }
+  .live-hint button { text-decoration: underline; }
+  .value-cell.editing .live-hint, .value-cell.editing .val-caption-rest { display: none; }
+  @keyframes shake-x { 0%,100%{transform:translateX(0);} 25%{transform:translateX(-2px);} 75%{transform:translateX(2px);} }
+  .shake { animation: shake-x 120ms linear; }
+  .cell-settle { transition: background-color 600ms ease-out; }
+  .usd-cell, .share-cell { font-size: 13px; }
+  .usd-cell.is-liability { color: var(--liability); }
+  .share-cell { font-size: 12px; color: var(--text-muted); }
+  .asof-cell { font-size: 13px; white-space: nowrap; }
+  .asof-cell .visited-check { color: var(--text-muted); margin-right: 3px; }
+  tr.networth-row td { padding-top: 14px; padding-bottom: 14px; font-size: 13px; font-weight: 500; border-top: 1px solid var(--text-muted); border-bottom: none; }
+
+  /* ---------------- check-in strip ---------------- */
+  .checkin-strip { position: sticky; top: 44px; z-index: 20; height: 44px; background: var(--surface); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 40px; font-size: 13px; }
+  @media (max-width: 719px) { .checkin-strip { padding: 0 16px; } }
+  .checkin-left { font-size: 13px; }
+  .checkin-center { font-size: 11px; color: var(--text-muted); }
+  @media (max-width: 719px) { .checkin-center { display: none; } }
+  .checkin-right button { font-size: 12px; text-decoration: underline; color: var(--text-muted); }
+  .checkin-summary { opacity: 0; transition: opacity 220ms ease; }
+  .checkin-summary.show { opacity: 1; }
+
+  /* ---------------- drawer + scrim ---------------- */
+  .scrim { position: fixed; inset: 0; top: 44px; background: rgba(0,0,0,.18); opacity: 0; pointer-events: none; transition: opacity 220ms ease; z-index: 40; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .scrim { background: rgba(0,0,0,.4); } }
+  :root[data-theme="dark"] .scrim { background: rgba(0,0,0,.4); }
+  .scrim.show { opacity: 1; pointer-events: auto; }
+  .drawer { position: fixed; top: 44px; right: 0; bottom: 0; width: 420px; max-width: 100%; background: var(--surface); border-left: 1px solid var(--border); transform: translateX(100%); transition: transform 220ms cubic-bezier(.2,.8,.2,1); z-index: 41; overflow-y: auto; }
+  .drawer.open { transform: translateX(0); }
+  @media (max-width: 719px) { .drawer { width: 100%; } }
+  .drawer-header { position: sticky; top: 0; background: var(--surface); display: flex; justify-content: space-between; align-items: center; padding: 12px 28px 0; }
+  .drawer-close { font-size: 16px; color: var(--text-muted); line-height: 1; }
+  .drawer-back { font-size: 13px; color: var(--text-muted); display: none; }
+  @media (max-width: 719px) { .drawer-close { display: none; } .drawer-back { display: block; } }
+  .drawer-body { padding: 8px 28px 40px; }
+  .drawer-section { margin-top: 28px; }
+  .drawer-section:first-child { margin-top: 0; }
+  .drawer-label { font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--text-muted); margin-bottom: 8px; }
+  .drawer-class { font-size: 11px; color: var(--text-muted); }
+  .drawer-title { font-size: 18px; font-weight: 500; margin-top: 2px; }
+  .drawer-hint { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+  .drawer-figure { font-size: 24px; font-variant-numeric: tabular-nums; }
+  .drawer-figure.small { font-size: 20px; }
+  .drawer-figure.is-liability { color: var(--liability); }
+  .drawer-sub { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+  .drawer-kv { display: flex; justify-content: space-between; gap: 12px; padding: 6px 0; border-bottom: 1px solid var(--border); font-size: 12px; }
+  .drawer-kv:last-child { border-bottom: none; }
+  .drawer-kv .k { color: var(--text-muted); }
+  .drawer-link-btn { text-decoration: underline; cursor: pointer; }
+  .sparkline-wrap { margin-top: 8px; }
+  table.history-table { margin-top: 8px; font-size: 12px; }
+  table.history-table td { padding: 5px 4px; border-bottom: 1px solid var(--border); text-align: right; }
+  table.history-table td:first-child { text-align: left; }
+  .amort-form { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 16px; margin-top: 4px; }
+  .amort-field label { display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 3px; }
+  .amort-field input { width: 100%; border: 1px solid var(--border); border-radius: 3px; padding: 4px 6px; text-align: right; background: transparent; color: var(--text); font-size: 12px; }
+  .amort-none { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+  .amort-summary { font-size: 12px; color: var(--text-muted); margin-top: 10px; }
+  .research-pre { font-size: 12px; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; background: var(--bg); border-radius: 4px; padding: 12px; white-space: pre-wrap; margin: 8px 0 0; }
+  details.research-details summary { font-size: 13px; cursor: pointer; }
+  .copy-btn { font-size: 11px; text-decoration: underline; color: var(--text-muted); margin-top: 6px; }
+  .drawer-footer { display: flex; gap: 16px; margin-top: 28px; align-items: center; }
+  .archive-note { font-size: 11px; color: var(--text-muted); }
+
+  /* ---------------- plan page ---------------- */
+  .plan-grid { display: grid; grid-template-columns: 1fr 1.4fr; gap: 56px; }
+  @media (max-width: 899px) { .plan-grid { grid-template-columns: 1fr; gap: 32px; } }
+  .plan-caption { font-size: 12px; color: var(--text-muted); margin-top: 4px; margin-bottom: 16px; }
+  table.target-table { font-size: 13px; }
+  table.target-table th { font-size: 11px; font-weight: 400; color: var(--text-muted); text-align: right; padding: 4px 8px; border-bottom: 1px solid var(--border); }
+  table.target-table th:first-child, table.target-table td:first-child { text-align: left; }
+  table.target-table td { padding: 8px; text-align: right; border-bottom: 1px solid var(--border); }
+  .target-pct-input { width: 64px; text-align: right; border: 1px solid var(--border); border-radius: 3px; padding: 3px 5px; background: transparent; color: var(--text); }
+  .target-actual { color: var(--text-muted); }
+  .target-gap { font-size: 12px; color: var(--text-muted); }
+  tr.target-total-row td { font-size: 13px; padding-top: 12px; border-bottom: none; }
+  .target-total-note { font-size: 12px; color: var(--text-muted); }
+  .proj-inputs { display: flex; gap: 20px; margin-bottom: 16px; flex-wrap: wrap; }
+  .proj-field label { display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 4px; }
+  .proj-field input { border: 1px solid var(--border); border-radius: 3px; padding: 5px 8px; background: transparent; color: var(--text); width: 120px; }
+  .proj-footnote { font-size: 11px; color: var(--text-muted); margin-top: 8px; }
+
+  /* ---------------- notes panel ---------------- */
+  .notes-body h3 { font-size: 13px; font-weight: 500; margin: 20px 0 6px; }
+  .notes-body h3:first-child { margin-top: 0; }
+  .notes-body p { font-size: 13px; color: var(--text); margin: 0 0 8px; }
+</style>
+
+<div class="topbar">
+  <div class="wordmark">FinAsset 360</div>
+  <div class="topnav">
+    <a class="nav-btn" href="#sheet" data-route="sheet">Sheet</a>
+    <a class="nav-btn" href="#plan" data-route="plan">Plan</a>
+  </div>
+  <div class="topbar-right" id="topbar-right">
+    <span class="chip">USD</span>
+    <span class="avatar" id="avatar-chip">AR</span>
+    <button class="why-link" id="why-link">Why this design</button>
+  </div>
+</div>
+<div id="checkin-strip-slot"></div>
+<div id="page-root"></div>
+
+<div class="scrim" id="scrim"></div>
+<div class="drawer" id="drawer" tabindex="-1">
+  <div class="drawer-header">
+    <button class="drawer-back" id="drawer-back">&larr; Back</button>
+    <div></div>
+    <button class="drawer-close" id="drawer-close" aria-label="Close">&times;</button>
+  </div>
+  <div class="drawer-body" id="drawer-body"></div>
+</div>
+
+<script>
+/* ============================================================
+   Reused helpers (from tree-ui/index.html, verbatim or lightly adapted)
+   ============================================================ */
+function seededRandom(seed) {
+  var s = 0;
+  for (var i = 0; i < seed.length; i++) s = (s * 31 + seed.charCodeAt(i)) >>> 0;
+  return function () {
+    s = (s * 1664525 + 1013904223) >>> 0;
+    return s / 4294967296;
+  };
+}
+function genHistory(endValue, endDateISO, points, seedKey, volatility) {
+  var rand = seededRandom(seedKey);
+  var values = new Array(points);
+  values[points - 1] = endValue;
+  for (var i = points - 2; i >= 0; i--) {
+    var pct = (rand() - 0.5) * 2 * volatility;
+    values[i] = values[i + 1] / (1 + pct);
+  }
+  var end = new Date(endDateISO + 'T00:00:00');
+  var out = [];
+  for (var j = points - 1; j >= 0; j--) {
+    var d = new Date(end.getFullYear(), end.getMonth() - j, end.getDate());
+    out.push({ date: d.toISOString().slice(0, 10), value: Math.round(values[points - 1 - j]) });
+  }
+  return out;
+}
+function fmtMoney(n) {
+  var neg = n < 0;
+  var abs = Math.round(Math.abs(n));
+  var s = abs.toLocaleString('en-US');
+  return (neg ? '−' : '') + s;
+}
+function fmtPct(n, decimals) {
+  if (decimals === undefined) decimals = 1;
+  return n.toFixed(decimals) + '%';
+}
+/* Adapted display format for this brief: "D MMM YYYY" / "D MMM" (not tree-ui's "MMM D, YYYY"). */
+function fmtDate(iso) {
+  var d = new Date(iso + 'T00:00:00');
+  return d.getDate() + ' ' + d.toLocaleDateString('en-US', { month: 'short' }) + ' ' + d.getFullYear();
+}
+function fmtDayMonth(iso) {
+  var d = new Date(iso + 'T00:00:00');
+  return d.getDate() + ' ' + d.toLocaleDateString('en-US', { month: 'short' });
+}
+function fv(P, annualRate, monthlyContribution, years) {
+  var r = annualRate / 12;
+  var n = years * 12;
+  var growth = Math.pow(1 + r, n);
+  if (r === 0) return P + monthlyContribution * n;
+  return P * growth + monthlyContribution * ((growth - 1) / r);
+}
+function monthlyPayment(P0, annualRate, termMonths) {
+  var r = annualRate / 12;
+  return P0 * r / (1 - Math.pow(1 + r, -termMonths));
+}
+function amortizeBalance(currentBalance, annualRate, payment, k) {
+  var r = annualRate / 12;
+  var growth = Math.pow(1 + r, k);
+  var bal = currentBalance * growth - payment * ((growth - 1) / r);
+  return Math.max(0, bal);
+}
+function payoffMonths(currentBalance, annualRate, payment) {
+  var r = annualRate / 12;
+  var x = (payment / r) / (payment / r - currentBalance);
+  return Math.log(x) / Math.log(1 + r);
+}
+/* adapted field names: liability.amount (not .balance), amortization: {rate, original, term, extra, customPayment} */
+function computeAmortizationInfo(liability) {
+  var am = liability.amortization;
+  if (!am) return null;
+  var base = monthlyPayment(am.original, am.rate, am.term);
+  var payment = (am.customPayment != null && am.customPayment !== '') ? Number(am.customPayment) : base;
+  var totalPayment = payment + (am.extra || 0);
+  var currentBalance = latestVal(liability).value;
+  var kPayoff = payoffMonths(currentBalance, am.rate, totalPayment);
+  var start = new Date(TODAY + 'T00:00:00');
+  var payoffDate = new Date(start.getFullYear(), start.getMonth() + Math.round(kPayoff), start.getDate());
+  return {
+    base: base, isCustom: (am.customPayment != null && am.customPayment !== ''),
+    extra: am.extra || 0, totalPayment: totalPayment,
+    payoffMonths: kPayoff, payoffDate: payoffDate
+  };
+}
+function reducedMotion() {
+  try { return !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches); }
+  catch (e) { return false; }
+}
+
+/* ============================================================
+   Data
+   ============================================================ */
+var TODAY = '2026-09-07';
+var FX = { USD: 1, EUR: 1.09, INR: 0.012 };
+var PRICES = { AAPL: 232.10, VTI: 298.40, MSFT: 512.30, NVDA: 178.60, SCHD: 27.90, VXUS: 71.20, XAU: 3412, XAG: 41.80, BTC: 118400, ETH: 4120, SOL: 212 };
+var VOL = { 'real-estate': 0.015, equity: 0.04, 'precious-metal': 0.03, cash: 0.01, crypto: 0.15, vehicles: 0.02 };
+var CHAIN_SVG = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" class="link-glyph"><path d="M9 15l6-6"/><path d="M10 5l1-1a4 4 0 015.66 5.66l-1.5 1.5"/><path d="M14 19l-1 1a4 4 0 01-5.66-5.66l1.5-1.5"/></svg>';
+
+var ASSET_CLASSES = [
+  { id: 'real-estate', name: 'Real Estate', target: 35, holdings: [
+    { id: 'house', name: '123 Maple St', currency: 'USD', amount: 785000, asOf: '2026-07-02', linkedLiabilityId: 'mortgage-maple' },
+    { id: 'flat-pune', name: 'Flat in Pune', currency: 'INR', amount: 9200000, asOf: '2026-05-20' }
+  ]},
+  { id: 'equity', name: 'Equity', target: 35, holdings: [
+    { id: 'aapl', name: 'AAPL', currency: 'USD', amount: 27240, asOf: '2026-08-10', symbol: 'AAPL', qty: 120 },
+    { id: 'vti', name: 'VTI', currency: 'USD', amount: 90210, asOf: '2026-08-10', symbol: 'VTI', qty: 310 },
+    { id: 'msft', name: 'MSFT', currency: 'USD', amount: 22590, asOf: '2026-08-10', symbol: 'MSFT', qty: 45 },
+    { id: 'nvda', name: 'NVDA', currency: 'USD', amount: 10380, asOf: '2026-08-10', symbol: 'NVDA', qty: 60 },
+    { id: 'schd', name: 'SCHD', currency: 'USD', amount: 11040, asOf: '2026-08-10', symbol: 'SCHD', qty: 400 },
+    { id: 'vxus', name: 'VXUS', currency: 'USD', amount: 17500, asOf: '2026-08-10', symbol: 'VXUS', qty: 250 },
+    { id: 'k401', name: 'Vanguard 401(k)', currency: 'USD', amount: 214300, asOf: '2026-08-10' },
+    { id: 'roth', name: 'Roth IRA', currency: 'USD', amount: 68900, asOf: '2026-07-28' }
+  ]},
+  { id: 'precious-metal', name: 'Precious Metal', target: 10, holdings: [
+    { id: 'gold-coins', name: 'Gold coins', currency: 'USD', amount: 40560, asOf: '2026-08-10', symbol: 'XAU', qty: 12 },
+    { id: 'gold-jewellery', name: 'Gold jewellery', currency: 'INR', amount: 1620000, asOf: '2026-06-11', hint: '180 g' },
+    { id: 'silver-bars', name: 'Silver bars', currency: 'USD', amount: 4090, asOf: '2026-08-10', symbol: 'XAG', qty: 100 }
+  ]},
+  { id: 'cash', name: 'Cash', target: 10, holdings: [
+    { id: 'chase', name: 'Chase checking', currency: 'USD', amount: 14250, asOf: '2026-09-01' },
+    { id: 'marcus', name: 'Marcus savings', currency: 'USD', amount: 62000, asOf: '2026-09-01' },
+    { id: 'hdfc', name: 'HDFC savings', currency: 'INR', amount: 1450000, asOf: '2026-08-10' },
+    { id: 'n26', name: 'N26 account', currency: 'EUR', amount: 8400, asOf: '2026-08-10' },
+    { id: 'emergency-cd', name: 'Emergency fund CD', currency: 'USD', amount: 25000, asOf: '2026-07-15' }
+  ]},
+  { id: 'crypto', name: 'Crypto', target: 5, holdings: [
+    { id: 'btc', name: 'Bitcoin', currency: 'USD', amount: 98600, asOf: '2026-08-10', symbol: 'BTC', qty: 0.85 },
+    { id: 'eth', name: 'Ether', currency: 'USD', amount: 24800, asOf: '2026-08-10', symbol: 'ETH', qty: 6.2 },
+    { id: 'sol', name: 'Solana', currency: 'USD', amount: 26600, asOf: '2026-08-10', symbol: 'SOL', qty: 140 }
+  ]},
+  { id: 'vehicles', name: 'Vehicles', target: 5, holdings: [
+    { id: 'tesla', name: '2022 Tesla Model Y', currency: 'USD', amount: 31500, asOf: '2026-08-10' },
+    { id: 'honda', name: '2018 Honda CR-V', currency: 'USD', amount: 17800, asOf: '2026-06-30' }
+  ]}
+];
+
+var LIABILITY_CLASSES = [
+  { id: 'mortgage', name: 'Mortgage', liabilities: [
+    { id: 'mortgage-maple', name: 'Mortgage · 123 Maple St', currency: 'USD', amount: 412300, asOf: '2026-08-10', linkedHoldingId: 'house',
+      amortization: { rate: 0.0625, original: 520000, term: 360, start: '2021-08-01', customPayment: null, extra: 300 } }
+  ]},
+  { id: 'auto-loan', name: 'Auto Loan', liabilities: [
+    { id: 'tesla-loan', name: 'Tesla loan', currency: 'USD', amount: 18900, asOf: '2026-08-10', linkedHoldingId: null,
+      amortization: { rate: 0.049, original: 38000, term: 60, start: '2023-03-01', customPayment: null, extra: 0 } }
+  ]},
+  { id: 'credit-card', name: 'Credit Card', liabilities: [
+    { id: 'chase-sapphire', name: 'Chase Sapphire', currency: 'USD', amount: 3240, asOf: '2026-09-01', linkedHoldingId: null, amortization: null }
+  ]},
+  { id: 'student-loan', name: 'Student Loan', liabilities: [
+    { id: 'fed-student-loan', name: 'Federal student loan', currency: 'USD', amount: 12600, asOf: '2026-07-20', linkedHoldingId: null, amortization: null }
+  ]}
+];
+
+var RESEARCH_PROMPTS = {
+  'real-estate': 'Estimate the current market value of a property at {name}. Consider recent comparable sales within 1 mile in the last 6 months, current listing prices, and local price trends. Give a single point estimate and a range.',
+  equity: 'Estimate the current fair value of {name} given recent price action, sector trends, and any material news in the last quarter. Note key risks and give a point estimate with a range.',
+  'precious-metal': 'Estimate the current market value of {name} based on today’s spot price and any applicable premium for coins, bars, or jewellery. State the purity/weight assumption used and give a point estimate with a range.',
+  cash: 'Confirm the current balance of {name} against the latest statement, noting any pending transactions or accrued interest since the last recorded balance. Give a single point estimate.',
+  crypto: 'Estimate the current market value of {name} using the latest spot price across major exchanges. Note recent volatility and give a point estimate with a range.',
+  vehicles: 'Estimate the current resale value of {name} using recent comparable listings for similar make, model, year, mileage, and condition. Give a point estimate and a range.'
+};
+
+var HOLDINGS_MAP = {};
+var LIABILITIES_MAP = {};
+
+function initData() {
+  ASSET_CLASSES.forEach(function (cls) {
+    cls.holdings.forEach(function (h) {
+      h.classId = cls.id; h.kind = 'holding';
+      h.valuations = genHistory(h.amount, h.asOf, 24, h.id, VOL[cls.id] || 0.02);
+      HOLDINGS_MAP[h.id] = h;
+    });
+  });
+  LIABILITY_CLASSES.forEach(function (cls) {
+    cls.liabilities.forEach(function (l) {
+      l.classId = cls.id; l.kind = 'liability';
+      l.valuations = genHistory(l.amount, l.asOf, 24, l.id, 0.01);
+      LIABILITIES_MAP[l.id] = l;
+    });
+  });
+}
+initData();
+
+/* ============================================================
+   Derived math
+   ============================================================ */
+function latestVal(item) {
+  var v = item.valuations, best = v[0];
+  for (var i = 1; i < v.length; i++) if (v[i].date > best.date) best = v[i];
+  return best;
+}
+function usdValue(item) { return latestVal(item).value * FX[item.currency]; }
+function daysBetween(isoEarlier, isoLater) {
+  var a = new Date(isoEarlier + 'T00:00:00'), b = new Date(isoLater + 'T00:00:00');
+  return Math.round((b.getTime() - a.getTime()) / 86400000);
+}
+function isStale(iso) { return daysBetween(iso, TODAY) > 30; }
+function liveEstimate(item) { return item.symbol ? item.qty * PRICES[item.symbol] : null; }
+
+function allHoldings() { var out = []; ASSET_CLASSES.forEach(function (c) { out = out.concat(c.holdings); }); return out; }
+function allLiabilities() { var out = []; LIABILITY_CLASSES.forEach(function (c) { out = out.concat(c.liabilities); }); return out; }
+
+function holdingsTotal() { return allHoldings().reduce(function (s, h) { return s + usdValue(h); }, 0); }
+function liabilitiesTotal() { return allLiabilities().reduce(function (s, l) { return s + usdValue(l); }, 0); }
+function netWorth() { return holdingsTotal() - liabilitiesTotal(); }
+function classTotal(cls) { return cls.holdings.reduce(function (s, h) { return s + usdValue(h); }, 0); }
+function liabClassTotal(cls) { return cls.liabilities.reduce(function (s, l) { return s + usdValue(l); }, 0); }
+function newestAsOfDate() {
+  var best = null;
+  allHoldings().concat(allLiabilities()).forEach(function (it) {
+    var d = latestVal(it).date;
+    if (!best || d > best) best = d;
+  });
+  return best;
+}
+function staleItems() {
+  return allHoldings().concat(allLiabilities()).filter(function (it) { return isStale(latestVal(it).date); });
+}
+
+function distributionRows() {
+  var total = holdingsTotal();
+  return ASSET_CLASSES.map(function (cls) {
+    var ct = classTotal(cls);
+    var actualPct = total > 0 ? (ct / total) * 100 : 0;
+    return { cls: cls, actualPct: actualPct, targetPct: cls.target, gap: (cls.target - actualPct) / 100 * total };
+  });
+}
+
+/* recorded net worth history: sum each item's own 24-point genHistory by index (months-ago aligned) */
+function recordedNetWorthSeries() {
+  var hs = allHoldings(), ls = allLiabilities();
+  var out = [];
+  for (var i = 0; i < 24; i++) {
+    var v = 0;
+    hs.forEach(function (h) { v += h.valuations[i].value * FX[h.currency]; });
+    ls.forEach(function (l) { v -= l.valuations[i].value * FX[l.currency]; });
+    var monthsAgo = 23 - i;
+    var d = new Date(TODAY + 'T00:00:00');
+    d = new Date(d.getFullYear(), d.getMonth() - monthsAgo, 1);
+    out.push({ date: d.toISOString().slice(0, 10), value: v });
+  }
+  return out;
+}
+
+var PROJECTION = { growth: 0.06, contribution: 2500, years: 20 };
+
+function liabilitiesProjected(years) {
+  var total = 0;
+  LIABILITY_CLASSES.forEach(function (cls) {
+    cls.liabilities.forEach(function (l) {
+      if (l.amortization) {
+        var info = computeAmortizationInfo(l);
+        total += amortizeBalance(latestVal(l).value, l.amortization.rate, info.totalPayment, Math.round(years * 12)) * FX[l.currency];
+      } else {
+        total += usdValue(l);
+      }
+    });
+  });
+  return total;
+}
+function projectedNetWorth(years) {
+  return fv(holdingsTotal(), PROJECTION.growth, PROJECTION.contribution, years) - liabilitiesProjected(years);
+}
+function mortgagePayoffInfo() {
+  var m = LIABILITIES_MAP['mortgage-maple'];
+  return computeAmortizationInfo(m);
+}
+
+/* ============================================================
+   State
+   ============================================================ */
+var STATE = {
+  route: 'sheet',
+  rowOrder: [],
+  checkIn: null,
+  drawer: null,
+  drawerReturnFocus: null
+};
+
+function itemById(id) { return HOLDINGS_MAP[id] || LIABILITIES_MAP[id]; }
+
+/* ============================================================
+   Small DOM helpers
+   ============================================================ */
+function h(tag, attrs, children) {
+  var e = document.createElement(tag);
+  attrs = attrs || {};
+  for (var k in attrs) {
+    if (k === 'class') e.className = attrs[k];
+    else if (k === 'html') e.innerHTML = attrs[k];
+    else if (k.indexOf('on') === 0) e.addEventListener(k.slice(2), attrs[k]);
+    else e.setAttribute(k, attrs[k]);
+  }
+  (children || []).forEach(function (c) {
+    if (c == null) return;
+    e.appendChild(typeof c === 'string' ? document.createTextNode(c) : c);
+  });
+  return e;
+}
+function svgEl(tag, attrs) {
+  var e = document.createElementNS('http://www.w3.org/2000/svg', tag);
+  for (var k in attrs) e.setAttribute(k, attrs[k]);
+  return e;
+}
+function qs(sel, root) { return (root || document).querySelector(sel); }
+
+/* ============================================================
+   Router
+   ============================================================ */
+function currentRoute() {
+  var hash = location.hash.replace('#', '');
+  return hash === 'plan' ? 'plan' : 'sheet';
+}
+function renderRoute() {
+  STATE.route = currentRoute();
+  document.querySelectorAll('.nav-btn').forEach(function (a) {
+    a.classList.toggle('active', a.getAttribute('data-route') === STATE.route);
+  });
+  var root = qs('#page-root');
+  root.innerHTML = '';
+  var page = h('div', { class: 'page' });
+  root.appendChild(page);
+  if (STATE.route === 'plan') renderPlanPage(page);
+  else renderSheetPage(page);
+  requestAnimationFrame(function () { page.classList.add('show'); });
+}
+window.addEventListener('hashchange', function () {
+  if (STATE.checkIn) leaveCheckin();
+  if (STATE.drawer) closeDrawer();
+  renderRoute();
+});
+
+/* ============================================================
+   Sheet page
+   ============================================================ */
+function renderSheetPage(page) {
+  page.appendChild(buildHeaderBand());
+  page.appendChild(buildSheetTable());
+  renderCheckinStrip();
+  animateDistributionBars(true);
+}
+
+function buildHeaderBand() {
+  var band = h('div', { class: 'header-band' });
+
+  var left = h('div', {});
+  left.appendChild(h('div', { class: 'nw-label' }, ['NET WORTH']));
+  left.appendChild(h('div', { class: 'nw-figure', id: 'nw-figure' }, [fmtMoney(netWorth())]));
+  left.appendChild(h('div', { class: 'nw-subline', id: 'nw-subline' }, [
+    'Holdings ' + fmtMoney(holdingsTotal()) + ' − Liabilities ' + fmtMoney(liabilitiesTotal()) + ' · as of ' + fmtDate(newestAsOfDate())
+  ]));
+  var controls = h('div', { class: 'nw-controls' });
+  controls.appendChild(h('button', { class: 'btn-hairline', onclick: function () { startCheckin('all'); } }, ['Check-in']));
+  var staleBtn = h('button', { class: 'stale-btn', id: 'stale-btn', onclick: function () { startCheckin('stale'); } }, [staleItems().length + ' stale']);
+  staleBtn.hidden = staleItems().length === 0;
+  controls.appendChild(staleBtn);
+  left.appendChild(controls);
+  left.appendChild(h('div', { class: 'last-checkin', id: 'last-checkin' }, ['Last check-in ' + fmtDate(STATE.lastCheckIn || LAST_CHECKIN)]));
+  band.appendChild(left);
+
+  var right = h('div', { id: 'dist-block' });
+  var cap = h('div', { class: 'dist-caption' });
+  cap.appendChild(h('div', { class: 'dist-caption-label' }, ['DISTRIBUTION']));
+  cap.appendChild(h('div', { class: 'dist-caption-legend' }, ['actual · target ┆']));
+  right.appendChild(cap);
+  var rows = distributionRows();
+  var maxVal = 0;
+  rows.forEach(function (r) { maxVal = Math.max(maxVal, r.actualPct, r.targetPct); });
+  var scale = maxVal > 0 ? 92 / maxVal : 1;
+  rows.forEach(function (r) {
+    var row = h('div', { class: 'dist-row', 'data-class': r.cls.id });
+    row.appendChild(h('div', { class: 'dist-name' }, [r.cls.name]));
+    var track = h('div', { class: 'dist-track' });
+    var fill = h('div', { class: 'dist-fill' });
+    fill.style.width = '0%';
+    fill.setAttribute('data-target-width', (r.actualPct * scale).toFixed(2));
+    track.appendChild(fill);
+    var tick = h('div', { class: 'dist-tick' });
+    tick.style.left = (r.targetPct * scale) + '%';
+    track.appendChild(tick);
+    row.appendChild(track);
+    var figs = h('div', { class: 'dist-figures' });
+    figs.appendChild(h('div', { class: 'dist-line1' }, [
+      h('span', { class: 'actual' }, [fmtPct(r.actualPct)]), ' · ', h('span', { class: 'target' }, [Math.round(r.targetPct) + '%'])
+    ]));
+    var gapWords = r.gap >= 0 ? (fmtMoney(Math.abs(r.gap)) + ' below target') : (fmtMoney(Math.abs(r.gap)) + ' above target');
+    figs.appendChild(h('div', { class: 'dist-line2' }, [gapWords]));
+    row.appendChild(figs);
+    right.appendChild(row);
+  });
+  band.appendChild(right);
+  return band;
+}
+
+function animateDistributionBars(stagger) {
+  var fills = document.querySelectorAll('.dist-fill');
+  if (reducedMotion()) {
+    fills.forEach(function (f) { f.style.width = f.getAttribute('data-target-width') + '%'; });
+    return;
+  }
+  fills.forEach(function (f, i) {
+    var target = f.getAttribute('data-target-width') + '%';
+    var delay = stagger ? i * 40 : 0;
+    setTimeout(function () {
+      f.style.transition = 'width 400ms ease-out';
+      f.style.width = target;
+    }, delay);
+  });
+}
+
+function updateDistributionBars() {
+  var rows = distributionRows();
+  var maxVal = 0;
+  rows.forEach(function (r) { maxVal = Math.max(maxVal, r.actualPct, r.targetPct); });
+  var scale = maxVal > 0 ? 92 / maxVal : 1;
+  rows.forEach(function (r) {
+    var row = qs('.dist-row[data-class="' + r.cls.id + '"]');
+    if (!row) return;
+    var fill = row.querySelector('.dist-fill');
+    fill.style.transition = 'width 300ms ease-out';
+    fill.style.width = (r.actualPct * scale) + '%';
+    row.querySelector('.dist-tick').style.left = (r.targetPct * scale) + '%';
+    row.querySelector('.actual').textContent = fmtPct(r.actualPct);
+    var gapWords = r.gap >= 0 ? (fmtMoney(Math.abs(r.gap)) + ' below target') : (fmtMoney(Math.abs(r.gap)) + ' above target');
+    row.querySelector('.dist-line2').textContent = gapWords;
+  });
+}
+
+function updateHeaderFigures() {
+  var nwEl = qs('#nw-figure'); if (nwEl) nwEl.textContent = fmtMoney(netWorth());
+  var subEl = qs('#nw-subline');
+  if (subEl) subEl.textContent = 'Holdings ' + fmtMoney(holdingsTotal()) + ' − Liabilities ' + fmtMoney(liabilitiesTotal()) + ' · as of ' + fmtDate(newestAsOfDate());
+  var staleBtn = qs('#stale-btn');
+  if (staleBtn) {
+    var n = staleItems().length;
+    staleBtn.textContent = n + ' stale';
+    staleBtn.hidden = n === 0;
+  }
+}
+
+/* ---- sheet table ---- */
+function sortedHoldings(cls) { return cls.holdings.slice().sort(function (a, b) { return usdValue(b) - usdValue(a); }); }
+function sortedLiabilities(cls) { return cls.liabilities.slice().sort(function (a, b) { return usdValue(b) - usdValue(a); }); }
+
+function buildSheetTable() {
+  var wrap = h('div', { class: 'sheet-wrap', id: 'sheet-wrap' });
+  var indicator = h('div', { class: 'checkin-indicator', id: 'checkin-indicator' });
+  wrap.appendChild(indicator);
+
+  var table = h('table', { class: 'sheet-table' });
+  var thead = h('thead', {});
+  var headRow = h('tr', {});
+  headRow.appendChild(h('th', { class: 'col-name' }, ['Name']));
+  headRow.appendChild(h('th', { class: 'col-value' }, ['Value']));
+  headRow.appendChild(h('th', { class: 'col-usd usd-cell' }, ['in USD']));
+  headRow.appendChild(h('th', { class: 'col-asof' }, ['as of']));
+  headRow.appendChild(h('th', { class: 'col-share share-cell' }, ['Share']));
+  thead.appendChild(headRow);
+  table.appendChild(thead);
+
+  var tbody = h('tbody', { id: 'sheet-tbody' });
+  var hTotal = holdingsTotal(), lTotal = liabilitiesTotal();
+  var order = [];
+
+  tbody.appendChild(blockHeadingRow('HOLDINGS', hTotal));
+  ASSET_CLASSES.forEach(function (cls) {
+    var ct = classTotal(cls);
+    tbody.appendChild(sectionRow(cls.name, ct, hTotal > 0 ? (ct / hTotal) * 100 : 0));
+    sortedHoldings(cls).forEach(function (item) {
+      tbody.appendChild(itemRow(item, hTotal));
+      order.push(item.id);
+    });
+  });
+
+  tbody.appendChild(blockHeadingRow('LIABILITIES', lTotal));
+  LIABILITY_CLASSES.forEach(function (cls) {
+    var ct = liabClassTotal(cls);
+    tbody.appendChild(sectionRow(cls.name, ct, lTotal > 0 ? (ct / lTotal) * 100 : 0));
+    sortedLiabilities(cls).forEach(function (item) {
+      tbody.appendChild(itemRow(item, lTotal));
+      order.push(item.id);
+    });
+  });
+
+  var nwRow = h('tr', { class: 'networth-row' });
+  nwRow.appendChild(h('td', { class: 'col-name' }, ['Net Worth']));
+  nwRow.appendChild(h('td', { class: 'col-value' }, ['']));
+  nwRow.appendChild(h('td', { class: 'col-usd usd-cell' }, [fmtMoney(netWorth())]));
+  nwRow.appendChild(h('td', { class: 'col-asof' }, ['']));
+  nwRow.appendChild(h('td', { class: 'col-share share-cell' }, ['']));
+  tbody.appendChild(nwRow);
+
+  table.appendChild(tbody);
+  wrap.appendChild(table);
+  STATE.rowOrder = order;
+  return wrap;
+}
+
+function blockHeadingRow(label, subtotal) {
+  var tr = h('tr', { class: 'block-heading-row' });
+  tr.appendChild(h('td', { class: 'col-name' }, [label]));
+  tr.appendChild(h('td', { class: 'col-value' }, ['']));
+  tr.appendChild(h('td', { class: 'col-usd usd-cell' }, [fmtMoney(subtotal)]));
+  tr.appendChild(h('td', { class: 'col-asof' }, ['']));
+  tr.appendChild(h('td', { class: 'col-share share-cell' }, ['']));
+  return tr;
+}
+function sectionRow(name, subtotal, sharePct) {
+  var tr = h('tr', { class: 'section-row' });
+  tr.appendChild(h('td', { class: 'col-name' }, [name]));
+  tr.appendChild(h('td', { class: 'col-value' }, ['']));
+  tr.appendChild(h('td', { class: 'col-usd usd-cell' }, [fmtMoney(subtotal)]));
+  tr.appendChild(h('td', { class: 'col-asof' }, ['']));
+  tr.appendChild(h('td', { class: 'col-share share-cell section-share' }, [fmtPct(sharePct)]));
+  return tr;
+}
+
+function itemRow(item, sectionTotal) {
+  var isLiability = item.kind === 'liability';
+  var tr = h('tr', { class: 'item-row', 'data-id': item.id });
+  tr.addEventListener('click', function (e) {
+    if (STATE.checkIn) return;
+    if (e.target.closest('.value-cell')) return;
+    openDrawer(item, tr);
+  });
+
+  var nameTd = h('td', { class: 'col-name' });
+  var nameLine = h('div', { class: 'name-primary' }, [item.name]);
+  var linkedId = isLiability ? item.linkedHoldingId : item.linkedLiabilityId;
+  if (linkedId) {
+    var linkedItem = isLiability ? HOLDINGS_MAP[linkedId] : LIABILITIES_MAP[linkedId];
+    var title = isLiability ? ('Financed ' + linkedItem.name) : ('Linked to ' + linkedItem.name);
+    var span = h('span', { title: title, html: CHAIN_SVG });
+    nameLine.appendChild(span);
+  }
+  nameTd.appendChild(nameLine);
+  var hintText = item.symbol ? (formatQty(item.qty) + ' × ' + item.symbol) : (item.hint || null);
+  if (hintText) nameTd.appendChild(h('div', { class: 'name-hint' }, [hintText]));
+  tr.appendChild(nameTd);
+
+  tr.appendChild(buildValueCell(item, isLiability));
+
+  var usdTd = h('td', { class: 'usd-cell col-usd' + (isLiability ? ' is-liability' : '') }, [fmtMoney(usdValue(item))]);
+  tr.appendChild(usdTd);
+
+  tr.appendChild(buildAsOfCell(item));
+
+  var sharePct = sectionTotal > 0 ? (usdValue(item) / sectionTotal) * 100 : 0;
+  tr.appendChild(h('td', { class: 'share-cell col-share' }, [fmtPct(sharePct)]));
+
+  return tr;
+}
+function formatQty(q) {
+  return (q % 1 === 0) ? String(q) : String(q);
+}
+
+function buildValueCell(item, isLiability) {
+  var td = h('td', { class: 'value-cell col-value' });
+  var rest = h('div', { class: 'val-caption-rest' });
+  var btn = h('button', { class: 'val-btn' + (isLiability ? ' is-liability' : ''), onclick: function () { if (!STATE.checkIn) enterEditMode(item, td); } });
+  refreshValBtnLabel(btn, item);
+  rest.appendChild(btn);
+  var live = liveEstimate(item);
+  if (live != null) {
+    var pct = ((live - latestVal(item).value) / latestVal(item).value) * 100;
+    var sign = pct >= 0 ? '+' : '';
+    var hintDiv = h('div', { class: 'live-hint' }, [
+      'Live ' + fmtMoney(live) + ' · ' + sign + pct.toFixed(1) + '% ',
+      h('button', { onclick: function (e) { e.stopPropagation(); recordLive(item); } }, ['use'])
+    ]);
+    rest.appendChild(hintDiv);
+  }
+  td.appendChild(rest);
+  return td;
+}
+function refreshValBtnLabel(btn, item) {
+  var v = latestVal(item);
+  btn.innerHTML = '';
+  btn.appendChild(document.createTextNode(fmtMoney(v.value)));
+  if (item.currency !== 'USD') btn.appendChild(h('span', { class: 'val-ccy' }, [item.currency]));
+}
+
+function buildAsOfCell(item) {
+  var v = latestVal(item);
+  var td = h('td', { class: 'asof-cell col-asof' });
+  renderAsOfCellContent(td, item);
+  if (isStale(v.date)) { td.style.opacity = '.55'; td.title = 'Stale · ' + daysBetween(v.date, TODAY) + ' days'; }
+  return td;
+}
+function renderAsOfCellContent(td, item, visited) {
+  td.innerHTML = '';
+  var v = latestVal(item);
+  if (visited) td.appendChild(h('span', { class: 'visited-check' }, ['✓']));
+  var text = v.date === TODAY ? 'Today' : fmtDayMonth(v.date);
+  td.appendChild(document.createTextNode(text));
+}
+
+/* ---- targeted row/figure refresh after a non-sorting edit ---- */
+function refreshAfterEdit(item) {
+  var tr = qs('tr.item-row[data-id="' + item.id + '"]');
+  if (tr) {
+    var isLiability = item.kind === 'liability';
+    var btn = tr.querySelector('.val-btn');
+    refreshValBtnLabel(btn, item);
+    var liveHint = tr.querySelector('.live-hint');
+    var live = liveEstimate(item);
+    if (live != null && liveHint) {
+      var v = latestVal(item);
+      var pct = ((live - v.value) / v.value) * 100;
+      var sign = pct >= 0 ? '+' : '';
+      liveHint.childNodes[0].textContent = 'Live ' + fmtMoney(live) + ' · ' + sign + pct.toFixed(1) + '% ';
+    }
+    var usdTd = tr.querySelector('.usd-cell');
+    usdTd.textContent = fmtMoney(usdValue(item));
+    var asofTd = tr.querySelector('.asof-cell');
+    renderAsOfCellContent(asofTd, item, tr.classList.contains('checkin-visited'));
+    var v2 = latestVal(item);
+    if (isStale(v2.date)) { asofTd.style.opacity = '.55'; asofTd.title = 'Stale · ' + daysBetween(v2.date, TODAY) + ' days'; }
+    else { asofTd.style.opacity = ''; asofTd.title = ''; }
+    var grandTotal = isLiability ? liabilitiesTotal() : holdingsTotal();
+    var sharePct = grandTotal > 0 ? (usdValue(item) / grandTotal) * 100 : 0;
+    tr.querySelector('.share-cell').textContent = fmtPct(sharePct);
+  }
+  refreshSectionSubtotal(item);
+  updateHeaderFigures();
+  updateDistributionBars();
+}
+function refreshSectionSubtotal(item) {
+  var isLiability = item.kind === 'liability';
+  var classes = isLiability ? LIABILITY_CLASSES : ASSET_CLASSES;
+  var cls = classes.filter(function (c) { return c.id === item.classId; })[0];
+  var ct = isLiability ? liabClassTotal(cls) : classTotal(cls);
+  var total = isLiability ? liabilitiesTotal() : holdingsTotal();
+  var rows = document.querySelectorAll('tr.section-row');
+  rows.forEach(function (row) {
+    if (row.querySelector('.col-name').textContent === cls.name) {
+      row.querySelector('.usd-cell').textContent = fmtMoney(ct);
+      row.querySelector('.section-share').textContent = fmtPct(total > 0 ? (ct / total) * 100 : 0);
+    }
+  });
+  var blockRows = document.querySelectorAll('tr.block-heading-row');
+  blockRows.forEach(function (row) {
+    var label = row.querySelector('.col-name').textContent;
+    if (label === 'HOLDINGS' && !isLiability) row.querySelector('.usd-cell').textContent = fmtMoney(holdingsTotal());
+    if (label === 'LIABILITIES' && isLiability) row.querySelector('.usd-cell').textContent = fmtMoney(liabilitiesTotal());
+  });
+  var nwRow = qs('tr.networth-row');
+  if (nwRow) nwRow.querySelector('.usd-cell').textContent = fmtMoney(netWorth());
+}
+
+/* ============================================================
+   Inline editing
+   ============================================================ */
+function shakeEl(el) {
+  if (reducedMotion()) return;
+  el.classList.remove('shake');
+  void el.offsetWidth;
+  el.classList.add('shake');
+}
+function settleCell(el) {
+  if (reducedMotion()) { return; }
+  el.classList.add('cell-settle');
+  el.style.background = 'var(--accent-soft)';
+  requestAnimationFrame(function () {
+    requestAnimationFrame(function () {
+      el.style.background = 'transparent';
+    });
+  });
+  setTimeout(function () { el.classList.remove('cell-settle'); el.style.background = ''; }, 650);
+}
+
+function enterEditMode(item, td, opts) {
+  opts = opts || {};
+  td.classList.add('editing');
+  var v = latestVal(item);
+  td.innerHTML = '';
+  var input = h('input', { class: 'val-input', type: 'text', inputmode: 'decimal' });
+  input.value = String(v.value);
+  td.appendChild(input);
+
+  var caption = h('div', { class: 'val-caption' });
+  var captionBtn = h('button', {}, ['as of today ▾']);
+  var dateInput = null;
+  captionBtn.addEventListener('click', function () {
+    caption.innerHTML = '';
+    dateInput = h('input', { class: 'val-date-input', type: 'date', max: TODAY });
+    dateInput.value = TODAY;
+    caption.appendChild(dateInput);
+    dateInput.focus();
+  });
+  caption.appendChild(captionBtn);
+  td.appendChild(caption);
+
+  function getDate() { return dateInput && dateInput.value ? dateInput.value : TODAY; }
+
+  function doCommit() {
+    var raw = input.value.replace(/[, ]/g, '');
+    var num = parseFloat(raw);
+    if (isNaN(num) || num < 0) { shakeEl(input); return null; }
+    var date = getDate();
+    var latest = latestVal(item);
+    var unchanged = (num === latest.value) && (date === TODAY);
+    if (!unchanged) {
+      var existing = item.valuations.filter(function (vv) { return vv.date === date; })[0];
+      if (existing) existing.value = num; else item.valuations.push({ date: date, value: num });
+      item.valuations.sort(function (a, b) { return a.date < b.date ? -1 : a.date > b.date ? 1 : 0; });
+    }
+    return { recorded: !unchanged };
+  }
+
+  function exitToRest() {
+    td.classList.remove('editing');
+    td.innerHTML = '';
+    var rest = h('div', { class: 'val-caption-rest' });
+    var btn = h('button', { class: 'val-btn' + (item.kind === 'liability' ? ' is-liability' : ''), onclick: function () { if (!STATE.checkIn) enterEditMode(item, td); } });
+    refreshValBtnLabel(btn, item);
+    rest.appendChild(btn);
+    var live = liveEstimate(item);
+    if (live != null) {
+      var vv = latestVal(item);
+      var pct = ((live - vv.value) / vv.value) * 100;
+      var sign = pct >= 0 ? '+' : '';
+      rest.appendChild(h('div', { class: 'live-hint' }, [
+        'Live ' + fmtMoney(live) + ' · ' + sign + pct.toFixed(1) + '% ',
+        h('button', { onclick: function (e) { e.stopPropagation(); recordLive(item); } }, ['use'])
+      ]));
+    }
+    td.appendChild(rest);
+    return td.querySelector('.val-btn');
+  }
+
+  input.addEventListener('keydown', function (e) {
+    if (opts.checkin) {
+      if (e.key === 'Enter' && e.shiftKey) { e.preventDefault(); var r = doCommit(); if (r) checkinAdvance(-1, r.recorded); return; }
+      if (e.key === 'Enter') { e.preventDefault(); var r2 = doCommit(); if (r2) checkinAdvance(1, r2.recorded); return; }
+      if ((e.key === 'l' || e.key === 'L') && item.symbol) { e.preventDefault(); input.value = String(liveEstimate(item)); var r3 = doCommit(); if (r3) checkinAdvance(1, r3.recorded); return; }
+      if (e.key === 'Escape') { e.preventDefault(); leaveCheckin(); return; }
+    } else {
+      if (e.key === 'Enter') { e.preventDefault(); var res = doCommit(); if (res) { var btn2 = exitToRest(); if (res.recorded) { settleCell(td); var asof = qs('tr.item-row[data-id="' + item.id + '"] .asof-cell'); if (asof) asof.style.opacity = ''; refreshAfterEdit(item); } } }
+      else if (e.key === 'Escape') { e.preventDefault(); exitToRest(); }
+    }
+  });
+  if (!opts.checkin) {
+    input.addEventListener('blur', function () {
+      if (!td.classList.contains('editing')) return;
+      var res = doCommit();
+      if (res) { exitToRest(); if (res.recorded) { settleCell(td); refreshAfterEdit(item); } }
+    });
+  }
+  requestAnimationFrame(function () { input.focus(); input.select(); });
+  return { input: input, doCommit: doCommit, exitToRest: exitToRest };
+}
+
+function recordLive(item) {
+  var live = liveEstimate(item);
+  if (live == null) return;
+  var existing = item.valuations.filter(function (vv) { return vv.date === TODAY; })[0];
+  if (existing) existing.value = Math.round(live); else item.valuations.push({ date: TODAY, value: Math.round(live) });
+  item.valuations.sort(function (a, b) { return a.date < b.date ? -1 : a.date > b.date ? 1 : 0; });
+  var tr = qs('tr.item-row[data-id="' + item.id + '"]');
+  if (tr) {
+    var td = tr.querySelector('.value-cell');
+    settleCell(td);
+    refreshAfterEdit(item);
+  }
+  if (STATE.drawer && STATE.drawer.item === item) renderDrawerContent();
+}
+
+/* ============================================================
+   Check-in mode
+   ============================================================ */
+var LAST_CHECKIN = '2026-08-10';
+
+function startCheckin(mode) {
+  var ids = mode === 'stale' ? staleItems().map(function (it) { return it.id; }) : STATE.rowOrder.slice();
+  if (ids.length === 0) return;
+  STATE.checkIn = { mode: mode, ids: ids, index: 0, updated: 0, kept: 0, netWorthBefore: netWorth(), visited: {} };
+  renderCheckinStrip();
+  goToCheckinRow(0);
+}
+function leaveCheckin() {
+  var wasCheckin = !!STATE.checkIn;
+  STATE.checkIn = null;
+  renderCheckinStrip();
+  clearCheckinRowEdit();
+  if (wasCheckin) reflowSheet();
+}
+function clearCheckinRowEdit() {
+  var editingTd = qs('.value-cell.editing');
+  if (editingTd) {
+    editingTd.classList.remove('editing');
+    var id = editingTd.closest('tr').getAttribute('data-id');
+    var item = itemById(id);
+    editingTd.innerHTML = '';
+    var rest = h('div', { class: 'val-caption-rest' });
+    var btn = h('button', { class: 'val-btn' + (item.kind === 'liability' ? ' is-liability' : ''), onclick: function () { enterEditMode(item, editingTd); } });
+    refreshValBtnLabel(btn, item);
+    rest.appendChild(btn);
+    editingTd.appendChild(rest);
+  }
+  var ind = qs('#checkin-indicator');
+  if (ind) ind.style.transform = 'translateY(-999px)';
+  document.querySelectorAll('tr.item-row.checkin-current').forEach(function (r) { r.classList.remove('checkin-current'); });
+}
+function reflowSheet() {
+  var page = qs('#page-root .page');
+  if (!page) return;
+  var oldTable = qs('#sheet-wrap');
+  var oldBand = qs('.header-band');
+  if (!oldTable) return;
+  var newTable = buildSheetTable();
+  oldTable.replaceWith(newTable);
+  if (oldBand) { var newBand = buildHeaderBand(); oldBand.replaceWith(newBand); animateDistributionBars(false); }
+}
+
+function goToCheckinRow(index) {
+  var ci = STATE.checkIn;
+  if (!ci) return;
+  if (index < 0) index = 0;
+  if (index >= ci.ids.length) { finishCheckin(); return; }
+  ci.index = index;
+  clearCheckinRowEdit();
+  var id = ci.ids[index];
+  var item = itemById(id);
+  var tr = qs('tr.item-row[data-id="' + id + '"]');
+  if (!tr) { goToCheckinRow(index + 1); return; }
+  tr.classList.add('checkin-current');
+  var wrap = qs('#sheet-wrap');
+  var indicator = qs('#checkin-indicator');
+  var top = tr.offsetTop;
+  indicator.style.transform = 'translateY(' + top + 'px)';
+  tr.scrollIntoView({ block: 'center', behavior: reducedMotion() ? 'auto' : 'smooth' });
+  var td = tr.querySelector('.value-cell');
+  enterEditMode(item, td, { checkin: true });
+  renderCheckinStrip();
+}
+
+function checkinAdvance(dir, recorded) {
+  var ci = STATE.checkIn;
+  if (!ci) return;
+  var id = ci.ids[ci.index];
+  var tr = qs('tr.item-row[data-id="' + id + '"]');
+  if (recorded) ci.updated++; else ci.kept++;
+  ci.visited[id] = recorded ? 'updated' : 'kept';
+  if (tr) {
+    tr.classList.add('checkin-visited');
+    var item = itemById(id);
+    var td = tr.querySelector('.value-cell');
+    td.classList.remove('editing');
+    td.innerHTML = '';
+    var rest = h('div', { class: 'val-caption-rest' });
+    var btn = h('button', { class: 'val-btn' + (item.kind === 'liability' ? ' is-liability' : ''), onclick: function () { if (!STATE.checkIn) enterEditMode(item, td); } });
+    refreshValBtnLabel(btn, item);
+    rest.appendChild(btn);
+    td.appendChild(rest);
+    if (recorded) settleCell(td);
+    refreshAfterEdit(item);
+  }
+  goToCheckinRow(ci.index + dir);
+}
+
+function finishCheckin() {
+  var ci = STATE.checkIn;
+  var slot = qs('#checkin-strip-slot');
+  clearCheckinRowEdit();
+  var nwAfter = netWorth();
+  var diff = nwAfter - ci.netWorthBefore;
+  var sign = diff >= 0 ? '+' : '−';
+  var label = ci.mode === 'stale' ? 'Stale check-in' : 'Check-in';
+  var summary = h('div', { class: 'checkin-strip checkin-summary' }, [
+    h('div', { class: 'checkin-left' }, [
+      label.replace('Check-in', 'Check-in done') + ' · ' + ci.updated + ' updated · ' + ci.kept + ' kept · Net Worth ' + fmtMoney(ci.netWorthBefore) + ' → ' + fmtMoney(nwAfter) + ' (' + sign + fmtMoney(Math.abs(diff)) + ' since ' + fmtDayMonth(LAST_CHECKIN) + ')'
+    ]),
+    h('div', {}, []),
+    h('div', { class: 'checkin-right' }, [h('button', { onclick: doneCheckin }, ['Done'])])
+  ]);
+  slot.innerHTML = '';
+  slot.appendChild(summary);
+  requestAnimationFrame(function () { summary.classList.add('show'); });
+  STATE.checkIn = { done: true, finishedInfo: ci };
+}
+function doneCheckin() {
+  LAST_CHECKIN = TODAY;
+  STATE.lastCheckIn = TODAY;
+  STATE.checkIn = null;
+  var lc = qs('#last-checkin');
+  if (lc) lc.textContent = 'Last check-in ' + fmtDate(LAST_CHECKIN);
+  var slot = qs('#checkin-strip-slot');
+  slot.innerHTML = '';
+  reflowSheet();
+}
+
+function renderCheckinStrip() {
+  var slot = qs('#checkin-strip-slot');
+  slot.innerHTML = '';
+  var ci = STATE.checkIn;
+  if (!ci || ci.done) return;
+  var label = ci.mode === 'stale' ? ('Stale check-in · ' + (ci.index + 1) + ' of ' + ci.ids.length) : ('Check-in · ' + (ci.index + 1) + ' of ' + ci.ids.length);
+  var strip = h('div', { class: 'checkin-strip' }, [
+    h('div', { class: 'checkin-left' }, [label]),
+    h('div', { class: 'checkin-center' }, ['Enter keep or record · L use Live Estimate · ⇧Enter back · Esc leave']),
+    h('div', { class: 'checkin-right' }, [h('button', { onclick: leaveCheckin }, ['Leave'])])
+  ]);
+  slot.appendChild(strip);
+}
+
+/* ============================================================
+   Drawer: shared shell
+   ============================================================ */
+function openDrawer(item, triggerEl) {
+  STATE.drawer = { item: item };
+  STATE.drawerReturnFocus = triggerEl;
+  var drawer = qs('#drawer'), scrim = qs('#scrim');
+  renderDrawerContent();
+  drawer.classList.add('open');
+  scrim.classList.add('show');
+  scrim.style.pointerEvents = 'auto';
+  requestAnimationFrame(function () { qs('#drawer-close').focus(); });
+}
+function renderDrawerContent() {
+  var item = STATE.drawer.item;
+  var body = qs('#drawer-body');
+  body.innerHTML = '';
+  if (item.kind === 'liability') body.appendChild(buildLiabilityDrawer(item));
+  else body.appendChild(buildHoldingDrawer(item));
+}
+function closeDrawer() {
+  var drawer = qs('#drawer'), scrim = qs('#scrim');
+  drawer.classList.remove('open');
+  scrim.classList.remove('show');
+  scrim.style.pointerEvents = '';
+  var wasNotes = STATE.drawer && STATE.drawer.notes;
+  var focusEl = STATE.drawerReturnFocus;
+  STATE.drawer = null;
+  if (focusEl && document.body.contains(focusEl)) focusEl.focus();
+  if (!wasNotes) reflowSheet();
+}
+qs('#drawer-close').addEventListener('click', closeDrawer);
+qs('#drawer-back').addEventListener('click', closeDrawer);
+qs('#scrim').addEventListener('click', closeDrawer);
+document.addEventListener('keydown', function (e) {
+  if (e.key === 'Escape' && qs('#drawer').classList.contains('open')) closeDrawer();
+});
+
+/* ---- sparkline (reused D-variant approach: draw-in after next frame) ---- */
+function buildSparklineSVG(history, strokeVar) {
+  var w = 360, h2 = 48, pad = 4;
+  var vals = history.map(function (p) { return p.value; });
+  var minV = Math.min.apply(null, vals), maxV = Math.max.apply(null, vals);
+  function x(i) { return pad + (i / (history.length - 1)) * (w - pad * 2); }
+  function y(v) { return h2 - pad - ((v - minV) / ((maxV - minV) || 1)) * (h2 - pad * 2); }
+  var pts = history.map(function (p, i) { return x(i) + ',' + y(p.value); }).join(' ');
+  var svg = svgEl('svg', { viewBox: '0 0 ' + w + ' ' + h2, width: '100%', height: String(h2), preserveAspectRatio: 'none', role: 'img', 'aria-label': 'History sparkline' });
+  var line = svgEl('polyline', { points: pts, fill: 'none', stroke: 'var(' + strokeVar + ')', 'stroke-width': '1.5' });
+  svg.appendChild(line);
+  var wrap = h('div', { class: 'sparkline-wrap' });
+  wrap.appendChild(svg);
+  if (!reducedMotion()) {
+    requestAnimationFrame(function () {
+      try {
+        var len = line.getTotalLength();
+        if (!len || !isFinite(len)) throw new Error('no length');
+        line.style.strokeDasharray = String(len);
+        line.style.strokeDashoffset = String(len);
+        line.getBoundingClientRect();
+        line.style.transition = 'stroke-dashoffset 600ms ease-out';
+        requestAnimationFrame(function () { line.style.strokeDashoffset = '0'; });
+      } catch (err) { line.style.strokeDasharray = ''; line.style.strokeDashoffset = ''; }
+    });
+  }
+  return wrap;
+}
+function buildHistoryTable(history) {
+  var last12 = history.slice(-12).slice().reverse();
+  var table = h('table', { class: 'history-table' });
+  last12.forEach(function (p, idx) {
+    var item = STATE.drawer.item;
+    var tr = h('tr', {});
+    tr.appendChild(h('td', {}, [fmtDate(p.date)]));
+    tr.appendChild(h('td', {}, [fmtMoney(p.value) + (item.currency !== 'USD' ? ' ' + item.currency : '')]));
+    tr.appendChild(h('td', {}, [fmtMoney(p.value * FX[item.currency]) + ' USD']));
+    table.appendChild(tr);
+  });
+  return table;
+}
+
+/* ---- holding drawer ---- */
+function buildHoldingDrawer(item) {
+  var cls = ASSET_CLASSES.filter(function (c) { return c.id === item.classId; })[0];
+  var frag = h('div', {});
+
+  var s1 = h('div', { class: 'drawer-section' });
+  s1.appendChild(h('div', { class: 'drawer-class' }, [cls.name]));
+  s1.appendChild(h('div', { class: 'drawer-title' }, [item.name]));
+  var hintText = item.symbol ? (formatQty(item.qty) + ' × ' + item.symbol) : (item.hint || (item.currency !== 'USD' ? item.currency : null));
+  if (hintText) s1.appendChild(h('div', { class: 'drawer-hint' }, [hintText]));
+  frag.appendChild(s1);
+
+  var v = latestVal(item);
+  var s2 = h('div', { class: 'drawer-section' });
+  s2.appendChild(h('div', { class: 'drawer-label' }, ['Latest Valuation']));
+  s2.appendChild(h('div', { class: 'drawer-figure' }, [fmtMoney(v.value) + (item.currency !== 'USD' ? ' ' + item.currency : '')]));
+  var subParts = [];
+  if (item.currency !== 'USD') subParts.push('≈ ' + fmtMoney(usdValue(item)) + ' USD');
+  subParts.push(fmtDate(v.date));
+  var subline = subParts.join(' · ');
+  if (isStale(v.date)) subline += ' · stale';
+  s2.appendChild(h('div', { class: 'drawer-sub' }, [subline]));
+  frag.appendChild(s2);
+
+  var live = liveEstimate(item);
+  if (live != null) {
+    var s3 = h('div', { class: 'drawer-section' });
+    s3.appendChild(h('div', { class: 'drawer-label' }, ['Live Estimate']));
+    s3.appendChild(h('div', { class: 'drawer-figure small' }, [fmtMoney(live) + ' USD']));
+    var pct = ((live - v.value) / v.value) * 100;
+    var sign = pct >= 0 ? '+' : '';
+    s3.appendChild(h('div', { class: 'drawer-sub' }, [sign + pct.toFixed(1) + '% vs last Valuation · not a Valuation until you record it']));
+    s3.appendChild(h('button', { class: 'btn-hairline', style: 'margin-top:8px;', onclick: function () { recordLive(item); } }, ['Record Live Estimate']));
+    frag.appendChild(s3);
+  }
+
+  var s4 = h('div', { class: 'drawer-section' });
+  s4.appendChild(h('div', { class: 'drawer-label' }, ['Valuation History']));
+  s4.appendChild(buildSparklineSVG(item.valuations, '--accent'));
+  s4.appendChild(buildHistoryTable(item.valuations));
+  frag.appendChild(s4);
+
+  if (item.linkedLiabilityId) {
+    var liab = LIABILITIES_MAP[item.linkedLiabilityId];
+    var s5 = h('div', { class: 'drawer-section' });
+    s5.appendChild(h('div', { class: 'drawer-label' }, ['Linked Liability']));
+    s5.appendChild(h('div', { class: 'drawer-link-btn', onclick: function () { openDrawer(liab, STATE.drawerReturnFocus); } }, [liab.name]));
+    s5.appendChild(h('div', { class: 'drawer-kv' }, [h('span', { class: 'k' }, ['Balance']), fmtMoney(usdValue(liab)) + ' USD']));
+    var netPos = usdValue(item) - usdValue(liab);
+    s5.appendChild(h('div', { class: 'drawer-kv' }, [h('span', { class: 'k' }, ['Projected Net Position today']), fmtMoney(netPos)]));
+    var info = computeAmortizationInfo(liab);
+    if (info) {
+      var payoffYear = info.payoffDate.getFullYear();
+      s5.appendChild(h('div', { class: 'drawer-kv' }, [h('span', { class: 'k' }, ['Payoff']), '· ' + payoffYear + ' (illustrative)']));
+    }
+    frag.appendChild(s5);
+  }
+
+  var s6 = h('div', { class: 'drawer-section' });
+  var details = h('details', { class: 'research-details' });
+  details.appendChild(h('summary', {}, ['Research prompt']));
+  var promptText = (RESEARCH_PROMPTS[cls.id] || '').replace('{name}', item.name);
+  details.appendChild(h('pre', { class: 'research-pre' }, [promptText]));
+  var copyBtn = h('button', { class: 'copy-btn' }, ['Copy']);
+  copyBtn.addEventListener('click', function () {
+    try { navigator.clipboard.writeText(promptText); } catch (e) {}
+    copyBtn.textContent = 'Copied';
+    setTimeout(function () { copyBtn.textContent = 'Copy'; }, 1200);
+  });
+  details.appendChild(copyBtn);
+  s6.appendChild(details);
+  frag.appendChild(s6);
+
+  var footer = h('div', { class: 'drawer-footer' });
+  footer.appendChild(h('button', { class: 'btn-hairline', onclick: function () {
+    closeDrawer();
+    var tr = qs('tr.item-row[data-id="' + item.id + '"]');
+    if (tr) enterEditMode(item, tr.querySelector('.value-cell'));
+  } }, ['Record Valuation']));
+  var archiveNote = h('span', { class: 'archive-note', hidden: true }, ['Not in this prototype']);
+  footer.appendChild(h('button', { class: 'stale-btn', onclick: function () {
+    archiveNote.hidden = false;
+    setTimeout(function () { archiveNote.hidden = true; }, 1500);
+  } }, ['Archive']));
+  footer.appendChild(archiveNote);
+  frag.appendChild(footer);
+
+  return frag;
+}
+
+/* ---- liability drawer ---- */
+function buildLiabilityDrawer(item) {
+  var cls = LIABILITY_CLASSES.filter(function (c) { return c.id === item.classId; })[0];
+  var frag = h('div', {});
+
+  var s1 = h('div', { class: 'drawer-section' });
+  s1.appendChild(h('div', { class: 'drawer-class' }, [cls.name]));
+  s1.appendChild(h('div', { class: 'drawer-title' }, [item.name]));
+  if (item.currency !== 'USD') s1.appendChild(h('div', { class: 'drawer-hint' }, [item.currency]));
+  frag.appendChild(s1);
+
+  var v = latestVal(item);
+  var s2 = h('div', { class: 'drawer-section' });
+  s2.appendChild(h('div', { class: 'drawer-label' }, ['Balance']));
+  s2.appendChild(h('div', { class: 'drawer-figure is-liability' }, [fmtMoney(v.value) + (item.currency !== 'USD' ? ' ' + item.currency : '')]));
+  var subline = fmtDate(v.date);
+  if (isStale(v.date)) subline += ' · stale';
+  s2.appendChild(h('div', { class: 'drawer-sub' }, [subline]));
+  frag.appendChild(s2);
+
+  if (item.linkedHoldingId) {
+    var hold = HOLDINGS_MAP[item.linkedHoldingId];
+    var s3 = h('div', { class: 'drawer-section' });
+    s3.appendChild(h('div', { class: 'drawer-label' }, ['Financed Holding']));
+    s3.appendChild(h('div', { class: 'drawer-link-btn', onclick: function () { openDrawer(hold, STATE.drawerReturnFocus); } }, [hold.name]));
+    s3.appendChild(h('div', { class: 'drawer-kv' }, [h('span', { class: 'k' }, ['Value']), fmtMoney(usdValue(hold)) + ' USD']));
+    var netPos = usdValue(hold) - usdValue(item);
+    s3.appendChild(h('div', { class: 'drawer-kv' }, [h('span', { class: 'k' }, ['Projected Net Position today']), fmtMoney(netPos)]));
+    frag.appendChild(s3);
+  }
+
+  var s4 = h('div', { class: 'drawer-section' });
+  s4.appendChild(h('div', { class: 'drawer-label' }, ['Amortization Assumptions']));
+  var localAm = item.amortization ? {
+    rate: item.amortization.rate, original: item.amortization.original, term: item.amortization.term,
+    customPayment: item.amortization.customPayment, extra: item.amortization.extra, start: item.amortization.start
+  } : null;
+  if (!localAm) {
+    s4.appendChild(h('div', { class: 'amort-none' }, ['None set · balance held flat in Projection']));
+  } else {
+    var form = h('div', { class: 'amort-form' });
+    var summaryLine = h('div', { class: 'amort-summary' });
+    var curveWrap = h('div', {});
+
+    function field(labelText, value, onchange, step) {
+      var wrap = h('div', { class: 'amort-field' });
+      wrap.appendChild(h('label', {}, [labelText]));
+      var input = h('input', { type: 'text', inputmode: 'decimal' });
+      input.value = value == null ? '' : String(value);
+      input.addEventListener('change', function () { onchange(input.value); recompute(); });
+      wrap.appendChild(input);
+      return wrap;
+    }
+    form.appendChild(field('Interest rate %', (localAm.rate * 100).toFixed(3), function (val) { localAm.rate = parseFloat(val) / 100 || 0; }));
+    form.appendChild(field('Original amount', localAm.original, function (val) { localAm.original = parseFloat(val) || 0; }));
+    form.appendChild(field('Term (months)', localAm.term, function (val) { localAm.term = parseFloat(val) || 1; }));
+    form.appendChild(field('Custom monthly payment', localAm.customPayment, function (val) { localAm.customPayment = val === '' ? null : parseFloat(val); }));
+    form.appendChild(field('Extra monthly payment', localAm.extra, function (val) { localAm.extra = parseFloat(val) || 0; }));
+    form.appendChild(field('Start date', localAm.start, function (val) { localAm.start = val; }));
+
+    function recompute() {
+      var fakeLiab = { valuations: item.valuations, amortization: localAm };
+      var base = monthlyPayment(localAm.original, localAm.rate, localAm.term);
+      var payment = (localAm.customPayment != null && !isNaN(localAm.customPayment)) ? localAm.customPayment : base;
+      var totalPayment = payment + (localAm.extra || 0);
+      var currentBalance = v.value;
+      var kPayoff = payoffMonths(currentBalance, localAm.rate, totalPayment);
+      var start = new Date(TODAY + 'T00:00:00');
+      var payoffDate = new Date(start.getFullYear(), start.getMonth() + Math.round(kPayoff), start.getDate());
+      var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+      var derivedLabel = (localAm.customPayment != null && !isNaN(localAm.customPayment)) ? '' : ' (derived)';
+      summaryLine.textContent = 'Payment ' + fmtMoney(payment) + '/mo' + derivedLabel + ' + ' + fmtMoney(localAm.extra || 0) + ' extra · Payoff ' + months[payoffDate.getMonth()] + ' ' + payoffDate.getFullYear() + ' · illustrative';
+      curveWrap.innerHTML = '';
+      var n = Math.max(1, Math.min(360, Math.round(kPayoff)));
+      var pts = [];
+      for (var i = 0; i <= n; i += Math.max(1, Math.round(n / 24))) {
+        pts.push({ date: 'm' + i, value: amortizeBalance(currentBalance, localAm.rate, totalPayment, i) });
+      }
+      if (pts[pts.length - 1].date !== 'm' + n) pts.push({ date: 'm' + n, value: 0 });
+      curveWrap.appendChild(buildSparklineSVG(pts, '--liability'));
+    }
+    recompute();
+    s4.appendChild(form);
+    s4.appendChild(summaryLine);
+    s4.appendChild(curveWrap);
+  }
+  frag.appendChild(s4);
+
+  var s5 = h('div', { class: 'drawer-section' });
+  s5.appendChild(h('div', { class: 'drawer-label' }, ['Balance History']));
+  s5.appendChild(buildSparklineSVG(item.valuations, '--liability'));
+  s5.appendChild(buildHistoryTable(item.valuations));
+  frag.appendChild(s5);
+
+  var footer = h('div', { class: 'drawer-footer' });
+  footer.appendChild(h('button', { class: 'btn-hairline', onclick: function () {
+    closeDrawer();
+    var tr = qs('tr.item-row[data-id="' + item.id + '"]');
+    if (tr) enterEditMode(item, tr.querySelector('.value-cell'));
+  } }, ['Record Balance']));
+  var archiveNote = h('span', { class: 'archive-note', hidden: true }, ['Not in this prototype']);
+  footer.appendChild(h('button', { class: 'stale-btn', onclick: function () {
+    archiveNote.hidden = false;
+    setTimeout(function () { archiveNote.hidden = true; }, 1500);
+  } }, ['Archive']));
+  footer.appendChild(archiveNote);
+  frag.appendChild(footer);
+
+  return frag;
+}
+
+/* ============================================================
+   Plan page
+   ============================================================ */
+function renderPlanPage(page) {
+  var grid = h('div', { class: 'plan-grid' });
+
+  var left = h('div', {});
+  left.appendChild(h('div', { class: 'nw-label' }, ['TARGET ALLOCATION']));
+  left.appendChild(h('div', { class: 'plan-caption' }, ['Goal share per Asset Class. Compared against actual on the Sheet.']));
+  var table = h('table', { class: 'target-table' });
+  var thead = h('tr', {});
+  thead.appendChild(h('th', {}, ['Class']));
+  thead.appendChild(h('th', {}, ['Target %']));
+  thead.appendChild(h('th', {}, ['Actual %']));
+  thead.appendChild(h('th', {}, ['Gap']));
+  table.appendChild(h('thead', {}, [thead]));
+  var tbody = h('tbody', {});
+  var totalHold = holdingsTotal();
+  var totalCell;
+  function refreshTotalRow() {
+    var sum = ASSET_CLASSES.reduce(function (s, c) { return s + c.target; }, 0);
+    var note = '';
+    if (sum > 100) note = sum + '% · ' + (sum - 100) + '% over';
+    else if (sum < 100) note = sum + '% · ' + (100 - sum) + '% unallocated';
+    else note = '100%';
+    totalCell.textContent = note;
+  }
+  ASSET_CLASSES.forEach(function (cls) {
+    var tr = h('tr', {});
+    tr.appendChild(h('td', {}, [cls.name]));
+    var input = h('input', { class: 'target-pct-input', type: 'number', min: '0', max: '100', step: '1' });
+    input.value = cls.target;
+    input.addEventListener('input', function () {
+      cls.target = parseFloat(input.value) || 0;
+      var actualPct = totalHold > 0 ? (classTotal(cls) / totalHold) * 100 : 0;
+      var gap = (cls.target - actualPct) / 100 * totalHold;
+      gapCell.textContent = (gap >= 0 ? '+' : '−') + fmtMoney(Math.abs(gap));
+      refreshTotalRow();
+    });
+    var tdInput = h('td', {});
+    tdInput.appendChild(input);
+    tr.appendChild(tdInput);
+    var actualPct0 = totalHold > 0 ? (classTotal(cls) / totalHold) * 100 : 0;
+    tr.appendChild(h('td', { class: 'target-actual' }, [fmtPct(actualPct0)]));
+    var gap0 = (cls.target - actualPct0) / 100 * totalHold;
+    var gapCell = h('td', { class: 'target-gap' }, [(gap0 >= 0 ? '+' : '−') + fmtMoney(Math.abs(gap0))]);
+    tr.appendChild(gapCell);
+    tbody.appendChild(tr);
+  });
+  var totalRow = h('tr', { class: 'target-total-row' });
+  totalRow.appendChild(h('td', {}, ['Total']));
+  totalCell = h('td', { class: 'target-total-note', colspan: '3' });
+  var totalTd = h('td', {});
+  totalTd.appendChild(totalCell);
+  totalRow.appendChild(totalTd);
+  totalRow.appendChild(h('td', {}, []));
+  totalRow.appendChild(h('td', {}, []));
+  tbody.appendChild(totalRow);
+  refreshTotalRow();
+  table.appendChild(tbody);
+  left.appendChild(table);
+  grid.appendChild(left);
+
+  var right = h('div', {});
+  right.appendChild(h('div', { class: 'nw-label' }, ['PROJECTION']));
+  right.appendChild(h('div', { class: 'plan-caption' }, ['One shared set of assumptions.']));
+  var inputsRow = h('div', { class: 'proj-inputs' });
+  function projField(labelText, value, onchange) {
+    var wrap = h('div', { class: 'proj-field' });
+    wrap.appendChild(h('label', {}, [labelText]));
+    var input = h('input', { type: 'number' });
+    input.value = value;
+    input.addEventListener('input', function () { onchange(parseFloat(input.value) || 0); redrawTimeline(); });
+    wrap.appendChild(input);
+    return wrap;
+  }
+  inputsRow.appendChild(projField('Growth %/yr', PROJECTION.growth * 100, function (v) { PROJECTION.growth = v / 100; }));
+  inputsRow.appendChild(projField('Contribution /month', PROJECTION.contribution, function (v) { PROJECTION.contribution = v; }));
+  inputsRow.appendChild(projField('Horizon years', PROJECTION.years, function (v) { PROJECTION.years = v; }));
+  right.appendChild(inputsRow);
+  var timelineWrap = h('div', { id: 'timeline-wrap' });
+  right.appendChild(timelineWrap);
+  right.appendChild(h('div', { class: 'proj-footnote' }, ['Illustrative · formula pending reconciliation (ticket 07)']));
+  grid.appendChild(right);
+
+  page.appendChild(grid);
+  buildTimelineSVG(timelineWrap, true);
+  function redrawTimeline() { buildTimelineSVG(timelineWrap, false); }
+}
+
+var planTimelineDrawnOnce = false;
+function buildTimelineSVG(container, firstRender) {
+  container.innerHTML = '';
+  var recorded = recordedNetWorthSeries();
+  var W = 720, H = 220, padL = 72, padR = 14, padT = 24, padB = 26;
+  var plotW = W - padL - padR, plotH = H - padT - padB;
+  var recordedFrac = 0.35;
+  var recordedWidth = plotW * recordedFrac;
+  var projectedWidth = plotW * (1 - recordedFrac);
+  var todayX = padL + recordedWidth;
+  var years = Math.max(1, Math.round(PROJECTION.years));
+
+  var projected = [];
+  for (var y = 0; y <= years; y++) projected.push({ year: y, value: projectedNetWorth(y) });
+
+  var allVals = recorded.map(function (p) { return p.value; }).concat(projected.map(function (p) { return p.value; }));
+  var minY = Math.min.apply(null, allVals.concat([0]));
+  var maxY = Math.max.apply(null, allVals);
+  if (maxY === minY) maxY = minY + 1;
+
+  function xRec(i) { return padL + (i / (recorded.length - 1)) * recordedWidth; }
+  function xProj(yr) { return todayX + (yr / years) * projectedWidth; }
+  function yOf(v) { return padT + plotH - ((v - minY) / (maxY - minY)) * plotH; }
+
+  var svg = svgEl('svg', { viewBox: '0 0 ' + W + ' ' + H, width: '100%', height: String(H), preserveAspectRatio: 'xMidYMid meet', role: 'img', 'aria-label': 'Net worth, recorded and projected' });
+
+  [minY, maxY].forEach(function (v) {
+    var t = svgEl('text', { x: padL - 8, y: yOf(v) + 3, 'text-anchor': 'end', 'font-size': '11', fill: 'var(--text-muted)' });
+    t.textContent = fmtMoney(v);
+    svg.appendChild(t);
+  });
+
+  svg.appendChild(svgEl('line', { x1: todayX, y1: padT, x2: todayX, y2: padT + plotH, stroke: 'var(--border)', 'stroke-width': '1' }));
+  var todayLabel = svgEl('text', { x: todayX, y: padT - 8, 'text-anchor': 'middle', 'font-size': '11', fill: 'var(--text-muted)' });
+  todayLabel.textContent = 'Today';
+  svg.appendChild(todayLabel);
+
+  var startYear = new Date(TODAY + 'T00:00:00').getFullYear();
+  for (var yr2 = 5; yr2 <= years; yr2 += 5) {
+    var t2 = svgEl('text', { x: xProj(yr2), y: padT + plotH + 16, 'text-anchor': 'middle', 'font-size': '11', fill: 'var(--text-muted)' });
+    t2.textContent = String(startYear + yr2);
+    svg.appendChild(t2);
+  }
+
+  var recPts = recorded.map(function (p, i) { return xRec(i) + ',' + yOf(p.value); }).join(' ');
+  var recLine = svgEl('polyline', { points: recPts, fill: 'none', stroke: 'var(--accent)', 'stroke-width': '1.5' });
+  svg.appendChild(recLine);
+
+  var projPts = projected.map(function (p) { return xProj(p.year) + ',' + yOf(p.value); }).join(' ');
+  var projLine = svgEl('polyline', { points: projPts, fill: 'none', stroke: 'var(--accent)', 'stroke-width': '1.25', 'stroke-dasharray': '4 3' });
+  svg.appendChild(projLine);
+
+  var info = mortgagePayoffInfo();
+  if (info) {
+    var payoffYearsFrac = info.payoffMonths / 12;
+    if (payoffYearsFrac <= years) {
+      var payoffVal = projectedNetWorth(payoffYearsFrac);
+      var pax = xProj(payoffYearsFrac), pay = yOf(payoffVal);
+      svg.appendChild(svgEl('circle', { cx: pax, cy: pay, r: '4', fill: 'var(--bg)', stroke: 'var(--accent)', 'stroke-width': '1.5' }));
+      var payoffLabel = svgEl('text', { x: Math.min(pax + 8, W - padR - 4), y: pay - 8, 'text-anchor': pax > W - padR - 110 ? 'end' : 'start', 'font-size': '11', fill: 'var(--text-muted)' });
+      payoffLabel.textContent = 'Mortgage paid off · ' + info.payoffDate.getFullYear();
+      svg.appendChild(payoffLabel);
+    }
+  }
+
+  var endVal = projected[projected.length - 1].value;
+  var endX = xProj(years), endY = yOf(endVal);
+  svg.appendChild(svgEl('circle', { cx: endX, cy: endY, r: '3', fill: 'var(--accent)' }));
+  var endLabel = svgEl('text', { x: endX - 8, y: endY - 8, 'text-anchor': 'end', 'font-size': '13', fill: 'var(--text)' });
+  endLabel.textContent = (startYear + years) + ' · ' + fmtMoney(endVal);
+  svg.appendChild(endLabel);
+
+  container.appendChild(svg);
+
+  if (firstRender && !planTimelineDrawnOnce && !reducedMotion()) {
+    planTimelineDrawnOnce = true;
+    requestAnimationFrame(function () {
+      try {
+        var len = recLine.getTotalLength();
+        if (!len || !isFinite(len)) throw new Error('no length');
+        recLine.style.strokeDasharray = String(len);
+        recLine.style.strokeDashoffset = String(len);
+        recLine.getBoundingClientRect();
+        recLine.style.transition = 'stroke-dashoffset 600ms ease-out';
+        requestAnimationFrame(function () { recLine.style.strokeDashoffset = '0'; });
+      } catch (err) { recLine.style.strokeDasharray = ''; recLine.style.strokeDashoffset = ''; }
+    });
+  }
+}
+
+/* ============================================================
+   "Why this design" notes panel (reuses the drawer shell)
+   ============================================================ */
+var NOTES = [
+  { title: 'One page is the Portfolio', body: 'A monthly check-in plus a handful of distribution-only glances a month, over data small enough to see whole, doesn’t need a tree to drill through or tabs to switch between — it needs one page you can scan top to bottom. A balance sheet keeps every Holding and Liability, and the totals they roll up to, in one continuous view instead of splitting the picture across screens.' },
+  { title: 'Check-in is a mode, not a page', body: 'Recording Valuations is a periodic ritual, not a permanent way of looking at the sheet. Turning it into a mode over the same rows — rather than a separate flow — means you never lose your place, and leaving it (Esc, Leave, or the last row) returns you to the exact page you started from.' },
+  { title: 'Distribution on the first screen', body: 'Allocation drift is the thing worth noticing without asking for it, so it sits beside Net Worth on load rather than a tab or a chart you have to navigate to. Bars scaled to the largest value, not to 100%, keep the comparison to target readable even when classes are small.' },
+  { title: 'Liabilities as their own group', body: 'Debt behaves differently from what you own — it has its own amortization math, its own payoff horizon — so it gets its own block in the sheet and its own row color, rather than being folded into Asset Classes as negative Holdings.' },
+  { title: 'Nothing colored red or green', body: 'A stale Valuation, a liability, a gap above or below target: none of it is good or bad on its face, so none of it is colored to imply judgment. Staleness reads as reduced opacity, gaps read as words (“above” / “below”), and Liabilities read as a distinct neutral hue — information without a verdict.' },
+  { title: 'Illustrative projection', body: 'The Plan page projects Holdings forward with a fixed growth/contribution assumption and nets out Liabilities, but the formula for reconciling amortized and flat debt against that projection is still open (ticket 07). The label says so, plainly, rather than presenting a number with more confidence than the math behind it currently earns.' }
+];
+function renderNotesPanel() {
+  var body = h('div', { class: 'notes-body' });
+  NOTES.forEach(function (n) {
+    body.appendChild(h('h3', {}, [n.title]));
+    body.appendChild(h('p', {}, [n.body]));
+  });
+  return body;
+}
+qs('#why-link').addEventListener('click', function () {
+  STATE.drawer = { notes: true };
+  STATE.drawerReturnFocus = qs('#why-link');
+  var drawerBody = qs('#drawer-body');
+  drawerBody.innerHTML = '';
+  drawerBody.appendChild(renderNotesPanel());
+  qs('#drawer').classList.add('open');
+  qs('#scrim').classList.add('show');
+  qs('#scrim').style.pointerEvents = 'auto';
+  requestAnimationFrame(function () { qs('#drawer-close').focus(); });
+});
+
+/* ============================================================
+   Init
+   ============================================================ */
+STATE.lastCheckIn = LAST_CHECKIN;
+renderRoute();
+</script>

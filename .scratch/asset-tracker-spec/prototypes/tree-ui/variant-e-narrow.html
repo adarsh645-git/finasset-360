@@ -1,0 +1,2760 @@
+<!-- PROTOTYPE — throwaway. FinAsset 360 · Variant E, narrow-viewport study. Copied from variant-e.html
+     (do not edit that file) and extended with three narrow (<900px) browsing strategies —
+     N1 one-pane-at-a-time, N2 accordion outline, N3 task-first flat list — switchable via ?n=1|2|3.
+     Built from BRIEF-NARROW.md. At >=900px all three variants render identically to variant-e.html.
+     Not production code. -->
+<meta charset="utf-8">
+<title>FinAsset 360 · Variant E · Narrow</title>
+<style>
+  /* shared design tokens + base */
+  :root {
+    --bg: #f7f8f9;
+    --surface: #edeff1;
+    --border: #dde1e5;
+    --text: #1b1e22;
+    --text-muted: #6b7580;
+    --accent: #4f6d8f;
+    --accent-soft: rgba(79,109,143,0.12);
+    --liability: #8a7361;
+    --row-hover: rgba(15,23,32,0.045);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #16181b;
+      --surface: #1e2126;
+      --border: #2b2f35;
+      --text: #e7e9ec;
+      --text-muted: #939aa4;
+      --accent: #8fb0d4;
+      --accent-soft: rgba(143,176,212,0.16);
+      --liability: #b09a86;
+      --row-hover: rgba(255,255,255,0.045);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #16181b;
+    --surface: #1e2126;
+    --border: #2b2f35;
+    --text: #e7e9ec;
+    --text-muted: #939aa4;
+    --accent: #8fb0d4;
+    --accent-soft: rgba(143,176,212,0.16);
+    --liability: #b09a86;
+    --row-hover: rgba(255,255,255,0.045);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, sans-serif;
+    font-size: 15px;
+    line-height: 1.45;
+    font-variant-numeric: tabular-nums;
+    -webkit-font-smoothing: antialiased;
+  }
+  #app { position: relative; min-height: 100vh; max-width: 100%; }
+  button { font: inherit; color: inherit; background: none; border: none; cursor: pointer; }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  table { font-variant-numeric: tabular-nums; }
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; }
+  }
+
+
+  /* ---- wordmark ---- */
+  .c-wordmark { font-size: 13px; color: var(--text-muted); padding: 14px 20px 0; letter-spacing: .02em; }
+
+
+  /* ================= Variant E · Miller-column chrome (from C) ================= */
+  .variant-c { display: flex; flex-direction: column; min-height: 100vh; }
+  .c-breadcrumb { font-size: 12px; color: var(--text-muted); padding: 10px 20px; border-bottom: 1px solid var(--border); }
+  .c-breadcrumb button { color: var(--text-muted); text-decoration: underline; text-underline-offset: 2px; text-decoration-color: var(--border); }
+  .c-breadcrumb button:hover { color: var(--text); }
+  .c-breadcrumb .sep { margin: 0 6px; color: var(--border); }
+  .c-columns { display: flex; flex: 1; overflow-x: auto; }
+  .c-col { width: 270px; flex: 0 0 270px; border-right: 1px solid var(--border); overflow-y: auto; padding: 8px 0 64px; }
+  .c-col-detail { flex: 1 1 auto; min-width: 560px; padding: 24px 32px 64px; overflow-y: auto; }
+  .c-row { display: flex; align-items: center; height: 34px; padding: 0 14px; gap: 8px; cursor: pointer; border-left: 2px solid transparent; transition: background-color 100ms ease; }
+  .c-row:hover { background: var(--row-hover); }
+  .c-row.is-selected { border-left-color: var(--accent); background: var(--accent-soft); }
+  .c-row.is-selected .c-label { color: var(--text); font-weight: 500; }
+  .c-label { flex: 1; font-size: 13px; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .c-meta { font-size: 12px; color: var(--text-muted); }
+  .c-liability .c-meta { color: var(--liability); }
+  .c-chevron-right { font-size: 12px; color: var(--text-muted); }
+  .c-gap { height: 10px; }
+  .c-btn-outline { margin-top: 16px; border: 1px solid var(--border); color: var(--text-muted); padding: 6px 14px; border-radius: 3px; font-size: 13px; }
+  .c-btn-outline:hover { background: var(--row-hover); }
+
+
+  /* ================= Variant E · dashboard/detail styling (from D) ================= */
+  .d-content { max-width: 1100px; }
+  .d-content.enter { animation: d-enter 180ms ease-out; }
+  @keyframes d-enter { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+
+  .d-section { margin-top: 40px; }
+  .d-section:first-child { margin-top: 0; }
+  .d-label-11 { font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--text-muted); }
+  .d-label-11-icon { display: flex; align-items: center; gap: 6px; }
+  .d-name-with-icon { display: flex; align-items: center; gap: 8px; }
+  .d-headline-figure { font-size: 36px; font-weight: 500; margin: 6px 0 4px; font-variant-numeric: tabular-nums; }
+  .d-subline { font-size: 13px; color: var(--text-muted); margin-top: 2px; }
+  .d-name-18 { font-size: 20px; font-weight: 500; }
+  .d-total-28 { font-size: 31px; font-weight: 500; margin: 6px 0 4px; font-variant-numeric: tabular-nums; }
+
+  /* -- dashboard two-column layout at wide viewports -- */
+  /* container-type/-name so the allocation rows below can reflow based on the aside's own
+     rendered width (which varies continuously with viewport at the 1200px+ breakpoint),
+     rather than a viewport media query that can't see how narrow the aside actually got. */
+  .e-dash-aside { margin-top: 40px; container-type: inline-size; container-name: e-alloc; }
+  @media (min-width: 1200px) {
+    .e-dash-view.d-content { max-width: 1600px; }
+    .e-dash-grid { display: grid; grid-template-columns: minmax(0, 1.65fr) minmax(300px, 1fr); gap: 56px; align-items: start; }
+    .e-dash-aside { margin-top: 0; }
+  }
+
+  .d-timeline-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px; }
+  .d-legend { display: flex; gap: 14px; font-size: 12px; color: var(--text-muted); align-items: center; }
+  .d-legend-item { display: flex; align-items: center; gap: 5px; }
+  .d-legend-swatch { width: 16px; height: 0; border-top: 1.5px solid var(--accent); display: inline-block; }
+  .d-legend-swatch.dashed { border-top-style: dashed; }
+  .d-timeline-svg-wrap { position: relative; }
+
+  .d-alloc-row { display: flex; align-items: center; height: 42px; gap: 8px 12px; flex-wrap: wrap; }
+  .d-alloc-name { width: 150px; flex: 0 0 150px; font-size: 15px; display: flex; align-items: center; gap: 7px; overflow: hidden; order: 1; }
+  .d-alloc-name-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .d-alloc-track { position: relative; flex: 1 1 160px; min-width: 160px; height: 6px; background: var(--border); border-radius: 2px; order: 2; }
+  .d-alloc-fill { position: absolute; left: 0; top: 0; bottom: 0; background: var(--accent); border-radius: 2px; width: 0%; transition: width 400ms ease-out; }
+  .d-alloc-target { position: absolute; top: -3px; width: 0; height: 12px; border-left: 1px dashed var(--text-muted); }
+  .d-alloc-figures { flex: 0 0 auto; text-align: right; order: 3; }
+  .d-alloc-figures .l1 { font-size: 15px; font-variant-numeric: tabular-nums; }
+  .d-alloc-figures .l2 { font-size: 12px; color: var(--text-muted); font-variant-numeric: tabular-nums; }
+
+  /* reflow: .d-alloc-track has a 160px floor above, so once the row's own container (the
+     dashboard aside, at the 1200px+ two-column breakpoint) is too narrow to fit
+     name + a >=160px track + figures on one line, drop the track to a full-width line
+     beneath a name+figures head line instead of letting it get crushed to a stub. Scoped to
+     the 'e-alloc' container (the dashboard aside) — the Asset-Class view's single bar has no
+     such ancestor container, so it always keeps the single-line layout, which is correct
+     there since that column never gets this narrow. */
+  @container e-alloc (max-width: 499px) {
+    .d-alloc-row { height: auto; padding: 6px 0; }
+    .d-alloc-name { flex: 1 1 auto; width: auto; min-width: 0; order: 1; }
+    .d-alloc-figures { order: 2; }
+    .d-alloc-track { order: 3; flex: 1 1 100%; min-width: 0; margin-top: 4px; }
+  }
+
+  .d-attn-item { font-size: 15px; padding: 6px 0; cursor: pointer; color: var(--text); }
+  .d-attn-item:hover { text-decoration: underline; text-decoration-color: var(--border); }
+  .d-attn-item .meta { color: var(--text-muted); font-variant-numeric: tabular-nums; }
+
+  .d-table { width: 100%; border-collapse: collapse; font-size: 15px; margin-top: 8px; }
+  .d-table th { text-align: left; font-weight: 400; font-size: 12px; color: var(--text-muted); padding: 6px 4px; border-bottom: 1px solid var(--border); }
+  .d-table td { padding: 8px 4px; border-bottom: 1px solid var(--border); font-variant-numeric: tabular-nums; }
+  .d-table td.num, .d-table th.num { text-align: right; }
+  .d-table tr.clickable { cursor: pointer; }
+  .d-table tr.clickable:hover { background: var(--row-hover); }
+  .d-table .stale-cell { opacity: 0.55; }
+  .d-live-tag { font-size: 11px; color: var(--text-muted); border: 1px solid var(--border); border-radius: 3px; padding: 1px 4px; margin-left: 6px; }
+
+  .d-kv-row { display: flex; justify-content: space-between; gap: 12px; padding: 6px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
+  .d-kv-row .label { color: var(--text-muted); }
+  .d-kv-row:last-child { border-bottom: none; }
+  .d-linked-line { font-size: 15px; cursor: pointer; padding: 4px 0; }
+  .d-linked-line:hover { text-decoration: underline; text-decoration-color: var(--border); }
+
+  .d-history-list { font-size: 13px; margin-top: 10px; }
+  .d-history-item { display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px solid var(--border); color: var(--text-muted); font-variant-numeric: tabular-nums; }
+  .d-history-item .v { color: var(--text); }
+  .d-history-item:last-child { border-bottom: none; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .d-content.enter { animation-duration: 0.01ms !important; }
+  }
+
+  /* ================= Variant E · own chrome ================= */
+
+  /* -- top strip: wordmark, Portfolio/Plan roots, Net Worth readout, Check-in -- */
+  .e-topstrip { display: flex; align-items: baseline; justify-content: space-between; padding: 14px 20px 0; gap: 16px; flex-wrap: wrap; }
+  .e-topstrip-left { display: flex; align-items: baseline; gap: 16px; }
+  .e-root-link { font-size: 13px; color: var(--text-muted); padding: 0; }
+  .e-root-link:hover { color: var(--text); }
+  .e-root-link.is-active { color: var(--text); font-weight: 500; }
+  .e-topstrip-right { display: flex; align-items: center; gap: 14px; }
+  .e-nw-readout { font-size: 13px; color: var(--text); font-variant-numeric: tabular-nums; padding: 0; }
+  .e-nw-readout:hover { color: var(--accent); }
+  .e-checkin-control { position: relative; display: flex; align-items: center; }
+  .e-checkin-main { font-size: 13px; border: 1px solid var(--border); padding: 4px 10px; border-radius: 4px 0 0 4px; color: var(--text-muted); }
+  .e-checkin-main:hover { background: var(--row-hover); color: var(--text); }
+  .e-checkin-caret { font-size: 10px; color: var(--text-muted); padding: 4px 7px; border: 1px solid var(--border); border-left: none; border-radius: 0 4px 4px 0; }
+  .e-checkin-caret:hover { background: var(--row-hover); color: var(--text); }
+  .e-checkin-menu { position: absolute; top: 100%; right: 0; margin-top: 4px; background: var(--surface); border: 1px solid var(--border); border-radius: 4px; min-width: 170px; z-index: 10; padding: 4px 0; box-shadow: 0 4px 14px rgba(0,0,0,0.08); }
+  .e-checkin-menu-item { display: block; width: 100%; text-align: left; padding: 7px 12px; font-size: 13px; color: var(--text); }
+  .e-checkin-menu-item:hover { background: var(--row-hover); }
+
+  /* -- column 1 quiet staleness marker -- */
+  .e-stale-marker { color: var(--text-muted); }
+  .c-meta-stale { opacity: 0.55; }
+
+  /* -- new-column-mount motion -- */
+  @keyframes e-col-enter { from { opacity: 0; transform: translateX(8px); } to { opacity: 1; transform: translateX(0); } }
+  .c-col.e-col-enter { animation: e-col-enter 180ms ease-out; }
+
+  /* -- inline click-to-edit valuation/balance headline -- */
+  .e-editable-wrap { display: inline-block; }
+  .e-editable-figure { cursor: text; display: inline-block; border-bottom: 1px dotted transparent; }
+  .e-editable-figure:hover, .e-editable-figure:focus-visible { border-bottom-color: var(--text-muted); }
+  .e-edit-input { border: none; border-bottom: 1px solid var(--accent); background: transparent; color: var(--text); font-variant-numeric: tabular-nums; padding: 0; width: 240px; display: block; }
+  .e-backdate-line { margin-top: 4px; font-size: 13px; color: var(--text-muted); }
+  .e-backdate-toggle { color: var(--text-muted); text-decoration: underline; text-decoration-color: var(--border); text-underline-offset: 2px; padding: 0; }
+  .e-backdate-toggle:hover { color: var(--text); }
+  .e-backdate-input { margin-left: 6px; font: inherit; color: var(--text); background: var(--surface); border: 1px solid var(--border); border-radius: 3px; padding: 2px 4px; }
+
+  /* -- value-cell settle flash -- */
+  @keyframes e-settle-flash { from { background: var(--accent-soft); } to { background: transparent; } }
+  .e-settle-flash { animation: e-settle-flash 400ms ease-out; border-radius: 3px; padding: 2px 4px; margin: -2px -4px 2px -4px; }
+
+  /* -- small text-buttons (Use as Valuation, Copy, Archive, Start Check-in) -- */
+  .e-text-btn { font-size: 13px; color: var(--text-muted); text-decoration: underline; text-decoration-color: var(--border); text-underline-offset: 2px; padding: 0; }
+  .e-text-btn:hover { color: var(--text); }
+
+  /* -- Research + Archive actions row (Holding/Liability detail) -- */
+  .e-actions-row { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; margin-top: 28px; padding-top: 16px; border-top: 1px solid var(--border); flex-wrap: wrap; }
+  .e-research-block { display: flex; align-items: baseline; gap: 10px; flex: 1 1 auto; min-width: 0; }
+  .e-research-line { font-size: 13px; color: var(--text-muted); flex: 1 1 auto; min-width: 0; }
+
+  /* -- Check-in mode -- */
+  .e-checkin-strip { display: flex; justify-content: space-between; align-items: baseline; padding: 14px 20px; border-bottom: 1px solid var(--border); font-size: 13px; color: var(--text-muted); }
+  .e-checkin-progress { font-variant-numeric: tabular-nums; }
+  .e-checkin-hint { text-align: center; font-size: 12px; color: var(--text-muted); padding: 8px 20px; border-bottom: 1px solid var(--border); }
+  .e-checkin-card-wrap { display: flex; justify-content: center; padding: 56px 20px; }
+  .e-checkin-card { width: 560px; max-width: 100%; margin: 0 auto; }
+
+  /* -- Plan area -- */
+  .e-plan-wrap { max-width: 900px; padding: 40px 48px 64px; }
+  .e-plan-grid { display: block; }
+  .e-alloc-editor-row { display: flex; align-items: center; gap: 10px; height: 38px; }
+  .e-alloc-editor-name { flex: 1 1 auto; font-size: 15px; }
+  .e-alloc-input { width: 64px; text-align: right; font: inherit; font-variant-numeric: tabular-nums; background: var(--surface); border: 1px solid var(--border); border-radius: 3px; padding: 4px 6px; color: var(--text); }
+  .e-alloc-pct-sign { font-size: 13px; color: var(--text-muted); width: 14px; }
+  .e-alloc-actual { font-size: 13px; color: var(--text-muted); width: 120px; text-align: right; font-variant-numeric: tabular-nums; }
+  .e-alloc-total-row { margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--border); font-size: 13px; font-variant-numeric: tabular-nums; }
+  .e-assump-row { display: flex; align-items: center; gap: 10px; height: 38px; }
+  .e-assump-label { flex: 1 1 auto; font-size: 15px; color: var(--text-muted); }
+  .e-assump-input { width: 100px; text-align: right; font: inherit; font-variant-numeric: tabular-nums; background: var(--surface); border: 1px solid var(--border); border-radius: 3px; padding: 4px 6px; color: var(--text); }
+  .e-assump-suffix { font-size: 13px; color: var(--text-muted); width: 20px; }
+
+  /* -- class icons (Asset Class / Liability Class / Liabilities root; never Holdings/Liabilities leaves) -- */
+  .e-class-icon { display: block; flex-shrink: 0; }
+  .e-icon-slot { flex: 0 0 16px; display: flex; align-items: center; color: inherit; }
+
+  @media (min-width: 1200px) {
+    .e-plan-wrap { max-width: 1400px; }
+    .e-plan-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 56px; align-items: start; }
+    .e-plan-grid > .d-section { margin-top: 0; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .c-col.e-col-enter, .e-settle-flash { animation-duration: 0.01ms !important; }
+  }
+
+  /* ================= narrow-viewport switcher (deliberately foreign chrome, from index.html) ================= */
+  #switcher {
+    position: fixed;
+    left: 50%;
+    bottom: 16px;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: #14161a;
+    color: #f3f4f6;
+    border: 1px solid rgba(255,255,255,0.14);
+    border-radius: 999px;
+    padding: 6px 8px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 12px;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.35), 0 1px 2px rgba(0,0,0,0.3);
+    z-index: 2000;
+    user-select: none;
+    max-width: calc(100vw - 20px);
+  }
+  #switcher button {
+    width: 24px; height: 24px;
+    flex: 0 0 24px;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 50%;
+    color: #f3f4f6;
+    font-size: 13px;
+    transition: background-color 100ms ease;
+  }
+  #switcher button:hover { background: rgba(255,255,255,0.14); }
+  #switcher button:focus-visible { outline: 2px solid #f3f4f6; outline-offset: 2px; }
+  #switcher .switcher-label { padding: 0 4px; white-space: normal; text-align: center; }
+
+  /* ================= §2: shared narrow-viewport fixes (BRIEF-NARROW.md §2), <900px only ================= */
+  @media (max-width: 899px) {
+    /* 2.5 — nothing scrolls horizontally: the two-pane column shell's 830px floor never
+       applies below the breakpoint because the narrow variants don't build a flex .c-columns
+       row at all, but these overrides stay defensive in case any shared helper reintroduces
+       the class names. */
+    .c-columns { overflow-x: visible; }
+    .c-col-detail { min-width: 0; }
+    .c-col { width: 100%; flex: 1 1 auto; }
+
+    /* 2.3 — tap targets: 34px rows are too small for touch. */
+    .c-row { min-height: 44px; height: auto; }
+
+    /* 2.4 — Net Worth stays readable while scrolling. Top strip + breadcrumb (when present)
+       are wrapped together in .e-narrow-head so they stick as one unit. */
+    .e-narrow-head { position: sticky; top: 0; z-index: 20; background: var(--bg); }
+    .e-topstrip { padding-top: 12px; padding-bottom: 12px; }
+
+    /* 2.1 — touch has no hover: persistent dotted underline + trailing pencil on editable
+       figures, always visible rather than hover-gated. */
+    .e-editable-figure { border-bottom: 1px dotted var(--text-muted); }
+    .e-editable-figure::after { content: ' \270E'; font-size: 0.6em; color: var(--text-muted); vertical-align: middle; margin-left: 5px; }
+    .e-checkin-pencil { font-size: 0.65em; color: var(--text-muted); margin-left: 6px; }
+
+    /* 2.2 — Check-in's touch tap targets, replacing the dead keyboard-hint line. */
+    .e-checkin-touch-actions { display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
+    .e-checkin-touch-actions .c-btn-outline { margin-top: 0; }
+
+    .e-plan-wrap { padding: 28px 18px 56px; }
+  }
+
+  /* ================= N1 — one pane at a time ================= */
+  .e-breadcrumb-narrow button { white-space: nowrap; }
+  .e-n1-pane { padding-bottom: 24px; }
+  .e-n1-list-header { padding: 16px 20px 4px; }
+  .e-n1-list-header .d-name-with-icon { color: var(--text); }
+
+  /* ================= N2 — accordion outline + bottom sheet ================= */
+  .e-n2-headline { padding: 20px 20px 0; }
+  .e-n2-outline-wrap { padding: 20px 20px 0; }
+  .e-n2-dash { padding: 8px 20px 48px; }
+  .e-n2-outline .c-row { border-bottom: 1px solid var(--border); }
+  .e-n2-row-depth-1 { padding-left: 34px; }
+  .e-n2-row-depth-2 { padding-left: 48px; }
+  .e-n2-chevron { display: inline-block; transition: transform 120ms ease; }
+  .e-n2-chevron.is-open { transform: rotate(90deg); }
+  .e-n2-scrim { position: fixed; inset: 0; background: rgba(10,12,14,0.4); z-index: 29; }
+  .e-n2-sheet {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 30;
+    max-height: 84vh; overflow-y: auto;
+    background: var(--bg); border-top: 1px solid var(--border);
+    border-radius: 14px 14px 0 0;
+    box-shadow: 0 -8px 28px rgba(0,0,0,0.22);
+    padding: 10px 20px 40px;
+  }
+  .e-n2-sheet-handle { width: 36px; height: 4px; border-radius: 2px; background: var(--border); margin: 0 auto 14px; }
+  .e-n2-sheet-close { position: sticky; top: 0; float: right; }
+
+  /* ================= N3 — task-first flat list ================= */
+  .e-n3-flat { padding: 20px 20px 56px; }
+  .e-n3-nw-fig { font-size: 40px; }
+  .e-n3-start-checkin { display: block; width: 100%; text-align: center; margin-top: 20px; padding: 12px 14px; border: 1px solid var(--accent); border-radius: 6px; color: var(--accent); font-size: 15px; font-weight: 500; }
+  .e-n3-start-checkin:hover { background: var(--accent-soft); }
+  /* min-width:0 + overflow:hidden here (rather than relying on the inherited .c-label rule,
+     which only truncates its own direct text) is what lets this flex item shrink below its
+     two children's natural (nowrap) content width instead of forcing the row — and the whole
+     narrow page — wider than the viewport (§2.5: nothing scrolls horizontally). */
+  .e-n3-item-label { display: flex; flex-direction: column; gap: 1px; justify-content: center; min-width: 0; overflow: hidden; }
+  .e-n3-item-label > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .e-n3-item-caption { font-size: 11px; color: var(--text-muted); }
+  .e-n3-browse-link { display: block; margin-top: 14px; }
+  .e-n3-overview-link { padding: 10px 20px 0; }
+  .e-n3-fulldetail-close-row { display: flex; justify-content: flex-end; padding: 10px 20px 0; }
+</style>
+<div id="app"></div>
+<div id="switcher" role="navigation" aria-label="Prototype narrow-variant switcher">
+  <button id="switcher-prev" type="button" aria-label="Previous narrow variant">←</button>
+  <span id="switcher-label" class="switcher-label">N1 · One pane at a time</span>
+  <button id="switcher-next" type="button" aria-label="Next narrow variant">→</button>
+</div>
+<script>
+/* ============================================================
+   SHARED: data, formatting, math, lookups (no layout/DOM code)
+   ============================================================ */
+
+function seededRandom(seed) {
+  var s = 0;
+  for (var i = 0; i < seed.length; i++) s = (s * 31 + seed.charCodeAt(i)) >>> 0;
+  return function () {
+    s = (s * 1664525 + 1013904223) >>> 0;
+    return s / 4294967296;
+  };
+}
+
+function genHistory(endValue, endDateISO, points, seedKey, volatility) {
+  var rand = seededRandom(seedKey);
+  var values = new Array(points);
+  values[points - 1] = endValue;
+  for (var i = points - 2; i >= 0; i--) {
+    var pct = (rand() - 0.5) * 2 * volatility;
+    values[i] = values[i + 1] / (1 + pct);
+  }
+  var end = new Date(endDateISO + 'T00:00:00');
+  var out = [];
+  for (var j = points - 1; j >= 0; j--) {
+    var d = new Date(end.getFullYear(), end.getMonth() - j, end.getDate());
+    out.push({ date: d.toISOString().slice(0, 10), value: Math.round(values[points - 1 - j]) });
+  }
+  return out;
+}
+
+var DATA = {
+  homeCurrency: 'USD',
+  today: '2026-09-07',
+  assetClasses: [
+    {
+      id: 'real-estate', name: 'Real Estate',
+      holdings: [
+        { id: 'house', name: '123 Main St', valuation: 620000, recordedAt: '2026-08-01', live: false, liveEstimate: null,
+          history: [
+            { date: '2026-02-01', value: 605000 },
+            { date: '2026-03-01', value: 608000 },
+            { date: '2026-04-01', value: 610000 },
+            { date: '2026-05-01', value: 613000 },
+            { date: '2026-06-01', value: 615000 },
+            { date: '2026-07-01', value: 617500 },
+            { date: '2026-08-01', value: 620000 }
+          ] }
+      ]
+    },
+    {
+      id: 'equity', name: 'Equity',
+      holdings: [
+        { id: 'aapl', name: 'AAPL · 40 sh', valuation: 9480, recordedAt: '2026-09-01', live: true, liveEstimate: 9612,
+          history: [
+            { date: '2026-03-01', value: 8200 },
+            { date: '2026-04-01', value: 8450 },
+            { date: '2026-05-01', value: 8900 },
+            { date: '2026-06-01', value: 8700 },
+            { date: '2026-07-01', value: 9100 },
+            { date: '2026-08-01', value: 9300 },
+            { date: '2026-09-01', value: 9480 }
+          ] },
+        { id: 'vti', name: 'VTI · 120 sh', valuation: 34560, recordedAt: '2026-09-01', live: true, liveEstimate: 34920,
+          history: genHistory(34560, '2026-09-01', 7, 'vti', 0.03) },
+        { id: 'k401', name: 'Vanguard 401(k)', valuation: 148200, recordedAt: '2026-08-31', live: false, liveEstimate: null,
+          history: genHistory(148200, '2026-08-31', 7, 'k401', 0.02) }
+      ]
+    },
+    {
+      id: 'precious-metal', name: 'Precious Metal',
+      holdings: [
+        { id: 'gold', name: 'Gold coins · 3 oz', valuation: 7350, recordedAt: '2026-09-01', live: true, liveEstimate: 7410,
+          history: genHistory(7350, '2026-09-01', 7, 'gold', 0.025) }
+      ]
+    },
+    {
+      id: 'cash', name: 'Cash',
+      holdings: [
+        { id: 'chase', name: 'Chase Checking', valuation: 6200, recordedAt: '2026-09-05', live: false, liveEstimate: null,
+          history: genHistory(6200, '2026-09-05', 7, 'chase', 0.08) },
+        { id: 'marcus', name: 'Marcus HYSA', valuation: 42000, recordedAt: '2026-09-05', live: false, liveEstimate: null,
+          history: genHistory(42000, '2026-09-05', 7, 'marcus', 0.01) }
+      ]
+    },
+    {
+      id: 'crypto', name: 'Crypto',
+      holdings: [
+        { id: 'btc', name: 'BTC · 0.5', valuation: 31000, recordedAt: '2026-09-01', live: true, liveEstimate: 30650,
+          history: [
+            { date: '2026-03-01', value: 24500 },
+            { date: '2026-04-01', value: 27800 },
+            { date: '2026-05-01', value: 26200 },
+            { date: '2026-06-01', value: 29500 },
+            { date: '2026-07-01', value: 33100 },
+            { date: '2026-08-01', value: 29800 },
+            { date: '2026-09-01', value: 31000 }
+          ] }
+      ]
+    }
+  ],
+  liabilityClasses: [
+    {
+      id: 'mortgage', name: 'Mortgage',
+      liabilities: [
+        { id: 'mortgage-main', name: 'Mortgage on 123 Main St', balance: 410000, recordedAt: '2026-08-01',
+          linkedHoldingId: 'house',
+          amortization: { rate: 0.0625, original: 480000, termMonths: 360, extra: 200 },
+          history: [
+            { date: '2026-02-01', value: 412600 },
+            { date: '2026-03-01', value: 412000 },
+            { date: '2026-04-01', value: 411500 },
+            { date: '2026-05-01', value: 411100 },
+            { date: '2026-06-01', value: 410700 },
+            { date: '2026-07-01', value: 410300 },
+            { date: '2026-08-01', value: 410000 }
+          ] }
+      ]
+    },
+    {
+      id: 'auto-loan', name: 'Auto Loan',
+      liabilities: [
+        { id: 'honda', name: 'Honda CR-V loan', balance: 18400, recordedAt: '2026-08-15',
+          linkedHoldingId: null, amortization: null,
+          history: [
+            { date: '2026-02-15', value: 19800 },
+            { date: '2026-03-15', value: 19500 },
+            { date: '2026-04-15', value: 19100 },
+            { date: '2026-05-15', value: 18900 },
+            { date: '2026-06-15', value: 18700 },
+            { date: '2026-07-15', value: 18550 },
+            { date: '2026-08-15', value: 18400 }
+          ] }
+      ]
+    },
+    {
+      id: 'credit-card', name: 'Credit Card',
+      liabilities: [
+        { id: 'amex', name: 'Amex Blue', balance: 2150, recordedAt: '2026-09-05',
+          linkedHoldingId: null, amortization: null,
+          history: genHistory(2150, '2026-09-05', 7, 'amex', 0.15) }
+      ]
+    }
+  ],
+  targetAllocation: { 'real-estate': 25, equity: 50, 'precious-metal': 10, cash: 10, crypto: 5 },
+  projectionAssumptions: { annualGrowth: 0.06, monthlyContribution: 1500, years: 20 }
+};
+
+function fmtMoney(n) {
+  var neg = n < 0;
+  var abs = Math.round(Math.abs(n));
+  var s = abs.toLocaleString('en-US');
+  return (neg ? '−' : '') + s;
+}
+function fmtPct(n, decimals) {
+  if (decimals === undefined) decimals = 1;
+  return n.toFixed(decimals) + '%';
+}
+function fmtDate(iso) {
+  var d = new Date(iso + 'T00:00:00');
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
+function fv(P, annualRate, monthlyContribution, years) {
+  var r = annualRate / 12;
+  var n = years * 12;
+  var growth = Math.pow(1 + r, n);
+  if (r === 0) return P + monthlyContribution * n;
+  return P * growth + monthlyContribution * ((growth - 1) / r);
+}
+function monthlyPayment(P0, annualRate, termMonths) {
+  var r = annualRate / 12;
+  return P0 * r / (1 - Math.pow(1 + r, -termMonths));
+}
+function amortizeBalance(currentBalance, annualRate, payment, k) {
+  var r = annualRate / 12;
+  var growth = Math.pow(1 + r, k);
+  var bal = currentBalance * growth - payment * ((growth - 1) / r);
+  return Math.max(0, bal);
+}
+function payoffMonths(currentBalance, annualRate, payment) {
+  var r = annualRate / 12;
+  var x = (payment / r) / (payment / r - currentBalance);
+  return Math.log(x) / Math.log(1 + r);
+}
+function computeAmortizationInfo(liability) {
+  var am = liability.amortization;
+  if (!am) return null;
+  var base = monthlyPayment(am.original, am.rate, am.termMonths);
+  var totalPayment = base + (am.extra || 0);
+  var kPayoff = payoffMonths(liability.balance, am.rate, totalPayment);
+  var start = new Date(DATA.today + 'T00:00:00');
+  var payoffDate = new Date(start.getFullYear(), start.getMonth() + Math.round(kPayoff), start.getDate());
+  return { monthlyPaymentBase: base, extra: am.extra, totalPayment: totalPayment, payoffMonths: kPayoff, payoffYear: payoffDate.getFullYear() };
+}
+
+function classTotal(cls) { return cls.holdings.reduce(function (s, h) { return s + h.valuation; }, 0); }
+function liabClassTotal(cls) { return cls.liabilities.reduce(function (s, l) { return s + l.balance; }, 0); }
+
+function computeDerived(data) {
+  var holdingsTotal = data.assetClasses.reduce(function (s, c) { return s + classTotal(c); }, 0);
+  var liabilitiesTotal = data.liabilityClasses.reduce(function (s, c) { return s + liabClassTotal(c); }, 0);
+  var netWorth = holdingsTotal - liabilitiesTotal;
+
+  var distribution = data.assetClasses.map(function (c) {
+    var total = classTotal(c);
+    return {
+      classId: c.id,
+      name: c.name,
+      total: total,
+      actualPct: holdingsTotal ? (total / holdingsTotal * 100) : 0,
+      targetPct: data.targetAllocation[c.id] || 0
+    };
+  });
+
+  var mostRecent = '';
+  data.assetClasses.forEach(function (c) { c.holdings.forEach(function (h) { if (h.recordedAt > mostRecent) mostRecent = h.recordedAt; }); });
+  data.liabilityClasses.forEach(function (c) { c.liabilities.forEach(function (l) { if (l.recordedAt > mostRecent) mostRecent = l.recordedAt; }); });
+
+  var mortgageLiab = data.liabilityClasses.filter(function (c) { return c.id === 'mortgage'; })[0].liabilities[0];
+  var mortgage = computeAmortizationInfo(mortgageLiab);
+
+  var years = data.projectionAssumptions.years;
+  var annualGrowth = data.projectionAssumptions.annualGrowth;
+  var monthlyContribution = data.projectionAssumptions.monthlyContribution;
+  var projectionSeries = [];
+  for (var y = 0; y <= years; y++) projectionSeries.push({ year: y, value: fv(netWorth, annualGrowth, monthlyContribution, y) });
+
+  var house = data.assetClasses.filter(function (c) { return c.id === 'real-estate'; })[0].holdings.filter(function (h) { return h.id === 'house'; })[0];
+  var netPositionSeries = [];
+  for (var y2 = 0; y2 <= years; y2++) {
+    var houseVal = fv(house.valuation, annualGrowth, 0, y2);
+    var mortgageBal = amortizeBalance(mortgageLiab.balance, mortgageLiab.amortization.rate, mortgage.totalPayment, y2 * 12);
+    netPositionSeries.push({ year: y2, houseValue: houseVal, mortgageBalance: mortgageBal, netPosition: houseVal - mortgageBal });
+  }
+
+  return { holdingsTotal: holdingsTotal, liabilitiesTotal: liabilitiesTotal, netWorth: netWorth, distribution: distribution, mostRecent: mostRecent, mortgage: mortgage, projectionSeries: projectionSeries, netPositionSeries: netPositionSeries };
+}
+
+var DERIVED = computeDerived(DATA);
+
+function findAssetClass(id) { for (var i = 0; i < DATA.assetClasses.length; i++) if (DATA.assetClasses[i].id === id) return DATA.assetClasses[i]; return null; }
+function findHoldingIn(cls, id) { for (var i = 0; i < cls.holdings.length; i++) if (cls.holdings[i].id === id) return cls.holdings[i]; return null; }
+function findLiabilityClass(id) { for (var i = 0; i < DATA.liabilityClasses.length; i++) if (DATA.liabilityClasses[i].id === id) return DATA.liabilityClasses[i]; return null; }
+function findLiabilityIn(cls, id) { for (var i = 0; i < cls.liabilities.length; i++) if (cls.liabilities[i].id === id) return cls.liabilities[i]; return null; }
+function findLinkedLiability(holdingId) {
+  for (var i = 0; i < DATA.liabilityClasses.length; i++) {
+    var lc = DATA.liabilityClasses[i];
+    for (var j = 0; j < lc.liabilities.length; j++) {
+      if (lc.liabilities[j].linkedHoldingId === holdingId) return { liability: lc.liabilities[j], liabilityClass: lc };
+    }
+  }
+  return null;
+}
+
+/* small generic event-wiring utility (click + keyboard activation); not a layout component */
+function onActivate(elm, fn) {
+  elm.addEventListener('click', fn);
+  elm.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fn(e); }
+  });
+  if (elm.tabIndex < 0 || elm.tabIndex === undefined) elm.tabIndex = 0;
+  if (!elm.getAttribute('role')) elm.setAttribute('role', 'button');
+}
+
+
+/* ---------- staleness/format utilities ---------- */
+function dReducedMotion() {
+  try { return !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches); }
+  catch (e) { return false; }
+}
+
+function dDaysAgo(iso) {
+  var rec = new Date(iso + 'T00:00:00');
+  var today = new Date(DATA.today + 'T00:00:00');
+  return Math.round((today.getTime() - rec.getTime()) / 86400000);
+}
+function dIsStale(iso) { return dDaysAgo(iso) > 30; }
+
+function dFmtCompact(n, decimals) {
+  if (decimals === undefined) decimals = 1;
+  if (n === 0) return '0';
+  var abs = Math.abs(n);
+  if (abs >= 1000000) return (n / 1000000).toFixed(decimals) + 'M';
+  if (abs >= 1000) return Math.round(n / 1000) + 'K';
+  return String(Math.round(n));
+}
+function dFmtMonthShort(iso) {
+  var d = new Date(iso + 'T00:00:00');
+  return d.toLocaleDateString('en-US', { month: 'short' }) + ' ' + String(d.getFullYear()).slice(2);
+}
+
+/* per-mount draw-in flags. Miller columns mount/unmount the dashboard's and the
+   Asset-Class-view's allocation bars, and the dashboard's and Plan's timelines, independently
+   and repeatedly as the user navigates — so each gets its own one-time-per-session flag rather
+   than one shared boolean (see BRIEF-E.md §6). */
+var eDrawFlags = { dashboardBars: false, classBar: false, dashboardTimeline: false, planTimeline: false };
+
+/* ---------- dBuildTimeline's live-resize bookkeeping ----------
+   dBuildTimeline (below) builds its SVG with a viewBox width equal to the mount point's own
+   measured pixel width, so there's no non-uniform x/y scaling to distort the <text> labels.
+   That means it has to repaint whenever that width changes: on window resize, and it also
+   caches the last-measured width per mount point (flagKey) so a same-session repaint (e.g.
+   Plan's "Years" input re-rendering its copy) can paint at the right width immediately
+   instead of flashing a fallback width for a frame. A single window resize listener — never
+   torn down — drives every currently-mounted instance via this registry, debounced, pruning
+   any entry whose wrapDiv is no longer in the document (both to avoid doing pointless work on
+   detached nodes and so the registry doesn't grow across view switches). */
+var eTimelineWidthCache = {};
+var eActiveTimelines = [];
+var eTimelineResizeTimer = null;
+function eScheduleTimelineResize() {
+  if (eTimelineResizeTimer) clearTimeout(eTimelineResizeTimer);
+  eTimelineResizeTimer = setTimeout(function () {
+    eTimelineResizeTimer = null;
+    eActiveTimelines = eActiveTimelines.filter(function (entry) { return document.body.contains(entry.wrapDiv); });
+    eActiveTimelines.forEach(function (entry) { entry.paint(); });
+  }, 150);
+}
+window.addEventListener('resize', eScheduleTimelineResize);
+
+/* ---------- per-class icons ----------
+   Minimal single-stroke monochrome glyphs, one per Asset/Liability Class id, plus the
+   top-level "Liabilities" row. Icons are classes-only — Holdings and Liabilities (the
+   leaf items) never get one (see BRIEF-E.md revision notes at the end of the brief).
+   The product lets users define their own custom Classes, so an unrecognized id is the
+   *normal* path (falls through to 'default'), not an error. Icons inherit currentColor —
+   never given their own accent color, since the single slate accent stays reserved for
+   selection/active state. */
+var E_ICON_PATHS = {
+  'real-estate': '<path d="M3 7.4 8 3.2l5 4.2"/><path d="M4.5 6.4V12.8h7V6.4"/><path d="M6.8 12.8V9.3h2.4v3.5"/>',
+  'equity': '<polyline points="2.5,11.5 6,7.5 9,10 13.5,4.5"/><polyline points="10,4.5 13.5,4.5 13.5,8"/>',
+  'precious-metal': '<path d="M4 10.5 4.75 5.75h6.5l0.75 4.75Z"/><line x1="4" y1="10.5" x2="12" y2="10.5"/>',
+  'cash': '<rect x="2" y="4.5" width="12" height="7" rx="1"/><circle cx="8" cy="8" r="1.6"/>',
+  'crypto': '<circle cx="8" cy="8" r="5.25"/><line x1="8" y1="4.25" x2="8" y2="11.75"/>',
+  'mortgage': '<path d="M3 6.9 8 2.9l5 4"/><path d="M4.5 5.9V11h7V5.9"/><line x1="2.5" y1="12.75" x2="13.5" y2="12.75"/>',
+  'auto-loan': '<path d="M3 10.25V8.5l1.4-3h7.2l1.4 3v1.75"/><line x1="2.25" y1="10.25" x2="13.75" y2="10.25"/><circle cx="5" cy="11.5" r="1.15"/><circle cx="11" cy="11.5" r="1.15"/>',
+  'credit-card': '<rect x="2" y="4" width="12" height="8" rx="1.2"/><line x1="2" y1="7" x2="14" y2="7"/>',
+  'liabilities': '<polyline points="2.5,4.5 6,8.5 9,6 13.5,11.5"/><polyline points="10,11.5 13.5,11.5 13.5,8"/>',
+  'default': '<circle cx="8" cy="8" r="5.25"/>'
+};
+function eIconMarkup(id) {
+  var inner = E_ICON_PATHS[id] || E_ICON_PATHS['default'];
+  return '<svg class="e-class-icon" viewBox="0 0 16 16" width="16" height="16" fill="none" ' +
+    'stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round" ' +
+    'aria-hidden="true" focusable="false">' + inner + '</svg>';
+}
+function eIconEl(id) {
+  var span = document.createElement('span');
+  span.className = 'e-icon-slot';
+  span.innerHTML = eIconMarkup(id);
+  return span;
+}
+
+/* ---------- information payload: alloc bars, timeline, detail building blocks,
+   per-node views (from Variant D) ---------- */
+function dAllocGapMoney(dist) { return (dist.targetPct / 100) * DERIVED.holdingsTotal - dist.total; }
+function dAllocGapText(dist) {
+  var gap = dAllocGapMoney(dist);
+  var threshold = DERIVED.holdingsTotal * 0.01;
+  if (Math.abs(gap) < threshold) return 'on target';
+  return gap > 0 ? (fmtMoney(gap) + ' below target') : (fmtMoney(Math.abs(gap)) + ' above target');
+}
+function dBuildAllocRow(dist, showName, animateDelay, flagKey) {
+  var row = document.createElement('div');
+  row.className = 'd-alloc-row';
+  if (showName) {
+    var name = document.createElement('div');
+    name.className = 'd-alloc-name';
+    name.appendChild(eIconEl(dist.classId));
+    var nameText = document.createElement('span');
+    nameText.className = 'd-alloc-name-text';
+    nameText.textContent = dist.name;
+    name.appendChild(nameText);
+    row.appendChild(name);
+  }
+  var track = document.createElement('div');
+  track.className = 'd-alloc-track';
+  var fill = document.createElement('div');
+  fill.className = 'd-alloc-fill';
+  var tick = document.createElement('div');
+  tick.className = 'd-alloc-target';
+  tick.style.left = Math.min(100, dist.targetPct) + '%';
+  track.appendChild(fill);
+  track.appendChild(tick);
+  row.appendChild(track);
+  var figures = document.createElement('div');
+  figures.className = 'd-alloc-figures';
+  var l1 = document.createElement('div'); l1.className = 'l1'; l1.textContent = fmtPct(dist.actualPct) + ' · target ' + dist.targetPct + '%';
+  var l2 = document.createElement('div'); l2.className = 'l2'; l2.textContent = dAllocGapText(dist);
+  figures.appendChild(l1); figures.appendChild(l2);
+  row.appendChild(figures);
+  var targetWidth = Math.min(100, dist.actualPct) + '%';
+  if (eDrawFlags[flagKey] || dReducedMotion()) {
+    fill.style.width = targetWidth;
+  } else {
+    fill.style.width = '0%';
+    setTimeout(function () { fill.style.width = targetWidth; }, animateDelay || 0);
+  }
+  return row;
+}
+
+/* ---------- recorded net-worth series (joins into the projection) ---------- */
+function dRecordedSeries() {
+  var todayDate = new Date(DATA.today + 'T00:00:00');
+  var dates = [];
+  for (var k = 7; k >= 1; k--) dates.push(new Date(todayDate.getFullYear(), todayDate.getMonth() - k, 1));
+  dates.push(todayDate);
+  function valueAtOrBefore(history, targetDate) {
+    var best = null, bestTime = -Infinity;
+    for (var i = 0; i < history.length; i++) {
+      var t = new Date(history[i].date + 'T00:00:00').getTime();
+      if (t <= targetDate.getTime() && t > bestTime) { best = history[i]; bestTime = t; }
+    }
+    if (!best) best = history[0]; /* extend/synthesize: fall back to earliest known point */
+    return best.value;
+  }
+  var series = dates.map(function (d) {
+    var hSum = 0;
+    DATA.assetClasses.forEach(function (cls) { cls.holdings.forEach(function (h) { hSum += valueAtOrBefore(h.history, d); }); });
+    var lSum = 0;
+    DATA.liabilityClasses.forEach(function (lc) { lc.liabilities.forEach(function (l) { lSum += valueAtOrBefore(l.history, d); }); });
+    return { date: d.toISOString().slice(0, 10), value: hSum - lSum };
+  });
+  series[series.length - 1] = { date: DATA.today, value: DERIVED.netWorth }; /* seam: matches projection's year-0 exactly */
+  return series;
+}
+
+/* ---------- the hero timeline: recorded + projected on one scale ---------- */
+function dBuildTimeline(flagKey) {
+  var wrapDiv = document.createElement('div');
+  wrapDiv.className = 'd-timeline-svg-wrap';
+
+  /* Measures wrapDiv's own rendered width. wrapDiv is guaranteed not to be attached yet the
+     first time this runs (dBuildTimeline hasn't returned it to its caller), so this reads 0
+     then; callers always fall back to the last-known-good width for this mount point
+     (eTimelineWidthCache), or 720 if this flagKey has never painted before. That fallback is
+     also what covers a container that's hidden/not laid out when a resize fires. */
+  function measureWidth() {
+    var w = wrapDiv.clientWidth || (wrapDiv.parentElement && wrapDiv.parentElement.clientWidth) || 0;
+    return w > 0 ? w : 0;
+  }
+
+  /* Rebuilds the SVG from scratch at the current (or best-known) width. viewBox width is set
+     to that same width, so x and y both render at scale 1 — no independent x/y stretch, which
+     is what distorted every <text> label under the old fixed-720-viewBox +
+     preserveAspectRatio="none" combination. allowDrawIn gates whether this particular paint is
+     allowed to consume the once-per-flagKey recorded-line draw-in animation (see call sites
+     below) — it must never be the very first, not-yet-attached, fallback-width paint, or that
+     paint would burn the one-time animation on a width that's about to be corrected. */
+  function paint(allowDrawIn) {
+    var measured = measureWidth();
+    var W = measured > 0 ? measured : (eTimelineWidthCache[flagKey] || 720);
+    if (measured > 0) eTimelineWidthCache[flagKey] = measured;
+
+    var recorded = dRecordedSeries();
+    var projected = DERIVED.projectionSeries; /* years 0..horizon */
+    /* horizon tracks DATA.projectionAssumptions.years live (Plan's "years" input edits it) —
+       everything below is expressed relative to it rather than a literal 20, so a shortened
+       or lengthened horizon never indexes past the end of `projected`. */
+    var horizon = Math.max(1, projected.length - 1);
+    var H = 260, padL = 46, padR = 14, padT = 30, padB = 26;
+    var plotW = W - padL - padR, plotH = H - padT - padB;
+    var recordedFrac = 0.30;
+    var recordedWidth = plotW * recordedFrac;
+    var projectedWidth = plotW * (1 - recordedFrac);
+    var todayX = padL + recordedWidth;
+
+    var maxRaw = projected[projected.length - 1].value;
+    var maxY = Math.ceil(maxRaw / 200000) * 200000;
+    var midY = maxY / 2;
+
+    function xRec(i) { return padL + (i / (recorded.length - 1)) * recordedWidth; }
+    function xProj(year) { return todayX + (year / horizon) * projectedWidth; }
+    function yOf(v) { return padT + plotH - (v / maxY) * plotH; }
+
+    var svgNS = 'http://www.w3.org/2000/svg';
+    var svg = document.createElementNS(svgNS, 'svg');
+    svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
+    svg.setAttribute('width', '100%');
+    svg.setAttribute('height', String(H));
+    /* No preserveAspectRatio override: viewBox width is set to wrapDiv's own measured pixel
+       width above (re-measured on resize — see eScheduleTimelineResize), and the rendered
+       width tracks that same value via width:100%, so the box always matches its own viewBox
+       1:1 already — default 'xMidYMid meet' behavior applies without ever needing to scale,
+       let alone scale x and y independently the way 'none' did (which is what stretched every
+       <text> label horizontally). */
+    svg.setAttribute('role', 'img');
+    svg.setAttribute('aria-label', 'Net worth, recorded and projected, over time');
+
+    function el(tag, attrs) {
+      var e = document.createElementNS(svgNS, tag);
+      for (var k in attrs) e.setAttribute(k, attrs[k]);
+      return e;
+    }
+
+    /* gridlines + y labels */
+    [0, midY, maxY].forEach(function (v) {
+      var y = yOf(v);
+      svg.appendChild(el('line', { x1: padL, y1: y, x2: W - padR, y2: y, stroke: 'var(--border)', 'stroke-width': '1' }));
+      var t = el('text', { x: padL - 8, y: y + 3, 'text-anchor': 'end', 'font-size': '12', fill: 'var(--text-muted)' });
+      t.textContent = dFmtCompact(v);
+      svg.appendChild(t);
+    });
+
+    /* today seam */
+    svg.appendChild(el('line', { x1: todayX, y1: padT, x2: todayX, y2: padT + plotH, stroke: 'var(--border)', 'stroke-width': '1' }));
+    var todayLabel = el('text', { x: todayX, y: padT - 12, 'text-anchor': 'middle', 'font-size': '12', fill: 'var(--text-muted)' });
+    todayLabel.textContent = 'Today';
+    svg.appendChild(todayLabel);
+
+    /* x labels: recorded (2 month labels) */
+    [0, 4].forEach(function (i) {
+      var t = el('text', { x: xRec(i), y: padT + plotH + 16, 'text-anchor': 'middle', 'font-size': '12', fill: 'var(--text-muted)' });
+      t.textContent = dFmtMonthShort(recorded[i].date);
+      svg.appendChild(t);
+    });
+    /* x labels: projected (4 evenly-spaced ticks across the horizon) */
+    var startYear = new Date(DATA.today + 'T00:00:00').getFullYear();
+    var projTicks = [];
+    if (horizon <= 4) {
+      for (var pt1 = 1; pt1 <= horizon; pt1++) projTicks.push(pt1);
+    } else {
+      for (var pt2 = 1; pt2 <= 4; pt2++) projTicks.push(Math.round(horizon * pt2 / 4));
+    }
+    projTicks = projTicks.filter(function (v, i) { return v > 0 && projTicks.indexOf(v) === i; });
+    projTicks.forEach(function (yr) {
+      var t = el('text', { x: xProj(yr), y: padT + plotH + 16, 'text-anchor': 'middle', 'font-size': '12', fill: 'var(--text-muted)' });
+      t.textContent = String(startYear + yr);
+      svg.appendChild(t);
+    });
+
+    /* recorded line */
+    var recPts = recorded.map(function (p, i) { return xRec(i) + ',' + yOf(p.value); }).join(' ');
+    var recLine = el('polyline', { points: recPts, fill: 'none', stroke: 'var(--accent)', 'stroke-width': '1.5' });
+    svg.appendChild(recLine);
+
+    /* projected line, clipped by an animated-width rect so dashes don't crawl */
+    var clipId = 'd-proj-clip-' + Math.random().toString(36).slice(2);
+    var clipPath = el('clipPath', { id: clipId });
+    var clipRect = el('rect', { x: todayX, y: padT - 4, width: '0', height: plotH + 8 });
+    clipPath.appendChild(clipRect);
+    svg.appendChild(clipPath);
+    var projPts = [];
+    for (var yy = 0; yy <= horizon; yy++) projPts.push(xProj(yy) + ',' + yOf(projected[yy].value));
+    var projLine = el('polyline', { points: projPts.join(' '), fill: 'none', stroke: 'var(--accent)', 'stroke-width': '1.25', 'stroke-dasharray': '4 3', 'clip-path': 'url(#' + clipId + ')' });
+    svg.appendChild(projLine);
+
+    /* mortgage payoff annotation — only if the payoff falls within the visible horizon */
+    var payoffYearsFrac = DERIVED.mortgage.payoffMonths / 12;
+    if (payoffYearsFrac <= horizon) {
+      var payoffVal = fv(DERIVED.netWorth, DATA.projectionAssumptions.annualGrowth, DATA.projectionAssumptions.monthlyContribution, payoffYearsFrac);
+      var pax = xProj(payoffYearsFrac), pay = yOf(payoffVal);
+      var payoffDot = el('circle', { cx: pax, cy: pay, r: '4', fill: 'var(--bg)', stroke: 'var(--accent)', 'stroke-width': '1.5' });
+      svg.appendChild(payoffDot);
+      var payoffLabel = el('text', { x: Math.min(pax + 8, W - padR - 4), y: pay - 8, 'text-anchor': pax > W - padR - 90 ? 'end' : 'start', 'font-size': '12', fill: 'var(--text-muted)' });
+      payoffLabel.textContent = 'Mortgage paid off';
+      svg.appendChild(payoffLabel);
+    }
+
+    /* endpoint marker (last year of horizon) */
+    var endX = xProj(horizon), endY = yOf(projected[horizon].value);
+    svg.appendChild(el('circle', { cx: endX, cy: endY, r: '3', fill: 'var(--accent)' }));
+    var endLabel = el('text', { x: endX - 8, y: endY - 8, 'text-anchor': 'end', 'font-size': '12', fill: 'var(--text-muted)' });
+    endLabel.textContent = (startYear + horizon) + ' · ' + dFmtCompact(projected[horizon].value, 2);
+    svg.appendChild(endLabel);
+
+    /* hover guide */
+    var guideLine = el('line', { x1: '0', y1: padT, x2: '0', y2: padT + plotH, stroke: 'var(--border)', 'stroke-width': '1', opacity: '0' });
+    var readout = el('text', { x: '0', y: padT - 12, 'font-size': '12', fill: 'var(--text-muted)', opacity: '0' });
+    svg.appendChild(guideLine);
+    svg.appendChild(readout);
+    var overlay = el('rect', { x: padL, y: padT, width: plotW, height: plotH, fill: 'transparent' });
+    overlay.addEventListener('mousemove', function (e) {
+      var rect = svg.getBoundingClientRect();
+      var scale = W / rect.width;
+      var x = (e.clientX - rect.left) * scale;
+      var label, gx;
+      if (x < todayX) {
+        var frac = Math.max(0, Math.min(1, (x - padL) / recordedWidth));
+        var idx = Math.round(frac * (recorded.length - 1));
+        gx = xRec(idx);
+        label = fmtDate(recorded[idx].date) + ' · ' + fmtMoney(recorded[idx].value);
+      } else {
+        var yf = Math.max(0, Math.min(horizon, ((x - todayX) / projectedWidth) * horizon));
+        gx = xProj(yf);
+        var v = fv(DERIVED.netWorth, DATA.projectionAssumptions.annualGrowth, DATA.projectionAssumptions.monthlyContribution, yf);
+        label = Math.round(startYear + yf) + ' · ' + fmtMoney(v);
+      }
+      guideLine.setAttribute('x1', gx); guideLine.setAttribute('x2', gx); guideLine.setAttribute('opacity', '1');
+      readout.setAttribute('x', Math.min(Math.max(gx, padL + 2), W - padR - 90));
+      readout.textContent = label;
+      readout.setAttribute('opacity', '1');
+    });
+    overlay.addEventListener('mouseleave', function () {
+      guideLine.setAttribute('opacity', '0');
+      readout.setAttribute('opacity', '0');
+    });
+    svg.appendChild(overlay);
+
+    wrapDiv.innerHTML = '';
+    wrapDiv.appendChild(svg);
+
+    /* draw-in, once ever per mount point (flagKey), and only on a paint that's allowed to
+       consume it (allowDrawIn) — see the call sites below for why. Measuring a polyline only
+       works once the SVG is in the document; every call to paint() that can reach this branch
+       has already been deferred past a requestAnimationFrame with a document.body.contains
+       check (below), so recLine is guaranteed attached here. Any failure still falls back to
+       drawing both lines complete instead of leaving the pane blank. */
+    if (allowDrawIn && !eDrawFlags[flagKey] && !dReducedMotion()) {
+      eDrawFlags[flagKey] = true;
+      clipRect.setAttribute('width', '0');
+      requestAnimationFrame(function () {
+        try {
+          var len = recLine.getTotalLength();
+          if (!len || !isFinite(len)) throw new Error('no length');
+          recLine.style.strokeDasharray = String(len);
+          recLine.style.strokeDashoffset = String(len);
+          recLine.getBoundingClientRect(); /* force layout before transition */
+          recLine.style.transition = 'stroke-dashoffset 600ms ease-out';
+          clipRect.style.transition = 'width 600ms ease-out';
+          clipRect.style.transitionDelay = '850ms';
+          requestAnimationFrame(function () {
+            recLine.style.strokeDashoffset = '0';
+            clipRect.setAttribute('width', String(W));
+          });
+        } catch (err) {
+          recLine.style.strokeDasharray = '';
+          recLine.style.strokeDashoffset = '';
+          clipRect.setAttribute('width', String(W));
+        }
+      });
+    } else {
+      clipRect.setAttribute('width', String(W));
+    }
+  }
+
+  /* Immediate synchronous paint so the chart is never blank even for a frame: at this point
+     wrapDiv is never attached yet (callers attach the element this function returns), so this
+     always uses the cached/fallback width and never the once-per-flagKey draw-in — that's
+     reserved for the corrective paint below, once the width is trustworthy. */
+  paint(false);
+  requestAnimationFrame(function () {
+    /* Node is attached by now (eRerender/eBuildDetail/refreshPlanTimeline all attach this
+       wrapper synchronously before this callback runs) — but guard anyway: a fast view switch
+       could detach it before this frame fires, and measuring/painting a detached node is the
+       exact failure mode that blanked a whole pane in an earlier round of this prototype. */
+    if (!document.body.contains(wrapDiv)) return;
+    paint(true);
+  });
+
+  /* Register so a window resize repaints this instance at its new width, debounced (see
+     eScheduleTimelineResize). Prune any earlier entries whose wrapDiv has since been detached
+     (view switched, or a previous copy of this same mount point was replaced) so the registry
+     never grows unbounded across re-renders. */
+  eActiveTimelines = eActiveTimelines.filter(function (entry) { return document.body.contains(entry.wrapDiv); });
+  eActiveTimelines.push({ flagKey: flagKey, wrapDiv: wrapDiv, paint: function () { paint(true); } });
+
+  return wrapDiv;
+}
+
+/* ---------- section builders shared within D ---------- */
+function dLabel11(text, iconId) {
+  var d = document.createElement('div');
+  d.className = 'd-label-11';
+  if (iconId) {
+    d.classList.add('d-label-11-icon');
+    d.appendChild(eIconEl(iconId));
+    var span = document.createElement('span');
+    span.textContent = text;
+    d.appendChild(span);
+  } else {
+    d.textContent = text;
+  }
+  return d;
+}
+function dSection() { var d = document.createElement('div'); d.className = 'd-section'; return d; }
+function dKvRow(label, value) {
+  var row = document.createElement('div');
+  row.className = 'd-kv-row';
+  var l = document.createElement('span'); l.className = 'label'; l.textContent = label;
+  var v = document.createElement('span'); v.textContent = value;
+  row.appendChild(l); row.appendChild(v);
+  return row;
+}
+function dSparklineSVG(history, dashed) {
+  var w = 320, h = 72, pad = 6;
+  var vals = history.map(function (p) { return p.value; });
+  var minV = Math.min.apply(null, vals), maxV = Math.max.apply(null, vals);
+  function x(i) { return pad + (i / (history.length - 1)) * (w - pad * 2); }
+  function y(v) { return h - pad - ((v - minV) / ((maxV - minV) || 1)) * (h - pad * 2); }
+  var pts = history.map(function (p, i) { return x(i) + ',' + y(p.value); }).join(' ');
+  var last = history[history.length - 1];
+  var dash = dashed ? ' stroke-dasharray="4 3"' : '';
+  var dot = dashed ? '' : '<circle cx="' + x(history.length - 1) + '" cy="' + y(last.value) + '" r="3" style="fill:var(--accent)"></circle>';
+  return '<svg viewBox="0 0 ' + w + ' ' + h + '" width="100%" height="' + h + '" preserveAspectRatio="none" role="img" aria-label="Valuation history">' +
+    '<polyline points="' + pts + '" style="fill:none;stroke:var(--accent);stroke-width:' + (dashed ? '1.25' : '1.5') + '"' + dash + '></polyline>' + dot +
+    '</svg>';
+}
+function dBuildHistorySection(history) {
+  var section = dSection();
+  section.appendChild(dLabel11('Valuation History'));
+  var sparkWrap = document.createElement('div');
+  sparkWrap.style.marginTop = '10px';
+  sparkWrap.innerHTML = dSparklineSVG(history, false);
+  section.appendChild(sparkWrap);
+  var list = document.createElement('div');
+  list.className = 'd-history-list';
+  history.slice().reverse().slice(0, 8).forEach(function (p) {
+    var item = document.createElement('div');
+    item.className = 'd-history-item';
+    var d = document.createElement('span'); d.textContent = fmtDate(p.date);
+    var v = document.createElement('span'); v.className = 'v'; v.textContent = fmtMoney(p.value);
+    item.appendChild(d); item.appendChild(v);
+    list.appendChild(item);
+  });
+  section.appendChild(list);
+  return section;
+}
+
+/* ---------- Attention (stale valuations) ---------- */
+function dBuildAttentionSection() {
+  var staleItems = [];
+  DATA.assetClasses.forEach(function (cls) {
+    cls.holdings.forEach(function (h) {
+      var days = dDaysAgo(h.recordedAt);
+      if (days > 30) staleItems.push({ label: h.name, days: days, amount: h.valuation, sel: { type: 'holding', classId: cls.id, holdingId: h.id } });
+    });
+  });
+  DATA.liabilityClasses.forEach(function (lc) {
+    lc.liabilities.forEach(function (l) {
+      var days = dDaysAgo(l.recordedAt);
+      if (days > 30) staleItems.push({ label: l.name, days: days, amount: l.balance, sel: { type: 'liability', liabClassId: lc.id, liabilityId: l.id } });
+    });
+  });
+  if (!staleItems.length) return null;
+  var section = dSection();
+  section.appendChild(dLabel11('Valuations older than 30 days'));
+  var list = document.createElement('div');
+  list.style.marginTop = '6px';
+  staleItems.forEach(function (item) {
+    var row = document.createElement('div');
+    row.className = 'd-attn-item';
+    row.appendChild(document.createTextNode(item.label + ' · '));
+    var meta = document.createElement('span');
+    meta.className = 'meta';
+    meta.textContent = item.days + ' days · ' + fmtMoney(item.amount);
+    row.appendChild(meta);
+    onActivate(row, function () { eSelect(item.sel); });
+    list.appendChild(row);
+  });
+  section.appendChild(list);
+  return section;
+}
+
+/* ---------- Portfolio dashboard ---------- */
+function dRenderPortfolioView(container) {
+  /* At wide viewports (see .e-dash-view / .e-dash-grid, ≥1200px) this splits into a
+     two-column grid: Net Worth headline + timeline on the left/main, Target Allocation +
+     staleness + Start Check-in on the right/aside. Below that breakpoint .e-dash-grid has
+     no grid rule, so main/aside are just two stacked block <div>s and the DOM order below
+     (main first, then aside) reproduces the original single-column stack unchanged. */
+  container.classList.add('e-dash-view');
+  var grid = document.createElement('div');
+  grid.className = 'e-dash-grid';
+
+  var main = document.createElement('div');
+  main.className = 'e-dash-main';
+  main.appendChild(dLabel11('Net Worth'));
+  var fig = document.createElement('div'); fig.className = 'd-headline-figure'; fig.textContent = fmtMoney(DERIVED.netWorth);
+  main.appendChild(fig);
+  var sub = document.createElement('div'); sub.className = 'd-subline';
+  sub.textContent = 'Holdings ' + fmtMoney(DERIVED.holdingsTotal) + ' − Liabilities ' + fmtMoney(DERIVED.liabilitiesTotal) + ' · as of ' + fmtDate(DERIVED.mostRecent);
+  main.appendChild(sub);
+
+  var timelineSection = dSection();
+  var head = document.createElement('div'); head.className = 'd-timeline-head';
+  head.appendChild(dLabel11('Net Worth · recorded and projected'));
+  var legend = document.createElement('div'); legend.className = 'd-legend';
+  var li1 = document.createElement('span'); li1.className = 'd-legend-item';
+  li1.appendChild((function () { var s = document.createElement('span'); s.className = 'd-legend-swatch'; return s; })());
+  li1.appendChild(document.createTextNode('Recorded'));
+  var li2 = document.createElement('span'); li2.className = 'd-legend-item';
+  li2.appendChild((function () { var s = document.createElement('span'); s.className = 'd-legend-swatch dashed'; return s; })());
+  li2.appendChild(document.createTextNode('Projected'));
+  legend.appendChild(li1); legend.appendChild(li2);
+  head.appendChild(legend);
+  timelineSection.appendChild(head);
+  timelineSection.appendChild(dBuildTimeline('dashboardTimeline'));
+  main.appendChild(timelineSection);
+
+  var aside = document.createElement('div');
+  aside.className = 'e-dash-aside';
+
+  var allocSection = dSection();
+  allocSection.appendChild(dLabel11('Target Allocation vs actual'));
+  var rowsWrap = document.createElement('div');
+  rowsWrap.style.marginTop = '8px';
+  DERIVED.distribution.forEach(function (dist, i) {
+    rowsWrap.appendChild(dBuildAllocRow(dist, true, i * 40, 'dashboardBars'));
+  });
+  eDrawFlags.dashboardBars = true;
+  allocSection.appendChild(rowsWrap);
+  aside.appendChild(allocSection);
+
+  var attn = dBuildAttentionSection();
+  if (attn) aside.appendChild(attn);
+
+  var startBtn = document.createElement('button');
+  startBtn.type = 'button';
+  startBtn.className = 'e-text-btn';
+  startBtn.style.display = 'block';
+  startBtn.style.marginTop = '24px';
+  startBtn.textContent = 'Start Check-in';
+  onActivate(startBtn, function () { eStartCheckin('stale'); });
+  aside.appendChild(startBtn);
+
+  grid.appendChild(main);
+  grid.appendChild(aside);
+  container.appendChild(grid);
+}
+
+/* ---------- Asset Class view ---------- */
+function dRenderClassView(container, cls) {
+  var dist = DERIVED.distribution.filter(function (d) { return d.classId === cls.id; })[0];
+  var nameWrap = document.createElement('div'); nameWrap.className = 'd-name-with-icon';
+  nameWrap.appendChild(eIconEl(cls.id));
+  var name = document.createElement('span'); name.className = 'd-name-18'; name.textContent = cls.name;
+  nameWrap.appendChild(name);
+  container.appendChild(nameWrap);
+  var total = document.createElement('div'); total.className = 'd-total-28'; total.textContent = fmtMoney(dist.total);
+  container.appendChild(total);
+  var line = document.createElement('div'); line.className = 'd-subline';
+  line.textContent = fmtPct(dist.actualPct) + ' of Holdings · target ' + dist.targetPct + '% · ' + dAllocGapText(dist);
+  container.appendChild(line);
+  var barWrap = document.createElement('div'); barWrap.style.marginTop = '16px';
+  barWrap.appendChild(dBuildAllocRow(dist, false, 0, 'classBar'));
+  eDrawFlags.classBar = true;
+  container.appendChild(barWrap);
+
+  var section = dSection();
+  section.appendChild(dLabel11('Holdings'));
+  var table = document.createElement('table'); table.className = 'd-table';
+  var thead = document.createElement('thead');
+  thead.innerHTML = '<tr><th>Holding</th><th class="num">Valuation</th><th class="num">As of</th><th>Live Estimate</th></tr>';
+  table.appendChild(thead);
+  var tbody = document.createElement('tbody');
+  cls.holdings.forEach(function (h) {
+    var stale = dIsStale(h.recordedAt);
+    var tr = document.createElement('tr'); tr.className = 'clickable';
+    var tdN = document.createElement('td'); tdN.textContent = h.name;
+    var tdV = document.createElement('td'); tdV.className = 'num' + (stale ? ' stale-cell' : ''); tdV.textContent = fmtMoney(h.valuation);
+    if (stale) tdV.title = 'Valuation recorded ' + dDaysAgo(h.recordedAt) + ' days ago';
+    var tdD = document.createElement('td'); tdD.className = 'num'; tdD.textContent = fmtDate(h.recordedAt);
+    var tdL = document.createElement('td'); tdL.style.color = 'var(--text-muted)';
+    if (h.live) {
+      tdL.textContent = fmtMoney(h.liveEstimate) + ' ';
+      var tag = document.createElement('span'); tag.className = 'd-live-tag'; tag.textContent = 'live';
+      tdL.appendChild(tag);
+    } else { tdL.textContent = '—'; }
+    tr.appendChild(tdN); tr.appendChild(tdV); tr.appendChild(tdD); tr.appendChild(tdL);
+    onActivate(tr, function () { eSelect({ type: 'holding', classId: cls.id, holdingId: h.id }); });
+    tbody.appendChild(tr);
+  });
+  table.appendChild(tbody);
+  section.appendChild(table);
+  container.appendChild(section);
+}
+
+/* ---------- Holding view ---------- */
+function dRenderHoldingView(container, cls, holding) {
+  var name = document.createElement('div'); name.className = 'd-name-18'; name.textContent = holding.name;
+  container.appendChild(name);
+  var classSub = document.createElement('div'); classSub.className = 'd-subline'; classSub.textContent = cls.name;
+  container.appendChild(classSub);
+  var editWrap = eEditableFigure(holding, 'valuation', 'recordedAt', 'd-total-28', 'holding');
+  editWrap.style.marginTop = '10px';
+  container.appendChild(editWrap);
+  var days = dDaysAgo(holding.recordedAt);
+  var recLine = document.createElement('div'); recLine.className = 'd-subline';
+  recLine.textContent = 'recorded ' + fmtDate(holding.recordedAt) + ' · ' + days + ' days ago' + (days > 30 ? ' · older than 30 days' : '');
+  container.appendChild(recLine);
+
+  if (holding.live) {
+    var liveLine = document.createElement('div'); liveLine.style.fontSize = '15px'; liveLine.style.marginTop = '10px';
+    liveLine.textContent = 'Live Estimate ' + fmtMoney(holding.liveEstimate);
+    container.appendChild(liveLine);
+    var pctDelta = ((holding.liveEstimate - holding.valuation) / holding.valuation) * 100;
+    var sign = pctDelta >= 0 ? '+' : '−';
+    var deltaLine = document.createElement('div'); deltaLine.className = 'd-subline';
+    deltaLine.textContent = sign + Math.abs(pctDelta).toFixed(1) + '% vs last Valuation · not a Valuation until you record it';
+    container.appendChild(deltaLine);
+
+    var useBtn = document.createElement('button');
+    useBtn.type = 'button';
+    useBtn.className = 'e-text-btn';
+    useBtn.style.display = 'block';
+    useBtn.style.marginTop = '4px';
+    useBtn.textContent = 'Use as Valuation';
+    onActivate(useBtn, function () {
+      eCommitValue(holding, 'valuation', 'recordedAt', holding.liveEstimate, DATA.today, 'holding', holding.id);
+    });
+    container.appendChild(useBtn);
+  }
+
+  container.appendChild(dBuildHistorySection(holding.history));
+
+  var link = findLinkedLiability(holding.id);
+  if (link) {
+    var section = dSection();
+    section.appendChild(dLabel11('Linked Liability'));
+    var lline = document.createElement('div'); lline.className = 'd-linked-line'; lline.style.marginTop = '8px';
+    lline.textContent = link.liability.name + ' · ' + fmtMoney(-link.liability.balance);
+    onActivate(lline, function () { eSelect({ type: 'liability', liabClassId: link.liabilityClass.id, liabilityId: link.liability.id }); });
+    section.appendChild(lline);
+    var todayPos = DERIVED.netPositionSeries[0].netPosition;
+    var y20Pos = DERIVED.netPositionSeries[DERIVED.netPositionSeries.length - 1].netPosition;
+    var posLine = document.createElement('div'); posLine.style.fontSize = '15px'; posLine.style.marginTop = '8px';
+    posLine.style.fontVariantNumeric = 'tabular-nums';
+    posLine.textContent = 'Projected Net Position · today ' + fmtMoney(todayPos) + ' · ' + (new Date(DATA.today).getFullYear() + DATA.projectionAssumptions.years) + ' ' + fmtMoney(y20Pos);
+    section.appendChild(posLine);
+    container.appendChild(section);
+  }
+
+  container.appendChild(eBuildActionsRow(holding));
+}
+
+/* ---------- Liability view ---------- */
+function dRenderLiabilityView(container, lc, liability) {
+  var name = document.createElement('div'); name.className = 'd-name-18'; name.textContent = liability.name;
+  container.appendChild(name);
+  var classSub = document.createElement('div'); classSub.className = 'd-subline'; classSub.textContent = lc.name;
+  container.appendChild(classSub);
+  container.appendChild(dLabel11('Balance'));
+  container.appendChild(eEditableFigure(liability, 'balance', 'recordedAt', 'd-total-28', 'liability'));
+  var days = dDaysAgo(liability.recordedAt);
+  var recLine = document.createElement('div'); recLine.className = 'd-subline';
+  recLine.textContent = 'recorded ' + fmtDate(liability.recordedAt) + ' · ' + days + ' days ago' + (days > 30 ? ' · older than 30 days' : '');
+  container.appendChild(recLine);
+
+  container.appendChild(dBuildHistorySection(liability.history));
+
+  if (liability.amortization) {
+    var am = liability.amortization;
+    var info = computeAmortizationInfo(liability);
+    var section = dSection();
+    section.appendChild(dLabel11('Amortization Assumptions'));
+    var kv = document.createElement('div'); kv.style.marginTop = '8px';
+    kv.appendChild(dKvRow('Interest rate', (am.rate * 100).toFixed(2) + '%'));
+    kv.appendChild(dKvRow('Original amount', fmtMoney(am.original)));
+    kv.appendChild(dKvRow('Term', am.termMonths + ' months'));
+    kv.appendChild(dKvRow('Derived payment', fmtMoney(info.monthlyPaymentBase) + '/mo'));
+    kv.appendChild(dKvRow('Extra payment', fmtMoney(am.extra) + '/mo'));
+    kv.appendChild(dKvRow('Projected payoff', String(info.payoffYear)));
+    section.appendChild(kv);
+
+    var payoffYearsCeil = Math.min(20, Math.ceil(info.payoffMonths / 12));
+    var balSeries = [];
+    for (var yy = 0; yy <= payoffYearsCeil; yy++) {
+      balSeries.push({ date: String(new Date(DATA.today).getFullYear() + yy), value: amortizeBalance(liability.balance, am.rate, info.totalPayment, yy * 12) });
+    }
+    var sparkLabel = document.createElement('div'); sparkLabel.style.marginTop = '16px';
+    sparkLabel.appendChild(dLabel11('Projected balance'));
+    section.appendChild(sparkLabel);
+    var sparkWrap = document.createElement('div'); sparkWrap.style.marginTop = '8px';
+    sparkWrap.innerHTML = dSparklineSVG(balSeries, true);
+    section.appendChild(sparkWrap);
+    container.appendChild(section);
+  }
+
+  if (liability.linkedHoldingId) {
+    var holdingCls = findAssetClass('real-estate');
+    var linkedHolding = findHoldingIn(holdingCls, liability.linkedHoldingId);
+    if (linkedHolding) {
+      var fSection = dSection();
+      fSection.appendChild(dLabel11('Financed Holding'));
+      var fline = document.createElement('div'); fline.className = 'd-linked-line'; fline.style.marginTop = '8px';
+      fline.textContent = linkedHolding.name + ' · ' + fmtMoney(linkedHolding.valuation);
+      onActivate(fline, function () { eSelect({ type: 'holding', classId: holdingCls.id, holdingId: linkedHolding.id }); });
+      fSection.appendChild(fline);
+      /* reciprocal to the Holding side's Projected Net Position — new relative to both C and D */
+      var todayPos3 = DERIVED.netPositionSeries[0].netPosition;
+      var yEndPos3 = DERIVED.netPositionSeries[DERIVED.netPositionSeries.length - 1].netPosition;
+      var posLine3 = document.createElement('div'); posLine3.style.fontSize = '15px'; posLine3.style.marginTop = '8px';
+      posLine3.style.fontVariantNumeric = 'tabular-nums';
+      posLine3.textContent = 'Projected Net Position · today ' + fmtMoney(todayPos3) + ' · ' + (new Date(DATA.today).getFullYear() + DATA.projectionAssumptions.years) + ' ' + fmtMoney(yEndPos3);
+      fSection.appendChild(posLine3);
+      container.appendChild(fSection);
+    }
+  }
+
+  container.appendChild(eBuildActionsRow(liability));
+}
+
+/* ---------- Liabilities root / Liability Class aggregate views ---------- */
+function dRenderLiabilityRootView(container) {
+  container.appendChild(dLabel11('Liabilities', 'liabilities'));
+  var total = document.createElement('div'); total.className = 'd-total-28'; total.textContent = fmtMoney(-DERIVED.liabilitiesTotal);
+  container.appendChild(total);
+  var section = dSection();
+  section.appendChild(dLabel11('Liability Classes'));
+  var table = document.createElement('table'); table.className = 'd-table';
+  table.innerHTML = '<thead><tr><th>Liability Class</th><th class="num">Balance</th><th class="num">As of</th></tr></thead>';
+  var tbody = document.createElement('tbody');
+  DATA.liabilityClasses.forEach(function (lc) {
+    var mostRecent = lc.liabilities.reduce(function (m, l) { return l.recordedAt > m ? l.recordedAt : m; }, '');
+    var tr = document.createElement('tr'); tr.className = 'clickable';
+    var tdN = document.createElement('td'); tdN.textContent = lc.name;
+    var tdV = document.createElement('td'); tdV.className = 'num'; tdV.style.color = 'var(--liability)'; tdV.textContent = fmtMoney(-liabClassTotal(lc));
+    var tdD = document.createElement('td'); tdD.className = 'num'; tdD.textContent = fmtDate(mostRecent);
+    tr.appendChild(tdN); tr.appendChild(tdV); tr.appendChild(tdD);
+    onActivate(tr, function () { eSelect({ type: 'liabilityClass', liabClassId: lc.id }); });
+    tbody.appendChild(tr);
+  });
+  table.appendChild(tbody);
+  section.appendChild(table);
+  container.appendChild(section);
+}
+function dRenderLiabilityClassView(container, lc) {
+  container.appendChild(dLabel11(lc.name, lc.id));
+  var total = document.createElement('div'); total.className = 'd-total-28'; total.textContent = fmtMoney(-liabClassTotal(lc));
+  container.appendChild(total);
+  var section = dSection();
+  section.appendChild(dLabel11('Liabilities'));
+  var table = document.createElement('table'); table.className = 'd-table';
+  table.innerHTML = '<thead><tr><th>Liability</th><th class="num">Balance</th><th class="num">As of</th></tr></thead>';
+  var tbody = document.createElement('tbody');
+  lc.liabilities.forEach(function (l) {
+    var tr = document.createElement('tr'); tr.className = 'clickable';
+    var tdN = document.createElement('td'); tdN.textContent = l.name;
+    var tdV = document.createElement('td'); tdV.className = 'num'; tdV.style.color = 'var(--liability)'; tdV.textContent = fmtMoney(-l.balance);
+    var tdD = document.createElement('td'); tdD.className = 'num'; tdD.textContent = fmtDate(l.recordedAt);
+    tr.appendChild(tdN); tr.appendChild(tdV); tr.appendChild(tdD);
+    onActivate(tr, function () { eSelect({ type: 'liability', liabClassId: lc.id, liabilityId: l.id }); });
+    tbody.appendChild(tr);
+  });
+  table.appendChild(tbody);
+  section.appendChild(table);
+  container.appendChild(section);
+}
+
+/* ============================================================
+   VARIANT E · Miller-column navigation (from C), carrying D's
+   information payload. Own DOM, own state. E's breadcrumb is
+   built from `eState.path`/`eState.root` directly (below), so
+   D's sel-object breadcrumb builder isn't needed here.
+   ============================================================ */
+var eState = null;
+var eRootEl = null;
+var eLastColCount = 1;
+
+function renderE(root) {
+  eRootEl = root;
+  eState = { root: 'portfolio', path: [], checkin: null, lastCommit: null };
+  eLastColCount = 1;
+  eRerender();
+}
+
+/* Bridges D's selection-object shape (used by the dashboard's staleness list, the
+   Holdings table, linked-liability/financed-holding lines, etc.) onto E's Miller `path`. */
+function eSelect(sel) {
+  eState.checkin = null;
+  eState.root = 'portfolio';
+  if (sel.type === 'portfolio') {
+    eState.path = [];
+  } else if (sel.type === 'class') {
+    eState.path = [{ kind: 'class', id: sel.classId }];
+  } else if (sel.type === 'holding') {
+    eState.path = [{ kind: 'class', id: sel.classId }, { kind: 'holding', classId: sel.classId, id: sel.holdingId }];
+  } else if (sel.type === 'liabilityRoot') {
+    eState.path = [{ kind: 'liabilities' }];
+  } else if (sel.type === 'liabilityClass') {
+    eState.path = [{ kind: 'liabilities' }, { kind: 'liabilityClass', id: sel.liabClassId }];
+  } else if (sel.type === 'liability') {
+    eState.path = [{ kind: 'liabilities' }, { kind: 'liabilityClass', id: sel.liabClassId }, { kind: 'liability', liabClassId: sel.liabClassId, id: sel.liabilityId }];
+  }
+  eRerender();
+}
+
+/* Commits a new Valuation/balance: history append, DATA mutation, DERIVED recompute, and
+   arms the settle-flash for the next render of this item's figure (inline edit commit and
+   the Live Estimate "Use as Valuation" action both funnel through this). */
+function eCommitValue(item, fieldName, dateFieldName, newValue, newDate, flashKind, flashId) {
+  item.history.push({ date: newDate, value: newValue });
+  item[fieldName] = newValue;
+  item[dateFieldName] = newDate;
+  DERIVED = computeDerived(DATA);
+  eState.lastCommit = { kind: flashKind, id: flashId };
+  eRerender();
+}
+
+/* Reusable click-to-edit headline figure (§5). One static <div> (dotted-underline hover
+   cue) that swaps for a numeric input + backdating affordance on click; Enter/blur commits,
+   Esc cancels, an unparsable value on commit leaves the input open. */
+function eEditableFigure(item, fieldName, dateFieldName, figureClass, flashKind) {
+  var wrap = document.createElement('div');
+  wrap.className = 'e-editable-wrap';
+  var flashNow = !!(eState.lastCommit && eState.lastCommit.kind === flashKind && eState.lastCommit.id === item.id);
+  if (flashNow) eState.lastCommit = null;
+
+  function renderStatic() {
+    wrap.innerHTML = '';
+    var fig = document.createElement('div');
+    fig.className = figureClass + ' e-editable-figure' + (flashNow ? ' e-settle-flash' : '');
+    fig.textContent = fmtMoney(item[fieldName]);
+    fig.title = 'Click to edit';
+    onActivate(fig, renderEdit);
+    wrap.appendChild(fig);
+  }
+
+  function renderEdit() {
+    wrap.innerHTML = '';
+    var input = document.createElement('input');
+    input.type = 'text';
+    input.inputMode = 'decimal';
+    input.className = 'e-edit-input ' + figureClass;
+    input.value = String(Math.round(item[fieldName]));
+    wrap.appendChild(input);
+
+    var chosenDate = DATA.today;
+    var backdateLine = document.createElement('div');
+    backdateLine.className = 'e-backdate-line';
+    var backdateToggle = document.createElement('button');
+    backdateToggle.type = 'button';
+    backdateToggle.className = 'e-backdate-toggle';
+    backdateToggle.textContent = 'for: Today';
+    backdateLine.appendChild(backdateToggle);
+    wrap.appendChild(backdateLine);
+    var dateInput = null;
+    backdateToggle.addEventListener('click', function () {
+      if (dateInput) { dateInput.focus(); return; }
+      dateInput = document.createElement('input');
+      dateInput.type = 'date';
+      dateInput.max = DATA.today;
+      dateInput.value = DATA.today;
+      dateInput.className = 'e-backdate-input';
+      dateInput.addEventListener('change', function () {
+        chosenDate = dateInput.value || DATA.today;
+        backdateToggle.textContent = 'for: ' + fmtDate(chosenDate);
+      });
+      backdateLine.appendChild(dateInput);
+      dateInput.focus();
+    });
+
+    function commit() {
+      var raw = input.value.replace(/,/g, '').trim();
+      var parsed = raw === '' ? NaN : parseFloat(raw);
+      if (isNaN(parsed)) { input.focus(); input.select(); return; }
+      eCommitValue(item, fieldName, dateFieldName, parsed, chosenDate, flashKind, item.id);
+    }
+    function cancel() { flashNow = false; renderStatic(); }
+
+    wrap.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') { e.preventDefault(); cancel(); }
+      else if (e.key === 'Enter' && e.target !== backdateToggle) { e.preventDefault(); commit(); }
+    });
+    wrap.addEventListener('focusout', function (e) {
+      var goingTo = e.relatedTarget;
+      if (goingTo && wrap.contains(goingTo)) return;
+      commit();
+    });
+
+    input.focus();
+    input.select();
+  }
+
+  renderStatic();
+  return wrap;
+}
+
+/* Research-prompt-with-copy + Archive actions row, shared by Holding and Liability detail. */
+function eBuildActionsRow(item) {
+  var row = document.createElement('div');
+  row.className = 'e-actions-row';
+
+  var research = document.createElement('div');
+  research.className = 'e-research-block';
+  var line = document.createElement('span');
+  line.className = 'e-research-line';
+  var fieldVal = item.valuation !== undefined ? item.valuation : item.balance;
+  line.textContent = 'Look up the current value of ' + item.name + '. Last recorded ' + fmtMoney(fieldVal) + ' on ' + fmtDate(item.recordedAt) + '.';
+  research.appendChild(line);
+  var copyBtn = document.createElement('button');
+  copyBtn.type = 'button';
+  copyBtn.className = 'e-text-btn';
+  copyBtn.textContent = 'Copy';
+  onActivate(copyBtn, function () {
+    function done() {
+      copyBtn.textContent = 'Copied';
+      setTimeout(function () { copyBtn.textContent = 'Copy'; }, 1200);
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(line.textContent).then(done, done);
+    } else {
+      done();
+    }
+  });
+  research.appendChild(copyBtn);
+  row.appendChild(research);
+
+  var archiveBtn = document.createElement('button');
+  archiveBtn.type = 'button';
+  archiveBtn.className = 'e-text-btn';
+  archiveBtn.textContent = 'Archive';
+  /* non-functional, matches the convention set for Archive elsewhere (§5) */
+  row.appendChild(archiveBtn);
+
+  return row;
+}
+
+/* ---------- row shape (from C), extended with a column-1 staleness marker and
+   column-2/3 value dimming ---------- */
+function cRow(opts) {
+  var row = document.createElement('div');
+  row.className = 'c-row' + (opts.selected ? ' is-selected' : '') + (opts.liability ? ' c-liability' : '');
+  if (opts.iconId) row.appendChild(eIconEl(opts.iconId));
+  var label = document.createElement('span');
+  label.className = 'c-label';
+  label.textContent = opts.label;
+  if (opts.staleCount) {
+    var marker = document.createElement('span');
+    marker.className = 'e-stale-marker';
+    marker.textContent = ' ·';
+    marker.title = opts.staleCount + (opts.staleCount === 1 ? ' item older than 30 days' : ' items older than 30 days');
+    label.appendChild(marker);
+  }
+  row.appendChild(label);
+  var meta = document.createElement('span');
+  meta.className = 'c-meta' + (opts.stale ? ' c-meta-stale' : '');
+  meta.textContent = opts.meta || '';
+  row.appendChild(meta);
+  if (opts.hasChildren) {
+    var chev = document.createElement('span');
+    chev.className = 'c-chevron-right'; chev.textContent = '›';
+    row.appendChild(chev);
+  }
+  onActivate(row, opts.onSelect);
+  return row;
+}
+
+/* Up/Down arrow convenience within a single column (§5) — Tab order already covers
+   focus movement; Left/Right stay unbound (no switcher in this file to fight, but no
+   column-to-column use for them either). */
+function eBindColumnArrowKeys(col) {
+  col.addEventListener('keydown', function (e) {
+    if (e.key !== 'ArrowUp' && e.key !== 'ArrowDown') return;
+    var rows = Array.prototype.slice.call(col.querySelectorAll('.c-row'));
+    var idx = rows.indexOf(document.activeElement);
+    if (idx === -1) return;
+    var next = idx + (e.key === 'ArrowDown' ? 1 : -1);
+    if (next < 0 || next >= rows.length) return;
+    e.preventDefault();
+    rows[next].focus();
+  });
+}
+
+function eBuildBreadcrumb() {
+  var bar = document.createElement('div');
+  bar.className = 'c-breadcrumb';
+  if (eState.root === 'plan') {
+    var span = document.createElement('span');
+    span.textContent = 'Plan';
+    bar.appendChild(span);
+    return bar;
+  }
+  var path = eState.path;
+  var segs = [{ label: 'Portfolio', depth: 0 }];
+  if (path[0]) {
+    var label0 = path[0].kind === 'class' ? findAssetClass(path[0].id).name : 'Liabilities';
+    segs.push({ label: label0, depth: 1 });
+  }
+  if (path[1]) {
+    var label1;
+    if (path[1].kind === 'holding') label1 = findHoldingIn(findAssetClass(path[0].id), path[1].id).name;
+    else label1 = findLiabilityClass(path[1].id).name;
+    segs.push({ label: label1, depth: 2 });
+  }
+  if (path[2]) {
+    var label2 = findLiabilityIn(findLiabilityClass(path[1].id), path[2].id).name;
+    segs.push({ label: label2, depth: 3 });
+  }
+  segs.forEach(function (s, i) {
+    if (i > 0) {
+      var sep = document.createElement('span'); sep.className = 'sep'; sep.textContent = '›';
+      bar.appendChild(sep);
+    }
+    var btn = document.createElement('button');
+    btn.type = 'button';
+    btn.textContent = s.label;
+    onActivate(btn, function () { eState.root = 'portfolio'; eState.path = eState.path.slice(0, s.depth); eRerender(); });
+    bar.appendChild(btn);
+  });
+  return bar;
+}
+
+function eBuildCol1() {
+  var col = document.createElement('div');
+  col.className = 'c-col';
+  var path = eState.path;
+  DATA.assetClasses.forEach(function (cls) {
+    var selected = path[0] && path[0].kind === 'class' && path[0].id === cls.id;
+    var staleCount = cls.holdings.filter(function (h) { return dIsStale(h.recordedAt); }).length;
+    col.appendChild(cRow({
+      label: cls.name,
+      meta: fmtMoney(classTotal(cls)),
+      hasChildren: true,
+      selected: selected,
+      staleCount: staleCount,
+      iconId: cls.id,
+      onSelect: function () { eState.path = [{ kind: 'class', id: cls.id }]; eRerender(); }
+    }));
+  });
+  var gap = document.createElement('div'); gap.className = 'c-gap';
+  col.appendChild(gap);
+  var liabSelected = path[0] && path[0].kind === 'liabilities';
+  col.appendChild(cRow({
+    label: 'Liabilities',
+    meta: fmtMoney(-DERIVED.liabilitiesTotal),
+    hasChildren: true,
+    liability: true,
+    selected: liabSelected,
+    iconId: 'liabilities',
+    onSelect: function () { eState.path = [{ kind: 'liabilities' }]; eRerender(); }
+  }));
+  eBindColumnArrowKeys(col);
+  return col;
+}
+
+function eBuildCol2() {
+  var col = document.createElement('div');
+  col.className = 'c-col';
+  var path = eState.path;
+  if (path[0].kind === 'class') {
+    var cls = findAssetClass(path[0].id);
+    cls.holdings.forEach(function (h) {
+      var selected = path[1] && path[1].kind === 'holding' && path[1].id === h.id;
+      col.appendChild(cRow({
+        label: h.name,
+        meta: fmtMoney(h.valuation),
+        hasChildren: false,
+        selected: selected,
+        stale: dIsStale(h.recordedAt),
+        onSelect: function () { eState.path = [path[0], { kind: 'holding', classId: cls.id, id: h.id }]; eRerender(); }
+      }));
+    });
+  } else {
+    DATA.liabilityClasses.forEach(function (lc) {
+      var selected = path[1] && path[1].kind === 'liabilityClass' && path[1].id === lc.id;
+      var staleCount = lc.liabilities.filter(function (l) { return dIsStale(l.recordedAt); }).length;
+      col.appendChild(cRow({
+        label: lc.name,
+        meta: fmtMoney(-liabClassTotal(lc)),
+        hasChildren: true,
+        liability: true,
+        selected: selected,
+        staleCount: staleCount,
+        iconId: lc.id,
+        onSelect: function () { eState.path = [path[0], { kind: 'liabilityClass', id: lc.id }]; eRerender(); }
+      }));
+    });
+  }
+  eBindColumnArrowKeys(col);
+  return col;
+}
+
+function eBuildCol3() {
+  var col = document.createElement('div');
+  col.className = 'c-col';
+  var path = eState.path;
+  var lc = findLiabilityClass(path[1].id);
+  lc.liabilities.forEach(function (l) {
+    var selected = path[2] && path[2].id === l.id;
+    col.appendChild(cRow({
+      label: l.name,
+      meta: fmtMoney(-l.balance),
+      hasChildren: false,
+      liability: true,
+      stale: dIsStale(l.recordedAt),
+      selected: selected,
+      onSelect: function () { eState.path = [path[0], path[1], { kind: 'liability', liabClassId: lc.id, id: l.id }]; eRerender(); }
+    }));
+  });
+  eBindColumnArrowKeys(col);
+  return col;
+}
+
+function eBuildDetail() {
+  var panel = document.createElement('div');
+  panel.className = 'c-col-detail d-content enter';
+  var path = eState.path;
+  if (path.length === 0) {
+    dRenderPortfolioView(panel);
+  } else if (path[0].kind === 'class' && path.length === 1) {
+    dRenderClassView(panel, findAssetClass(path[0].id));
+  } else if (path[0].kind === 'class' && path.length === 2) {
+    var cls = findAssetClass(path[0].id);
+    dRenderHoldingView(panel, cls, findHoldingIn(cls, path[1].id));
+  } else if (path[0].kind === 'liabilities' && path.length === 1) {
+    dRenderLiabilityRootView(panel);
+  } else if (path[0].kind === 'liabilities' && path.length === 2) {
+    dRenderLiabilityClassView(panel, findLiabilityClass(path[1].id));
+  } else if (path[0].kind === 'liabilities' && path.length === 3) {
+    var lc = findLiabilityClass(path[1].id);
+    dRenderLiabilityView(panel, lc, findLiabilityIn(lc, path[2].id));
+  }
+  return panel;
+}
+
+/* ---------- Plan area (§4) ---------- */
+function eBuildPlanPage() {
+  var wrap = document.createElement('div');
+  wrap.className = 'e-plan-wrap d-content enter';
+
+  /* At wide viewports (≥1200px) .e-plan-grid becomes a 2-column grid so the allocation
+     editor and assumptions sit side by side; below that it's a plain block div and the two
+     sections stack in DOM order exactly as before. */
+  var planGrid = document.createElement('div');
+  planGrid.className = 'e-plan-grid';
+
+  var allocSection = dSection();
+  allocSection.appendChild(dLabel11('Target Allocation'));
+  var allocWrap = document.createElement('div'); allocWrap.style.marginTop = '10px';
+  var totalRow = document.createElement('div'); totalRow.className = 'e-alloc-total-row';
+
+  function refreshTotal() {
+    var sum = 0;
+    DATA.assetClasses.forEach(function (cls) { sum += (DATA.targetAllocation[cls.id] || 0); });
+    var text = 'Total · ' + sum.toFixed(1) + '%';
+    if (Math.abs(sum - 100) > 0.05) text += '  (off by ' + (sum - 100 >= 0 ? '+' : '') + (sum - 100).toFixed(1) + ')';
+    totalRow.textContent = text;
+  }
+
+  DATA.assetClasses.forEach(function (cls) {
+    var row = document.createElement('div'); row.className = 'e-alloc-editor-row';
+    var name = document.createElement('span'); name.className = 'e-alloc-editor-name'; name.textContent = cls.name;
+    row.appendChild(name);
+    var input = document.createElement('input');
+    input.type = 'text'; input.inputMode = 'decimal';
+    input.className = 'e-alloc-input';
+    input.value = String(DATA.targetAllocation[cls.id] || 0);
+    row.appendChild(input);
+    var pctSign = document.createElement('span'); pctSign.className = 'e-alloc-pct-sign'; pctSign.textContent = '%';
+    row.appendChild(pctSign);
+    var dist = DERIVED.distribution.filter(function (d) { return d.classId === cls.id; })[0];
+    var actual = document.createElement('span'); actual.className = 'e-alloc-actual'; actual.textContent = 'actual ' + fmtPct(dist.actualPct);
+    row.appendChild(actual);
+    input.addEventListener('input', function () {
+      var v = parseFloat(input.value);
+      DATA.targetAllocation[cls.id] = isNaN(v) ? 0 : v;
+      DERIVED = computeDerived(DATA);
+      refreshTotal();
+    });
+    allocWrap.appendChild(row);
+  });
+  refreshTotal();
+  allocWrap.appendChild(totalRow);
+  allocSection.appendChild(allocWrap);
+  planGrid.appendChild(allocSection);
+
+  var assumpSection = dSection();
+  assumpSection.appendChild(dLabel11('Projection Assumptions'));
+  var assumpWrap = document.createElement('div'); assumpWrap.style.marginTop = '10px';
+  function assumpRow(label, value, onChange, suffix) {
+    var row = document.createElement('div'); row.className = 'e-assump-row';
+    var l = document.createElement('span'); l.className = 'e-assump-label'; l.textContent = label;
+    row.appendChild(l);
+    var input = document.createElement('input');
+    input.type = 'text'; input.inputMode = 'decimal';
+    input.className = 'e-assump-input';
+    input.value = value;
+    row.appendChild(input);
+    var s = document.createElement('span'); s.className = 'e-assump-suffix'; s.textContent = suffix || '';
+    row.appendChild(s);
+    input.addEventListener('input', function () { onChange(input.value); });
+    assumpWrap.appendChild(row);
+  }
+  assumpRow('Annual growth', (DATA.projectionAssumptions.annualGrowth * 100).toString(), function (v) {
+    var n = parseFloat(v);
+    DATA.projectionAssumptions.annualGrowth = isNaN(n) ? 0 : n / 100;
+    DERIVED = computeDerived(DATA);
+    refreshPlanTimeline();
+  }, '%');
+  assumpRow('Monthly contribution', String(DATA.projectionAssumptions.monthlyContribution), function (v) {
+    var n = parseFloat(v);
+    DATA.projectionAssumptions.monthlyContribution = isNaN(n) ? 0 : n;
+    DERIVED = computeDerived(DATA);
+    refreshPlanTimeline();
+  }, '');
+  assumpRow('Years', String(DATA.projectionAssumptions.years), function (v) {
+    var n = parseInt(v, 10);
+    DATA.projectionAssumptions.years = isNaN(n) || n < 1 ? 1 : n;
+    DERIVED = computeDerived(DATA);
+    refreshPlanTimeline();
+  }, '');
+  assumpSection.appendChild(assumpWrap);
+  planGrid.appendChild(assumpSection);
+
+  wrap.appendChild(planGrid);
+
+  var timelineSection = dSection();
+  timelineSection.appendChild(dLabel11('Net Worth · recorded and projected'));
+  var timelineMount = document.createElement('div');
+  timelineMount.style.marginTop = '8px';
+  timelineMount.appendChild(dBuildTimeline('planTimeline'));
+  timelineSection.appendChild(timelineMount);
+  wrap.appendChild(timelineSection);
+
+  function refreshPlanTimeline() {
+    timelineMount.innerHTML = '';
+    timelineMount.appendChild(dBuildTimeline('planTimeline'));
+  }
+
+  return wrap;
+}
+
+/* ---------- Check-in mode (§3) ---------- */
+function eStaleHoldings() {
+  var out = [];
+  DATA.assetClasses.forEach(function (cls) {
+    cls.holdings.forEach(function (h) { if (dIsStale(h.recordedAt)) out.push({ cls: cls, holding: h }); });
+  });
+  return out;
+}
+function eAllHoldings() {
+  var out = [];
+  DATA.assetClasses.forEach(function (cls) {
+    cls.holdings.forEach(function (h) { out.push({ cls: cls, holding: h }); });
+  });
+  return out;
+}
+
+function eBuildCheckinControl() {
+  var wrap = document.createElement('div');
+  wrap.className = 'e-checkin-control';
+  var staleN = eStaleHoldings().length;
+  var mainBtn = document.createElement('button');
+  mainBtn.type = 'button';
+  mainBtn.className = 'e-checkin-main';
+  mainBtn.textContent = staleN > 0 ? ('Check-in (' + staleN + ')') : 'Check-in';
+  onActivate(mainBtn, function () { eStartCheckin('stale'); });
+  wrap.appendChild(mainBtn);
+
+  var caret = document.createElement('button');
+  caret.type = 'button';
+  caret.className = 'e-checkin-caret';
+  caret.textContent = '▾';
+  caret.setAttribute('aria-label', 'Check-in options');
+  var menu = document.createElement('div');
+  menu.className = 'e-checkin-menu';
+  menu.hidden = true;
+  var allN = eAllHoldings().length;
+  var item1 = document.createElement('button'); item1.type = 'button'; item1.className = 'e-checkin-menu-item';
+  item1.textContent = 'Stale only (' + staleN + ')';
+  onActivate(item1, function () { menu.hidden = true; eStartCheckin('stale'); });
+  var item2 = document.createElement('button'); item2.type = 'button'; item2.className = 'e-checkin-menu-item';
+  item2.textContent = 'All Holdings (' + allN + ')';
+  onActivate(item2, function () { menu.hidden = true; eStartCheckin('all'); });
+  menu.appendChild(item1); menu.appendChild(item2);
+  onActivate(caret, function (e) { if (e.stopPropagation) e.stopPropagation(); menu.hidden = !menu.hidden; });
+  wrap.appendChild(caret);
+  wrap.appendChild(menu);
+  return wrap;
+}
+
+function eStartCheckin(mode) {
+  var items = mode === 'all' ? eAllHoldings() : eStaleHoldings();
+  eState.checkin = { mode: mode, items: items, index: 0, flashId: null, startNetWorth: DERIVED.netWorth, done: false };
+  eRerender();
+}
+function eExitCheckin() {
+  eState.checkin = null;
+  eState.root = 'portfolio';
+  eState.path = [];
+  eRerender();
+}
+function eCheckinAdvanceIndex() {
+  var ci = eState.checkin;
+  if (!ci) return;
+  ci.flashId = null;
+  ci.index += 1;
+  if (ci.index >= ci.items.length) ci.done = true;
+  eRerender();
+}
+function eCheckinCommitAndAdvance(holding, value, date) {
+  holding.history.push({ date: date, value: value });
+  holding.valuation = value;
+  holding.recordedAt = date;
+  DERIVED = computeDerived(DATA);
+  eState.checkin.flashId = holding.id;
+  eRerender();
+  var delay = dReducedMotion() ? 0 : 450;
+  setTimeout(function () {
+    if (!eState.checkin) return;
+    eCheckinAdvanceIndex();
+  }, delay);
+}
+
+function eBuildCheckinCard(entry) {
+  var holding = entry.holding, cls = entry.cls;
+  var ci = eState.checkin;
+  var flashing = ci.flashId === holding.id;
+  var card = document.createElement('div');
+  card.className = 'e-checkin-card' + (flashing ? '' : ' d-content enter');
+
+  var name = document.createElement('div'); name.className = 'd-name-18'; name.textContent = holding.name;
+  card.appendChild(name);
+  var sub = document.createElement('div'); sub.className = 'd-subline'; sub.textContent = cls.name;
+  card.appendChild(sub);
+
+  if (flashing) {
+    var fig = document.createElement('div');
+    fig.className = 'd-total-28 e-settle-flash';
+    fig.textContent = fmtMoney(holding.valuation);
+    card.appendChild(fig);
+  } else {
+    var input = document.createElement('input');
+    input.type = 'text'; input.inputMode = 'decimal';
+    input.id = 'e-checkin-value-input';
+    input.className = 'e-edit-input d-total-28';
+    input.value = String(Math.round(holding.valuation));
+    card.appendChild(input);
+
+    if (eIsNarrow()) {
+      /* §2.1 — touch has no hover; the check-in value is always live-editable (it's an
+         <input>, not a click-to-edit static figure), but it still gets the same persistent
+         pencil cue as the detail-pane headline so the two editable-figure surfaces read the
+         same way on a phone. */
+      var pencil = document.createElement('span');
+      pencil.className = 'e-checkin-pencil';
+      pencil.textContent = '✎ editable';
+      pencil.setAttribute('aria-hidden', 'true');
+      card.appendChild(pencil);
+
+      /* §2.2 — the keyboard hint line (rendered once, above the card, in eRenderCheckin) is
+         dead on touch. These three tap targets are the touch equivalent, wired to the same
+         actions as the Enter/L/Esc keys — see eCheckinKeepAction/eCheckinUseEstimateAction
+         below, shared with the keydown handler so there's one source of truth per action. */
+      var actions = document.createElement('div');
+      actions.className = 'e-checkin-touch-actions';
+      var keepBtn = document.createElement('button');
+      keepBtn.type = 'button'; keepBtn.className = 'c-btn-outline'; keepBtn.textContent = 'Keep';
+      onActivate(keepBtn, function () { eCheckinKeepAction(); });
+      actions.appendChild(keepBtn);
+      if (holding.live) {
+        var estBtn = document.createElement('button');
+        estBtn.type = 'button'; estBtn.className = 'c-btn-outline'; estBtn.textContent = 'Use estimate';
+        onActivate(estBtn, function () { eCheckinUseEstimateAction(); });
+        actions.appendChild(estBtn);
+      }
+      var doneBtn2 = document.createElement('button');
+      doneBtn2.type = 'button'; doneBtn2.className = 'c-btn-outline'; doneBtn2.textContent = 'Done';
+      onActivate(doneBtn2, function () { eExitCheckin(); });
+      actions.appendChild(doneBtn2);
+      card.appendChild(actions);
+    }
+  }
+
+  var asOf = document.createElement('div'); asOf.className = 'd-subline';
+  asOf.textContent = 'as of ' + fmtDate(holding.recordedAt);
+  card.appendChild(asOf);
+
+  if (holding.live) {
+    var pctDelta = ((holding.liveEstimate - holding.valuation) / holding.valuation) * 100;
+    var sign = pctDelta >= 0 ? '+' : '−';
+    var liveLine = document.createElement('div'); liveLine.className = 'd-subline';
+    liveLine.textContent = 'Live Estimate ' + fmtMoney(holding.liveEstimate) + ' · ' + sign + Math.abs(pctDelta).toFixed(1) + '%';
+    card.appendChild(liveLine);
+  }
+
+  var sparkWrap = document.createElement('div'); sparkWrap.style.marginTop = '14px';
+  sparkWrap.innerHTML = dSparklineSVG(holding.history, false);
+  card.appendChild(sparkWrap);
+
+  return card;
+}
+
+function eBuildCheckinSummary() {
+  var ci = eState.checkin;
+  var card = document.createElement('div');
+  card.className = 'e-checkin-card d-content enter';
+  card.appendChild(dLabel11('Check-in complete'));
+  var kv = document.createElement('div'); kv.style.marginTop = '10px';
+  kv.appendChild(dKvRow('Net Worth at start', fmtMoney(ci.startNetWorth)));
+  kv.appendChild(dKvRow('Net Worth now', fmtMoney(DERIVED.netWorth)));
+  kv.appendChild(dKvRow('Change', fmtMoney(DERIVED.netWorth - ci.startNetWorth)));
+  card.appendChild(kv);
+  var doneBtn = document.createElement('button');
+  doneBtn.type = 'button'; doneBtn.className = 'c-btn-outline'; doneBtn.textContent = 'Done';
+  onActivate(doneBtn, function () { eExitCheckin(); });
+  card.appendChild(doneBtn);
+  return card;
+}
+
+function eRenderCheckin(root) {
+  var ci = eState.checkin;
+  var strip = document.createElement('div');
+  strip.className = 'e-checkin-strip';
+  var left = document.createElement('span');
+  left.textContent = 'Check-in · ' + (ci.mode === 'all' ? 'all' : 'stale only');
+  strip.appendChild(left);
+  var right = document.createElement('span');
+  right.className = 'e-checkin-progress';
+  right.textContent = ci.done ? 'Done' : ((ci.index + 1) + ' of ' + ci.items.length);
+  strip.appendChild(right);
+  root.appendChild(strip);
+
+  if (!eIsNarrow()) {
+    var hint = document.createElement('div');
+    hint.className = 'e-checkin-hint';
+    hint.textContent = '↵ keep unchanged · L use live estimate · Esc exit';
+    root.appendChild(hint);
+  }
+
+  var cardWrap = document.createElement('div');
+  cardWrap.className = 'e-checkin-card-wrap';
+  if (ci.done) {
+    cardWrap.appendChild(eBuildCheckinSummary());
+  } else {
+    cardWrap.appendChild(eBuildCheckinCard(ci.items[ci.index]));
+  }
+  root.appendChild(cardWrap);
+
+  if (!ci.done && ci.flashId === null) {
+    var inputEl = document.getElementById('e-checkin-value-input');
+    if (inputEl) { inputEl.focus(); inputEl.select(); }
+  }
+}
+
+/* Shared by the Enter key and, in narrow mode, the "Keep" tap target (§2.2) — one source of
+   truth for "commit whatever's in the input if it changed, otherwise just advance". */
+function eCheckinKeepAction() {
+  var ci = eState.checkin;
+  if (!ci || ci.done) return;
+  var holding = ci.items[ci.index].holding;
+  var input = document.getElementById('e-checkin-value-input');
+  var raw = input ? input.value.replace(/,/g, '').trim() : '';
+  var original = Math.round(holding.valuation);
+  var parsed = raw === '' ? NaN : parseFloat(raw);
+  if (!isNaN(parsed) && parsed !== original) {
+    eCheckinCommitAndAdvance(holding, parsed, DATA.today);
+  } else {
+    eCheckinAdvanceIndex();
+  }
+}
+/* Shared by the L key and, in narrow mode, the "Use estimate" tap target (§2.2). */
+function eCheckinUseEstimateAction() {
+  var ci = eState.checkin;
+  if (!ci || ci.done) return;
+  var holding = ci.items[ci.index].holding;
+  if (holding.live) eCheckinCommitAndAdvance(holding, holding.liveEstimate, DATA.today);
+}
+
+/* single persistent handler — Check-in's keyboard surface stays live across every
+   eRerender() during a pass, since the DOM (and any per-render listener on it) is torn
+   down and rebuilt on every advance. Narrow mode adds tap targets (§2.2) alongside these
+   keys — it does not remove them. */
+document.addEventListener('keydown', function (e) {
+  if (!eState || !eState.checkin) return;
+  var ci = eState.checkin;
+  if (e.key === 'Escape') { e.preventDefault(); eExitCheckin(); return; }
+  if (ci.done) {
+    if (e.key === 'Enter') { e.preventDefault(); eExitCheckin(); }
+    return;
+  }
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    eCheckinKeepAction();
+  } else if (e.key === 'l' || e.key === 'L') {
+    /* preserve the original's exact behavior: preventDefault only when the holding actually
+       has a Live Estimate to use — otherwise the key falls through untouched, same as before
+       this was refactored into a shared function for the narrow "Use estimate" tap target. */
+    var holding = ci.items[ci.index].holding;
+    if (holding.live) { e.preventDefault(); eCheckinUseEstimateAction(); }
+  }
+});
+
+/* close an open Check-in menu on outside click */
+document.addEventListener('click', function (e) {
+  var menus = document.querySelectorAll('.e-checkin-menu');
+  for (var i = 0; i < menus.length; i++) {
+    var m = menus[i];
+    if (m.hidden) continue;
+    var ctrl = m.parentElement;
+    if (!ctrl || !ctrl.contains(e.target)) m.hidden = true;
+  }
+});
+
+/* ---------- top strip + shell rerender ---------- */
+function eBuildTopStrip() {
+  var strip = document.createElement('div');
+  strip.className = 'e-topstrip';
+
+  var left = document.createElement('div');
+  left.className = 'e-topstrip-left';
+  var wm = document.createElement('span'); wm.className = 'c-wordmark'; wm.style.padding = '0'; wm.textContent = 'FinAsset 360';
+  left.appendChild(wm);
+
+  var portfolioLink = document.createElement('button');
+  portfolioLink.type = 'button';
+  portfolioLink.className = 'e-root-link' + (eState.root === 'portfolio' ? ' is-active' : '');
+  portfolioLink.textContent = 'Portfolio';
+  onActivate(portfolioLink, function () { eState.root = 'portfolio'; eState.path = []; eRerender(); });
+  left.appendChild(portfolioLink);
+
+  var planLink = document.createElement('button');
+  planLink.type = 'button';
+  planLink.className = 'e-root-link' + (eState.root === 'plan' ? ' is-active' : '');
+  planLink.textContent = 'Plan';
+  onActivate(planLink, function () { eState.root = 'plan'; eRerender(); });
+  left.appendChild(planLink);
+
+  strip.appendChild(left);
+
+  var right = document.createElement('div');
+  right.className = 'e-topstrip-right';
+
+  var nw = document.createElement('button');
+  nw.type = 'button';
+  nw.className = 'e-nw-readout';
+  nw.textContent = 'Net Worth ' + fmtMoney(DERIVED.netWorth);
+  onActivate(nw, function () { eState.root = 'portfolio'; eState.path = []; eRerender(); });
+  right.appendChild(nw);
+
+  right.appendChild(eBuildCheckinControl());
+
+  strip.appendChild(right);
+  return strip;
+}
+
+/* ============================================================
+   NARROW-VIEWPORT STRATEGIES (BRIEF-NARROW.md)
+   Breakpoint is 900px (§1). Everything below is reached only when eIsNarrow() — at >=900px
+   eRerender() (further down) takes the original wide branch, byte-identical to variant-e.html.
+   ============================================================ */
+function eIsNarrow() { return window.innerWidth < 900; }
+var eNarrowVariant = 1; /* set from ?n= at boot, see BOOT section */
+
+/* Narrow breadcrumb (N1, and N3's "Browse by class" sub-mode): same segments as
+   eBuildBreadcrumb(), but every ancestor segment is a "‹ " back-affordance and the current
+   (last) segment is plain, non-interactive text — this is the ONLY back control in N1, so it
+   has to read as navigation rather than decoration (§3, N1). */
+function eBuildBreadcrumbNarrow() {
+  var bar = document.createElement('div');
+  bar.className = 'c-breadcrumb e-breadcrumb-narrow';
+  if (eState.root === 'plan') {
+    var span = document.createElement('span');
+    span.textContent = 'Plan';
+    bar.appendChild(span);
+    return bar;
+  }
+  var path = eState.path;
+  var segs = [{ label: 'Portfolio', depth: 0 }];
+  if (path[0]) {
+    var label0 = path[0].kind === 'class' ? findAssetClass(path[0].id).name : 'Liabilities';
+    segs.push({ label: label0, depth: 1 });
+  }
+  if (path[1]) {
+    var label1;
+    if (path[1].kind === 'holding') label1 = findHoldingIn(findAssetClass(path[0].id), path[1].id).name;
+    else label1 = findLiabilityClass(path[1].id).name;
+    segs.push({ label: label1, depth: 2 });
+  }
+  if (path[2]) {
+    var label2 = findLiabilityIn(findLiabilityClass(path[1].id), path[2].id).name;
+    segs.push({ label: label2, depth: 3 });
+  }
+  segs.forEach(function (s, i) {
+    if (i > 0) {
+      var sep = document.createElement('span'); sep.className = 'sep'; sep.textContent = '›';
+      bar.appendChild(sep);
+    }
+    if (i === segs.length - 1) {
+      var cur = document.createElement('span');
+      cur.style.color = 'var(--text)';
+      cur.style.fontWeight = '500';
+      cur.textContent = s.label;
+      bar.appendChild(cur);
+    } else {
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.textContent = '‹ ' + s.label;
+      onActivate(btn, function () { eState.path = eState.path.slice(0, s.depth); eRerender(); });
+      bar.appendChild(btn);
+    }
+  });
+  return bar;
+}
+
+function eN1ListHeader(name, iconId) {
+  var header = document.createElement('div');
+  header.className = 'e-n1-list-header';
+  var nameWrap = document.createElement('div'); nameWrap.className = 'd-name-with-icon';
+  nameWrap.appendChild(eIconEl(iconId));
+  var nm = document.createElement('span'); nm.className = 'd-name-18'; nm.textContent = name;
+  nameWrap.appendChild(nm);
+  header.appendChild(nameWrap);
+  return header;
+}
+
+/* ---------- N1 — one pane at a time (canonical Miller, windowed) ----------
+   eState.path already encodes depth, so this renders only the deepest meaningful pane, full
+   width (§3, N1): path=[] -> the dashboard (with the class/liabilities list appended below it,
+   since that list — Miller's column 1 — has to live SOMEWHERE reachable, and "tapping Portfolio
+   in the breadcrumb" is the documented way back to this pane); path=[class] -> that class's
+   Holdings list; path=[class,holding] -> the Holding detail; path=[liabilities] -> Liability
+   Classes; path=[liabilities,liabClass] -> Liabilities; path=[liabilities,liabClass,liability]
+   -> the Liability detail. Shared with N3's "Browse by class" sub-mode. */
+function eBuildN1PaneContent() {
+  var pane = document.createElement('div');
+  pane.className = 'e-n1-pane';
+  var path = eState.path;
+  if (path.length === 0) {
+    var detail = document.createElement('div');
+    detail.className = 'c-col-detail d-content enter';
+    dRenderPortfolioView(detail);
+    pane.appendChild(detail);
+    var browse = dSection();
+    browse.style.padding = '0 20px';
+    browse.appendChild(dLabel11('Asset Classes & Liabilities'));
+    var listMount = document.createElement('div'); listMount.style.marginTop = '8px';
+    listMount.appendChild(eBuildCol1());
+    browse.appendChild(listMount);
+    pane.appendChild(browse);
+  } else if (path.length === 1 && path[0].kind === 'class') {
+    pane.appendChild(eN1ListHeader(findAssetClass(path[0].id).name, path[0].id));
+    pane.appendChild(eBuildCol2());
+  } else if (path.length === 1 && path[0].kind === 'liabilities') {
+    pane.appendChild(eN1ListHeader('Liabilities', 'liabilities'));
+    pane.appendChild(eBuildCol2());
+  } else if (path.length === 2 && path[0].kind === 'class') {
+    pane.appendChild(eBuildDetail());
+  } else if (path.length === 2 && path[0].kind === 'liabilities') {
+    var lc = findLiabilityClass(path[1].id);
+    pane.appendChild(eN1ListHeader(lc.name, lc.id));
+    pane.appendChild(eBuildCol3());
+  } else if (path.length === 3) {
+    pane.appendChild(eBuildDetail());
+  }
+  return pane;
+}
+
+/* ---------- N2 — accordion outline + bottom sheet ----------
+   Replaces the column browser with one scrolling indented outline (§3, N2): the dashboard sits
+   above it in the same scroll, Asset Classes/Liabilities expand in place (multiple branches at
+   once), and tapping a leaf opens its detail as a dismissible bottom sheet over the outline.
+   Expand/collapse state persists across re-renders (module-level, not part of eState — it isn't
+   part of the app's navigation model, it's purely this outline's own UI state). */
+var eN2Expanded = {};
+function eN2Toggle(key) { eN2Expanded[key] = !eN2Expanded[key]; eRerender(); }
+
+function eBuildN2Outline() {
+  var outline = document.createElement('div');
+  outline.className = 'e-n2-outline';
+  DATA.assetClasses.forEach(function (cls) {
+    var key = 'class:' + cls.id;
+    var expanded = !!eN2Expanded[key];
+    var staleCount = cls.holdings.filter(function (h) { return dIsStale(h.recordedAt); }).length;
+    var row = cRow({
+      label: cls.name, meta: fmtMoney(classTotal(cls)), hasChildren: true, iconId: cls.id,
+      staleCount: staleCount, onSelect: function () { eN2Toggle(key); }
+    });
+    var chev = row.querySelector('.c-chevron-right');
+    if (chev) { chev.classList.add('e-n2-chevron'); if (expanded) chev.classList.add('is-open'); }
+    outline.appendChild(row);
+    if (expanded) {
+      cls.holdings.forEach(function (h) {
+        var hrow = cRow({
+          label: h.name, meta: fmtMoney(h.valuation), stale: dIsStale(h.recordedAt),
+          onSelect: function () { eState.path = [{ kind: 'class', id: cls.id }, { kind: 'holding', classId: cls.id, id: h.id }]; eRerender(); }
+        });
+        hrow.classList.add('e-n2-row-depth-1');
+        outline.appendChild(hrow);
+      });
+    }
+  });
+  var liabKey = 'liabRoot';
+  var liabExpanded = !!eN2Expanded[liabKey];
+  var liabRow = cRow({
+    label: 'Liabilities', meta: fmtMoney(-DERIVED.liabilitiesTotal), hasChildren: true, liability: true,
+    iconId: 'liabilities', onSelect: function () { eN2Toggle(liabKey); }
+  });
+  var liabChev = liabRow.querySelector('.c-chevron-right');
+  if (liabChev) { liabChev.classList.add('e-n2-chevron'); if (liabExpanded) liabChev.classList.add('is-open'); }
+  outline.appendChild(liabRow);
+  if (liabExpanded) {
+    DATA.liabilityClasses.forEach(function (lc) {
+      var lcKey = 'liabClass:' + lc.id;
+      var lcExpanded = !!eN2Expanded[lcKey];
+      var staleCount = lc.liabilities.filter(function (l) { return dIsStale(l.recordedAt); }).length;
+      var lcRow = cRow({
+        label: lc.name, meta: fmtMoney(-liabClassTotal(lc)), hasChildren: true, liability: true,
+        iconId: lc.id, staleCount: staleCount, onSelect: function () { eN2Toggle(lcKey); }
+      });
+      lcRow.classList.add('e-n2-row-depth-1');
+      var lcChev = lcRow.querySelector('.c-chevron-right');
+      if (lcChev) { lcChev.classList.add('e-n2-chevron'); if (lcExpanded) lcChev.classList.add('is-open'); }
+      outline.appendChild(lcRow);
+      if (lcExpanded) {
+        lc.liabilities.forEach(function (l) {
+          var lRow = cRow({
+            label: l.name, meta: fmtMoney(-l.balance), liability: true, stale: dIsStale(l.recordedAt),
+            onSelect: function () { eState.path = [{ kind: 'liabilities' }, { kind: 'liabilityClass', id: lc.id }, { kind: 'liability', liabClassId: lc.id, id: l.id }]; eRerender(); }
+          });
+          lRow.classList.add('e-n2-row-depth-2');
+          outline.appendChild(lRow);
+        });
+      }
+    });
+  }
+  return outline;
+}
+
+function eN2CloseSheet() {
+  eState.path = eState.path.slice(0, -1);
+  eRerender();
+}
+
+function eBuildN2Sheet() {
+  var path = eState.path;
+  var isHolding = path.length === 2 && path[0].kind === 'class';
+  var isLiability = path.length === 3 && path[0].kind === 'liabilities';
+  if (!isHolding && !isLiability) return null;
+
+  var scrim = document.createElement('div');
+  scrim.className = 'e-n2-scrim';
+  onActivate(scrim, function () { eN2CloseSheet(); });
+
+  var sheet = document.createElement('div');
+  sheet.className = 'e-n2-sheet d-content enter';
+  var handle = document.createElement('div'); handle.className = 'e-n2-sheet-handle';
+  sheet.appendChild(handle);
+  var closeBtn = document.createElement('button');
+  closeBtn.type = 'button'; closeBtn.className = 'e-text-btn e-n2-sheet-close'; closeBtn.textContent = 'Close';
+  onActivate(closeBtn, function () { eN2CloseSheet(); });
+  sheet.appendChild(closeBtn);
+
+  /* dismissible by swipe-down (§3, N2) — a plain touch-drag on the handle; released past
+     80px closes the sheet, otherwise it springs back. */
+  var dragStartY = null;
+  handle.addEventListener('touchstart', function (e) { dragStartY = e.touches[0].clientY; sheet.style.transition = 'none'; }, { passive: true });
+  handle.addEventListener('touchmove', function (e) {
+    if (dragStartY === null) return;
+    var dy = Math.max(0, e.touches[0].clientY - dragStartY);
+    sheet.style.transform = 'translateY(' + dy + 'px)';
+  }, { passive: true });
+  handle.addEventListener('touchend', function (e) {
+    sheet.style.transition = '';
+    var dy = e.changedTouches && dragStartY !== null ? (e.changedTouches[0].clientY - dragStartY) : 0;
+    dragStartY = null;
+    if (dy > 80) { eN2CloseSheet(); } else { sheet.style.transform = ''; }
+  });
+
+  if (isHolding) {
+    var cls = findAssetClass(path[0].id);
+    dRenderHoldingView(sheet, cls, findHoldingIn(cls, path[1].id));
+  } else {
+    var lc = findLiabilityClass(path[1].id);
+    dRenderLiabilityView(sheet, lc, findLiabilityIn(lc, path[2].id));
+  }
+
+  var frag = document.createDocumentFragment();
+  frag.appendChild(scrim);
+  frag.appendChild(sheet);
+  return frag;
+}
+
+function eRerenderN2(root) {
+  /* Order (user call, 2026-09-08): Net Worth headline, then the Portfolio outline, then the
+     rest of the dashboard. Built by rendering the shared dashboard detached and lifting the
+     whole .e-dash-main (Net Worth label + figure + subline + the recorded/projected timeline)
+     out to the top, so dRenderPortfolioView itself stays untouched and the wide path is
+     unaffected. What stays below the outline is .e-dash-aside: Target Allocation, the
+     staleness list, and Start Check-in. */
+  var dash = document.createElement('div');
+  dash.className = 'c-col-detail d-content enter e-n2-dash';
+  dRenderPortfolioView(dash);
+
+  var headline = document.createElement('div');
+  headline.className = 'e-n2-headline d-content';
+  var dashMain = dash.querySelector('.e-dash-main');
+  if (dashMain) headline.appendChild(dashMain);
+  root.appendChild(headline);
+
+  var outlineWrap = dSection();
+  outlineWrap.className += ' e-n2-outline-wrap';
+  outlineWrap.appendChild(dLabel11('Portfolio'));
+  var mount = document.createElement('div'); mount.style.marginTop = '8px';
+  mount.appendChild(eBuildN2Outline());
+  outlineWrap.appendChild(mount);
+  root.appendChild(outlineWrap);
+
+  root.appendChild(dash);
+
+  var sheet = eBuildN2Sheet();
+  if (sheet) root.appendChild(sheet);
+}
+
+/* ---------- N3 — task-first, flat, hierarchy-demoted ----------
+   Abandons the hierarchy as the primary browsing model (§3, N3): one scrolling screen with Net
+   Worth, the timeline, a prominent Start Check-in, and a flat stale-first list of every Holding
+   and Liability (class shown as a caption, not a navigable level). Tapping a row opens its
+   detail full-screen with a plain Close, no breadcrumb. "Browse by class" is a secondary escape
+   hatch into N1's pane-at-a-time drilling, reusing eBuildN1PaneContent/eBuildBreadcrumbNarrow. */
+var eN3Browsing = false;
+
+function eN3FlatItems() {
+  var out = [];
+  DATA.assetClasses.forEach(function (cls) {
+    cls.holdings.forEach(function (h) {
+      out.push({ kind: 'holding', cls: cls, item: h, days: dDaysAgo(h.recordedAt), amount: h.valuation });
+    });
+  });
+  DATA.liabilityClasses.forEach(function (lc) {
+    lc.liabilities.forEach(function (l) {
+      out.push({ kind: 'liability', lc: lc, item: l, days: dDaysAgo(l.recordedAt), amount: l.balance });
+    });
+  });
+  out.sort(function (a, b) { return b.days - a.days; }); /* stale-first */
+  return out;
+}
+
+function eN3OpenDetail(entry) {
+  if (entry.kind === 'holding') {
+    eState.path = [{ kind: 'class', id: entry.cls.id }, { kind: 'holding', classId: entry.cls.id, id: entry.item.id }];
+  } else {
+    eState.path = [{ kind: 'liabilities' }, { kind: 'liabilityClass', id: entry.lc.id }, { kind: 'liability', liabClassId: entry.lc.id, id: entry.item.id }];
+  }
+  eN3Browsing = false;
+  eRerender();
+}
+
+function eN3CloseDetail() {
+  eState.path = [];
+  eN3Browsing = false;
+  eRerender();
+}
+
+function eBuildN3FullDetail() {
+  var wrap = document.createElement('div');
+  wrap.className = 'c-col-detail d-content enter';
+  var closeRow = document.createElement('div'); closeRow.className = 'e-n3-fulldetail-close-row';
+  var closeBtn = document.createElement('button');
+  closeBtn.type = 'button'; closeBtn.className = 'e-text-btn'; closeBtn.textContent = 'Close';
+  onActivate(closeBtn, function () { eN3CloseDetail(); });
+  closeRow.appendChild(closeBtn);
+  var frag = document.createDocumentFragment();
+  frag.appendChild(closeRow);
+  var path = eState.path;
+  if (path.length === 2 && path[0].kind === 'class') {
+    var cls = findAssetClass(path[0].id);
+    dRenderHoldingView(wrap, cls, findHoldingIn(cls, path[1].id));
+  } else {
+    var lc = findLiabilityClass(path[1].id);
+    dRenderLiabilityView(wrap, lc, findLiabilityIn(lc, path[2].id));
+  }
+  frag.appendChild(wrap);
+  return frag;
+}
+
+function eBuildN3Flat() {
+  var wrap = document.createElement('div');
+  wrap.className = 'e-n3-flat d-content enter';
+
+  wrap.appendChild(dLabel11('Net Worth'));
+  var fig = document.createElement('div'); fig.className = 'd-headline-figure e-n3-nw-fig'; fig.textContent = fmtMoney(DERIVED.netWorth);
+  wrap.appendChild(fig);
+  var sub = document.createElement('div'); sub.className = 'd-subline';
+  sub.textContent = 'Holdings ' + fmtMoney(DERIVED.holdingsTotal) + ' − Liabilities ' + fmtMoney(DERIVED.liabilitiesTotal) + ' · as of ' + fmtDate(DERIVED.mostRecent);
+  wrap.appendChild(sub);
+
+  var timelineSection = dSection();
+  timelineSection.appendChild(dLabel11('Net Worth · recorded and projected'));
+  timelineSection.appendChild(dBuildTimeline('dashboardTimeline'));
+  wrap.appendChild(timelineSection);
+
+  var startBtn = document.createElement('button');
+  startBtn.type = 'button'; startBtn.className = 'e-n3-start-checkin'; startBtn.textContent = 'Start Check-in';
+  onActivate(startBtn, function () { eStartCheckin('stale'); });
+  wrap.appendChild(startBtn);
+
+  var listSection = dSection();
+  listSection.appendChild(dLabel11('Every Holding & Liability · stale first'));
+  var list = document.createElement('div'); list.style.marginTop = '8px';
+  eN3FlatItems().forEach(function (entry) {
+    var row = document.createElement('div');
+    row.className = 'c-row' + (entry.kind === 'liability' ? ' c-liability' : '');
+    var labelWrap = document.createElement('span'); labelWrap.className = 'c-label e-n3-item-label';
+    var nameLine = document.createElement('span'); nameLine.textContent = entry.item.name;
+    var captionLine = document.createElement('span'); captionLine.className = 'e-n3-item-caption';
+    captionLine.textContent = (entry.kind === 'holding' ? entry.cls.name : entry.lc.name) + (entry.days > 30 ? ' · ' + entry.days + ' days ago' : '');
+    labelWrap.appendChild(nameLine); labelWrap.appendChild(captionLine);
+    row.appendChild(labelWrap);
+    var meta = document.createElement('span'); meta.className = 'c-meta' + (entry.days > 30 ? ' c-meta-stale' : '');
+    meta.textContent = entry.kind === 'liability' ? fmtMoney(-entry.amount) : fmtMoney(entry.amount);
+    row.appendChild(meta);
+    onActivate(row, function () { eN3OpenDetail(entry); });
+    list.appendChild(row);
+  });
+  listSection.appendChild(list);
+  wrap.appendChild(listSection);
+
+  var browseBtn = document.createElement('button');
+  browseBtn.type = 'button'; browseBtn.className = 'e-text-btn e-n3-browse-link'; browseBtn.textContent = 'Browse by class';
+  onActivate(browseBtn, function () { eN3Browsing = true; eState.path = []; eRerender(); });
+  wrap.appendChild(browseBtn);
+
+  var allocSection = dSection();
+  allocSection.appendChild(dLabel11('Target Allocation vs actual'));
+  var rowsWrap = document.createElement('div'); rowsWrap.style.marginTop = '8px';
+  DERIVED.distribution.forEach(function (dist, i) { rowsWrap.appendChild(dBuildAllocRow(dist, true, i * 40, 'dashboardBars')); });
+  eDrawFlags.dashboardBars = true;
+  allocSection.appendChild(rowsWrap);
+  wrap.appendChild(allocSection);
+
+  var attn = dBuildAttentionSection();
+  if (attn) wrap.appendChild(attn);
+
+  return wrap;
+}
+
+function eN3IsLeafPath() {
+  var path = eState.path;
+  return (path.length === 2 && path[0].kind === 'class') || (path.length === 3 && path[0].kind === 'liabilities');
+}
+
+function eRerenderN3(root, headEl) {
+  if (eN3IsLeafPath() && !eN3Browsing) {
+    root.appendChild(eBuildN3FullDetail());
+    return;
+  }
+  if (eN3Browsing || eState.path.length > 0) {
+    var overviewLink = document.createElement('button');
+    overviewLink.type = 'button'; overviewLink.className = 'e-text-btn e-n3-overview-link'; overviewLink.textContent = '‹ Overview';
+    onActivate(overviewLink, function () { eN3Browsing = false; eState.path = []; eRerender(); });
+    headEl.appendChild(overviewLink);
+    headEl.appendChild(eBuildBreadcrumbNarrow());
+    root.appendChild(eBuildN1PaneContent());
+    return;
+  }
+  root.appendChild(eBuildN3Flat());
+}
+
+function eRerender() {
+  eRootEl.innerHTML = '';
+
+  if (eState.checkin) {
+    eRenderCheckin(eRootEl);
+    return;
+  }
+
+  if (!eIsNarrow()) {
+    /* Wide (>=900px): exactly the original variant-e.html rendering, unchanged (§5 — wide
+       behaviour must be byte-for-byte the current E experience regardless of ?n=). */
+    eRootEl.appendChild(eBuildTopStrip());
+    eRootEl.appendChild(eBuildBreadcrumb());
+
+    if (eState.root === 'plan') {
+      eRootEl.appendChild(eBuildPlanPage());
+      return;
+    }
+
+    var cols = document.createElement('div');
+    cols.className = 'c-columns';
+    var path = eState.path;
+    var newColCount = 1 + (path.length >= 1 ? 1 : 0) + (path.length >= 2 && path[0].kind === 'liabilities' ? 1 : 0);
+
+    var col1 = eBuildCol1();
+    if (1 > eLastColCount) col1.classList.add('e-col-enter');
+    cols.appendChild(col1);
+    if (path.length >= 1) {
+      var col2 = eBuildCol2();
+      if (2 > eLastColCount) col2.classList.add('e-col-enter');
+      cols.appendChild(col2);
+    }
+    if (path.length >= 2 && path[0].kind === 'liabilities') {
+      var col3 = eBuildCol3();
+      if (3 > eLastColCount) col3.classList.add('e-col-enter');
+      cols.appendChild(col3);
+    }
+    eLastColCount = newColCount;
+
+    cols.appendChild(eBuildDetail());
+    eRootEl.appendChild(cols);
+    return;
+  }
+
+  /* Narrow (<900px): dispatch to N1/N2/N3. Top strip (and, for N1/plan, the breadcrumb) are
+     wrapped in .e-narrow-head so §2.4's `position: sticky` keeps Net Worth on screen while the
+     rest of the pane scrolls underneath. */
+  var head = document.createElement('div');
+  head.className = 'e-narrow-head';
+  head.appendChild(eBuildTopStrip());
+  eRootEl.appendChild(head);
+
+  if (eState.root === 'plan') {
+    head.appendChild(eBuildBreadcrumbNarrow());
+    eRootEl.appendChild(eBuildPlanPage());
+    return;
+  }
+
+  if (eNarrowVariant === 1) {
+    head.appendChild(eBuildBreadcrumbNarrow());
+    eRootEl.appendChild(eBuildN1PaneContent());
+  } else if (eNarrowVariant === 2) {
+    eRerenderN2(eRootEl);
+  } else {
+    eRerenderN3(eRootEl, head);
+  }
+}
+
+/* ---------- boot ---------- */
+var eAppRoot = document.getElementById('app');
+eAppRoot.className = 'variant-c';
+
+/* ============================================================
+   BOOT: read ?n=, wire the floating narrow-variant switcher, watch the 900px
+   boundary, dispatch. Follows index.html's ?variant= pattern (§4).
+   ============================================================ */
+var N_ORDER = [1, 2, 3];
+var N_NAMES = { 1: 'One pane at a time', 2: 'Accordion outline', 3: 'Task-first' };
+
+function getInitialN() {
+  try {
+    var params = new URLSearchParams(location.search);
+    var n = parseInt(params.get('n'), 10);
+    if (N_ORDER.indexOf(n) !== -1) return n;
+  } catch (err) { /* ignore — fall back to default */ }
+  return 1;
+}
+function setNInURL(n) {
+  try {
+    var url = new URL(location.href);
+    url.searchParams.set('n', String(n));
+    history.replaceState(null, '', url.toString());
+  } catch (err) {
+    /* sandboxed iframe / file:// edge case — eNarrowVariant (in-memory) still drives rendering */
+  }
+}
+function updateSwitcherLabel() {
+  var label = document.getElementById('switcher-label');
+  if (label) label.textContent = 'N' + eNarrowVariant + ' · ' + N_NAMES[eNarrowVariant];
+}
+function switchN(delta) {
+  var idx = N_ORDER.indexOf(eNarrowVariant);
+  eNarrowVariant = N_ORDER[(idx + delta + N_ORDER.length) % N_ORDER.length];
+  setNInURL(eNarrowVariant);
+  updateSwitcherLabel();
+  eRerender();
+}
+
+eNarrowVariant = getInitialN();
+renderE(eAppRoot);
+updateSwitcherLabel();
+
+document.getElementById('switcher-prev').addEventListener('click', function () { switchN(-1); });
+document.getElementById('switcher-next').addEventListener('click', function () { switchN(1); });
+
+/* Do NOT gate the switcher on viewport width (§4) — a reviewer on a desktop must be able to
+   flip variants while resizing to see each one cross the 900px breakpoint. Do NOT intercept
+   arrow keys when an input/textarea/contenteditable is focused — the check-in card autofocuses
+   an input (§4), and eEditableFigure's inline edit does too. */
+document.addEventListener('keydown', function (e) {
+  if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+  var ae = document.activeElement;
+  if (ae) {
+    var tag = ae.tagName;
+    if (tag === 'INPUT' || tag === 'TEXTAREA' || ae.isContentEditable) return;
+  }
+  switchN(e.key === 'ArrowLeft' ? -1 : 1);
+});
+
+/* Panes are built in JS, not purely by CSS, so crossing the 900px boundary needs an explicit
+   eRerender() — a plain resize listener re-checks eIsNarrow() and only re-renders on an actual
+   wide<->narrow transition (matchMedia's 'change' event does the same thing, but this reuses
+   the debounce-free simplicity of a single boolean compare). */
+var eWasNarrow = eIsNarrow();
+window.addEventListener('resize', function () {
+  var nowNarrow = eIsNarrow();
+  if (nowNarrow !== eWasNarrow) {
+    eWasNarrow = nowNarrow;
+    if (eState) eRerender();
+  }
+});
+</script>
