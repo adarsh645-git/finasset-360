@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { PortfolioShell } from "@/components/portfolio/PortfolioShell";
-import type { AssetClass, Holding } from "@/components/portfolio/types";
+import type { AssetClass, Holding, HoldingValuation } from "@/components/portfolio/types";
 
 // The Miller-column shell (ticket 03): Portfolio is the breadcrumb root,
 // Asset Classes and Holdings are fetched once here as Server Components
@@ -19,19 +19,29 @@ export default async function DashboardPage() {
     redirect("/login");
   }
 
-  const [{ data: portfolio, error: portfolioError }, { data: assetClasses, error: assetClassesError }, { data: holdings, error: holdingsError }] =
-    await Promise.all([
-      supabase.from("portfolio").select("user_id, home_currency").single(),
-      supabase
-        .from("asset_class")
-        .select("id, owner_id, name")
-        .order("owner_id", { ascending: true, nullsFirst: true })
-        .order("name", { ascending: true }),
-      supabase
-        .from("holding")
-        .select("id, asset_class_id, name, currency, created_at")
-        .order("created_at", { ascending: true }),
-    ]);
+  const [
+    { data: portfolio, error: portfolioError },
+    { data: assetClasses, error: assetClassesError },
+    { data: holdings, error: holdingsError },
+    { data: valuations, error: valuationsError },
+  ] = await Promise.all([
+    supabase.from("portfolio").select("user_id, home_currency").single(),
+    supabase
+      .from("asset_class")
+      .select("id, owner_id, name")
+      .order("owner_id", { ascending: true, nullsFirst: true })
+      .order("name", { ascending: true }),
+    supabase
+      .from("holding")
+      .select("id, asset_class_id, name, currency, created_at")
+      .order("created_at", { ascending: true }),
+    // Newest-first, so latestValuationByHolding can pick the first row seen
+    // per Holding as its latest without a separate per-Holding query.
+    supabase
+      .from("holding_valuation")
+      .select("id, holding_id, amount, fx_rate_to_home, home_currency_at_recording, recorded_at")
+      .order("recorded_at", { ascending: false }),
+  ]);
 
   if (portfolioError || !portfolio) {
     // The on_auth_user_created trigger should make this unreachable, but
@@ -44,6 +54,9 @@ export default async function DashboardPage() {
   if (holdingsError) {
     throw new Error(`Could not load Holdings: ${holdingsError.message}`);
   }
+  if (valuationsError) {
+    throw new Error(`Could not load Valuations: ${valuationsError.message}`);
+  }
 
   return (
     <PortfolioShell
@@ -52,6 +65,7 @@ export default async function DashboardPage() {
       currentUserId={user.id}
       assetClasses={assetClasses as AssetClass[]}
       holdings={holdings as Holding[]}
+      valuations={valuations as HoldingValuation[]}
     />
   );
 }

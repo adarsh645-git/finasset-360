@@ -17,3 +17,12 @@ export type Holding = {
  * PortfolioShell's save handler, and the PATCH body it sends all pass this
  * same trio around together. */
 export type HoldingPatch = Pick<Holding, "name" | "asset_class_id" | "currency">;
+
+export type HoldingValuation = {
+  id: string;
+  holding_id: string;
+  amount: number;
+  fx_rate_to_home: number;
+  home_currency_at_recording: string;
+  recorded_at: string;
+};

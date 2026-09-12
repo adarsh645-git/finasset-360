@@ -2,20 +2,25 @@
 
 import { useState } from "react";
 import { CurrencySelect } from "@/components/CurrencySelect";
-import type { AssetClass, Holding, HoldingPatch } from "./types";
+import { ValuationEditor } from "./ValuationEditor";
+import type { AssetClass, Holding, HoldingPatch, HoldingValuation } from "./types";
 
-// The rightmost detail panel for a selected Holding — edit its name, Asset
-// Class, and currency (user story 17), or delete it. Ticket 03 has no
-// archive column yet (that lands in ticket 06), so delete here is a true
-// delete.
+// The rightmost detail panel for a selected Holding — record a Valuation
+// (user stories 22–26), edit its name, Asset Class, and currency (user
+// story 17), or delete it. Ticket 03 has no archive column yet (that lands
+// in ticket 06), so delete here is a true delete.
 export function HoldingDetailPanel({
   holding,
   assetClasses,
+  latestValuation,
+  onRecordValuation,
   onSave,
   onDelete,
 }: {
   holding: Holding;
   assetClasses: AssetClass[];
+  latestValuation: HoldingValuation | null;
+  onRecordValuation: (amount: number, recordedAt: string) => Promise<string | null>;
   onSave: (patch: HoldingPatch) => Promise<string | null>;
   onDelete: () => Promise<string | null>;
 }) {
@@ -53,6 +58,12 @@ export function HoldingDetailPanel({
       key={holding.id}
     >
       <h1 className="text-lg font-semibold tracking-tight">{holding.name}</h1>
+
+      <ValuationEditor
+        currency={holding.currency}
+        latestValuation={latestValuation}
+        onRecord={onRecordValuation}
+      />
 
       <div className="flex flex-col gap-4">
         <label className="flex flex-col gap-1 text-sm">
