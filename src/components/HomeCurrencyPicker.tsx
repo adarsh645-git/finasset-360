@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { ISO_4217_CODES } from "@/lib/currency/iso4217";
+import { CurrencySelect } from "@/components/CurrencySelect";
 
 // A plain <select> against the full ISO 4217 list, per user story 3 ("choose
 // my home/display currency") and the "no setup wizard" requirement in
@@ -43,20 +43,8 @@ export function HomeCurrencyPicker({ currentCurrency }: { currentCurrency: strin
       <label htmlFor="home-currency" className="text-sm text-zinc-600 dark:text-zinc-400">
         Home currency
       </label>
-      <select
-        id="home-currency"
-        value={value}
-        disabled={isSaving}
-        onChange={(e) => handleChange(e.target.value)}
-        className="w-40 rounded-md border border-zinc-300 bg-transparent px-2 py-1.5 text-sm disabled:opacity-60 dark:border-zinc-700"
-      >
-        {ISO_4217_CODES.map((code) => (
-          <option key={code} value={code}>
-            {code}
-          </option>
-        ))}
-      </select>
-      {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
+      <CurrencySelect id="home-currency" value={value} onChange={handleChange} disabled={isSaving} />
+      {error && <p className="text-sm font-medium">{error}</p>}
     </div>
   );
 }

@@ -46,7 +46,7 @@ export default function LoginPage() {
         <GoogleIcon />
         {isSigningIn ? "Redirecting…" : "Continue with Google"}
       </button>
-      {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
+      {error && <p className="text-sm font-medium">{error}</p>}
     </div>
   );
 }

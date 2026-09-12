@@ -3,11 +3,20 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  /* Visual system (ticket 03): near-monochrome, one desaturated slate
+     accent reserved for selection — never used for icons, links, or
+     anything else — and no red/green anywhere in the interface. */
+  --hairline: #e4e4e7;
+  --accent: #64748b;
+  --accent-soft: rgba(100, 116, 139, 0.12);
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-hairline: var(--hairline);
+  --color-accent: var(--accent);
+  --color-accent-soft: var(--accent-soft);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
@@ -16,6 +25,9 @@
   :root {
     --background: #0a0a0a;
     --foreground: #ededed;
+    --hairline: #27272a;
+    --accent: #94a3b8;
+    --accent-soft: rgba(148, 163, 184, 0.16);
   }
 }
 
@@ -23,4 +35,20 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+  font-size: 15px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Reduced-motion aware, per this ticket's checklist — nothing in this app
+   loops, but hover/selection transitions still get suppressed outright for
+   a User who has asked for that. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
