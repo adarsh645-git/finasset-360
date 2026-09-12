@@ -1,5 +1,5 @@
 Type: build
-Status: ready-for-agent
+Status: resolved
 
 # 01: Sign in, get a Portfolio
 
@@ -13,12 +13,14 @@ Spec: [`docs/SPEC.md`](../../../docs/SPEC.md) — user stories 1–5.
 
 **Blocked by:** None (can start immediately).
 
-- [ ] Google sign-in works end to end; open sign-up, no allowlist or invite gating
-- [ ] First sign-in creates exactly one `portfolio` row; signing in again creates no second row
-- [ ] `portfolio` is `user_id uuid primary key references auth.users(id)` plus `home_currency char(3) not null` — no separate `users` or `profiles` table
-- [ ] The User can set and change their home currency
-- [ ] RLS is enabled on `portfolio` with `USING (user_id = auth.uid())` for all operations
-- [ ] Sign-out works
-- [ ] Test harness: local Supabase with RLS enabled, and a fixture giving two distinct authenticated Users
-- [ ] Test: User A cannot read or update User B's `portfolio` row — asserted by attempting it through the route boundary, not by inspecting policy definitions
-- [ ] Test: the suite fails if RLS is dropped (verify this once by hand; a suite that passes without policies is worse than none)
+- [x] Google sign-in works end to end; open sign-up, no allowlist or invite gating
+- [x] First sign-in creates exactly one `portfolio` row; signing in again creates no second row
+- [x] `portfolio` is `user_id uuid primary key references auth.users(id)` plus `home_currency char(3) not null` — no separate `users` or `profiles` table
+- [x] The User can set and change their home currency
+- [x] RLS is enabled on `portfolio` with `USING (user_id = auth.uid())` for all operations
+- [x] Sign-out works
+- [x] Test harness: local Supabase with RLS enabled, and a fixture giving two distinct authenticated Users
+- [x] Test: User A cannot read or update User B's `portfolio` row — asserted by attempting it through the route boundary, not by inspecting policy definitions
+- [x] Test: the suite fails if RLS is dropped (verify this once by hand; a suite that passes without policies is worse than none)
+
+**Resolved:** all criteria verified against the local Supabase harness (`npm test`, 14/14 passing) and by hand per README.md's RLS-drop check. This is local-dev-verified only — production verification against a real hosted Supabase project is [02](02-deploy-the-skeleton.md)'s job, in progress.
