@@ -2,20 +2,25 @@
 
 import { useState } from "react";
 import { CurrencySelect } from "@/components/CurrencySelect";
+import { validatePriceLookupInput } from "@/lib/holdings/price-lookup-input";
+import type { PriceCacheRow } from "@/lib/market-data/live-estimate";
+import { LiveEstimate } from "./LiveEstimate";
 import { ValuationEditor } from "./ValuationEditor";
 import { ValuationHistoryTable } from "./ValuationHistoryTable";
 import type { AssetClass, Holding, HoldingPatch, HoldingValuation } from "./types";
 
 // The rightmost detail panel for a selected Holding — record a Valuation
-// (user stories 22–26), see its full Valuation History (user story 27),
-// edit its name, Asset Class, and currency (user story 17), archive it
-// (user story 18, the primary removal path), or fall back to a true delete
-// for correcting a mistaken entry (user story 21).
+// (user stories 22–26), see its full Valuation History (user story 27), see
+// its Live Estimate against that history (user stories 32-35, ticket 07),
+// edit its name, Asset Class, currency, and market symbol/quantity (user
+// story 17), archive it (user story 18, the primary removal path), or fall
+// back to a true delete for correcting a mistaken entry (user story 21).
 export function HoldingDetailPanel({
   holding,
   assetClasses,
   latestValuation,
   history,
+  priceCache,
   onRecordValuation,
   onSave,
   onArchive,
@@ -25,6 +30,7 @@ export function HoldingDetailPanel({
   assetClasses: AssetClass[];
   latestValuation: HoldingValuation | null;
   history: HoldingValuation[];
+  priceCache: PriceCacheRow | null;
   onRecordValuation: (amount: number, recordedAt: string) => Promise<string | null>;
   onSave: (patch: HoldingPatch) => Promise<string | null>;
   onArchive: () => Promise<string | null>;
@@ -33,20 +39,35 @@ export function HoldingDetailPanel({
   const [name, setName] = useState(holding.name);
   const [assetClassId, setAssetClassId] = useState(holding.asset_class_id);
   const [currency, setCurrency] = useState(holding.currency);
+  const [symbol, setSymbol] = useState(holding.price_lookup_symbol ?? "");
+  const [quantity, setQuantity] = useState(holding.quantity !== null ? String(holding.quantity) : "");
   const [isSaving, setIsSaving] = useState(false);
   const [isArchiving, setIsArchiving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const isDirty = name !== holding.name || assetClassId !== holding.asset_class_id || currency !== holding.currency;
+  const priceLookup = validatePriceLookupInput(symbol, quantity);
+
+  const isDirty =
+    name !== holding.name ||
+    assetClassId !== holding.asset_class_id ||
+    currency !== holding.currency ||
+    symbol !== (holding.price_lookup_symbol ?? "") ||
+    quantity !== (holding.quantity !== null ? String(holding.quantity) : "");
 
   async function handleSave(event: React.FormEvent) {
     event.preventDefault();
-    if (!name.trim()) return;
+    if (!name.trim() || priceLookup.isMismatched || priceLookup.isInvalid) return;
     setIsSaving(true);
     setError(null);
-    const failure = await onSave({ name: name.trim(), asset_class_id: assetClassId, currency });
+    const failure = await onSave({
+      name: name.trim(),
+      asset_class_id: assetClassId,
+      currency,
+      price_lookup_symbol: priceLookup.value?.price_lookup_symbol ?? null,
+      quantity: priceLookup.value?.quantity ?? null,
+    });
     setIsSaving(false);
     if (failure) setError(failure);
   }
@@ -85,6 +106,16 @@ export function HoldingDetailPanel({
         onRecord={onRecordValuation}
       />
 
+      {holding.price_lookup_symbol && holding.quantity !== null && (
+        <LiveEstimate
+          quantity={holding.quantity}
+          priceCache={priceCache}
+          lastValuation={latestValuation}
+          holdingCurrency={holding.currency}
+          onUse={onRecordValuation}
+        />
+      )}
+
       <div className="flex flex-col gap-2">
         <h2 className="text-sm font-medium text-zinc-500 dark:text-zinc-400">Valuation History</h2>
         <ValuationHistoryTable currency={holding.currency} history={history} />
@@ -119,6 +150,33 @@ export function HoldingDetailPanel({
           Currency
           <CurrencySelect value={currency} onChange={setCurrency} />
         </label>
+
+        <div className="flex gap-4">
+          <label className="flex flex-1 flex-col gap-1 text-sm">
+            Market symbol
+            <input
+              value={symbol}
+              onChange={(e) => setSymbol(e.target.value)}
+              placeholder="e.g. AAPL, XAU (optional)"
+              className="rounded-md border border-hairline bg-transparent px-2 py-1.5 text-sm"
+            />
+          </label>
+          <label className="flex flex-1 flex-col gap-1 text-sm">
+            Quantity
+            <input
+              type="number"
+              inputMode="decimal"
+              step="any"
+              value={quantity}
+              onChange={(e) => setQuantity(e.target.value)}
+              className="rounded-md border border-hairline bg-transparent px-2 py-1.5 text-sm"
+            />
+          </label>
+        </div>
+        {priceLookup.isMismatched && (
+          <p className="text-xs font-medium">Market symbol and quantity must be set together.</p>
+        )}
+        {priceLookup.isInvalid && <p className="text-xs font-medium">Quantity must be a positive number.</p>}
       </div>
 
       {error && <p className="text-sm font-medium">{error}</p>}
@@ -126,7 +184,9 @@ export function HoldingDetailPanel({
       <div className="flex gap-2">
         <button
           type="submit"
-          disabled={isSaving || !isDirty || !name.trim()}
+          disabled={
+            isSaving || !isDirty || !name.trim() || priceLookup.isMismatched || priceLookup.isInvalid
+          }
           className="rounded-md border border-hairline px-3 py-1.5 text-sm disabled:opacity-60"
         >
           {isSaving ? "Saving…" : "Save"}

@@ -1,12 +1,15 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { isVisibleAssetClass } from "@/lib/asset-classes/visibility";
 import { isValidCurrencyCode } from "@/lib/currency/iso4217";
+import { HOLDING_COLUMNS } from "@/lib/holdings/columns";
+import { readPriceLookupPatch } from "@/lib/holdings/price-lookup";
 import { hasKey, readTrimmedString } from "@/lib/http/body";
 import { createRouteClient, jsonWithCookies, requireUser } from "@/lib/supabase/route";
 
-// PATCH /api/holdings/[id] — edit a Holding's name, Asset Class, and/or
-// currency (user story 17). Every field is optional; whatever is present is
-// validated the same way POST /api/holdings validates it.
+// PATCH /api/holdings/[id] — edit a Holding's name, Asset Class, currency,
+// and/or its market symbol and quantity (user story 17; ticket 07 adds the
+// last two). Every field is optional; whatever is present is validated the
+// same way POST /api/holdings validates it.
 export async function PATCH(request: NextRequest, context: RouteContext<"/api/holdings/[id]">) {
   const { supabase, responseCookies } = createRouteClient(request);
 
@@ -22,7 +25,13 @@ export async function PATCH(request: NextRequest, context: RouteContext<"/api/ho
     return NextResponse.json({ error: "Invalid JSON body." }, { status: 400 });
   }
 
-  const update: Record<string, string> = {};
+  const update: Record<string, string | number | null> = {};
+
+  const priceLookup = readPriceLookupPatch(body);
+  if (typeof priceLookup === "string") {
+    return NextResponse.json({ error: priceLookup }, { status: 400 });
+  }
+  if (priceLookup) Object.assign(update, priceLookup);
 
   if (hasKey(body, "name")) {
     const name = readTrimmedString(body, "name");
@@ -59,7 +68,7 @@ export async function PATCH(request: NextRequest, context: RouteContext<"/api/ho
     .from("holding")
     .update(update)
     .eq("id", id)
-    .select("id, asset_class_id, name, currency, archived_at, created_at")
+    .select(HOLDING_COLUMNS)
     .maybeSingle();
 
   if (error) {

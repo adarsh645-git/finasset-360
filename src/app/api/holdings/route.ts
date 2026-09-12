@@ -1,6 +1,8 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { isVisibleAssetClass } from "@/lib/asset-classes/visibility";
 import { isValidCurrencyCode } from "@/lib/currency/iso4217";
+import { HOLDING_COLUMNS } from "@/lib/holdings/columns";
+import { readPriceLookupPatch } from "@/lib/holdings/price-lookup";
 import { readTrimmedString } from "@/lib/http/body";
 import { createRouteClient, jsonWithCookies, requireUser } from "@/lib/supabase/route";
 
@@ -16,7 +18,7 @@ export async function GET(request: NextRequest) {
 
   const { data, error } = await supabase
     .from("holding")
-    .select("id, asset_class_id, name, currency, archived_at, created_at")
+    .select(HOLDING_COLUMNS)
     .is("archived_at", null)
     .order("created_at", { ascending: true });
 
@@ -28,7 +30,10 @@ export async function GET(request: NextRequest) {
 }
 
 // POST /api/holdings — add a Holding under an Asset Class (user stories 12,
-// 13). Body: { name, asset_class_id, currency }.
+// 13), optionally with a market symbol and quantity to give it a Live
+// Estimate (ticket 07; user stories 32-38). Body: { name, asset_class_id,
+// currency, price_lookup_symbol?, quantity? } — the last two must be
+// present together or not at all.
 export async function POST(request: NextRequest) {
   const { supabase, responseCookies } = createRouteClient(request);
 
@@ -59,14 +64,25 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  const priceLookup = readPriceLookupPatch(body);
+  if (typeof priceLookup === "string") {
+    return NextResponse.json({ error: priceLookup }, { status: 400 });
+  }
+
   if (!(await isVisibleAssetClass(supabase, assetClassId))) {
     return NextResponse.json({ error: "Asset Class not found." }, { status: 400 });
   }
 
   const { data, error } = await supabase
     .from("holding")
-    .insert({ user_id: auth.user.id, asset_class_id: assetClassId, name, currency })
-    .select("id, asset_class_id, name, currency, archived_at, created_at")
+    .insert({
+      user_id: auth.user.id,
+      asset_class_id: assetClassId,
+      name,
+      currency,
+      ...priceLookup,
+    })
+    .select(HOLDING_COLUMNS)
     .single();
 
   if (error) {

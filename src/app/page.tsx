@@ -1,5 +1,7 @@
 import { redirect } from "next/navigation";
 import { firstNameOrEmail } from "@/lib/auth/display-name";
+import { HOLDING_COLUMNS } from "@/lib/holdings/columns";
+import type { PriceCacheRow } from "@/lib/market-data/live-estimate";
 import { createClient } from "@/lib/supabase/server";
 import { PortfolioShell } from "@/components/portfolio/PortfolioShell";
 import type {
@@ -39,6 +41,7 @@ export default async function DashboardPage() {
     { data: liabilities, error: liabilitiesError },
     { data: liabilityValuations, error: liabilityValuationsError },
     { data: targetAllocations, error: targetAllocationsError },
+    { data: priceCache, error: priceCacheError },
   ] = await Promise.all([
     supabase.from("portfolio").select("user_id, home_currency").single(),
     supabase
@@ -52,7 +55,7 @@ export default async function DashboardPage() {
     // owned, per ticket 06).
     supabase
       .from("holding")
-      .select("id, asset_class_id, name, currency, archived_at, created_at")
+      .select(HOLDING_COLUMNS)
       .order("created_at", { ascending: true }),
     // Newest-first, so latestValuationByHolding can pick the first row seen
     // per Holding as its latest without a separate per-Holding query.
@@ -78,6 +81,12 @@ export default async function DashboardPage() {
       .select("id, liability_id, amount, fx_rate_to_home, home_currency_at_recording, recorded_at")
       .order("recorded_at", { ascending: false }),
     supabase.from("target_allocation").select("asset_class_id, target_percent"),
+    // The whole cache, not filtered to this User's own symbols — it's the
+    // one non-tenant-scoped table (docs/SPEC.md), small, and RLS already
+    // allows any authenticated User to read all of it.
+    supabase
+      .from("price_cache")
+      .select("symbol, price, price_currency, source, last_error, fetched_at"),
   ]);
 
   if (portfolioError || !portfolio) {
@@ -106,6 +115,9 @@ export default async function DashboardPage() {
   if (targetAllocationsError) {
     throw new Error(`Could not load Target Allocation: ${targetAllocationsError.message}`);
   }
+  if (priceCacheError) {
+    throw new Error(`Could not load the price cache: ${priceCacheError.message}`);
+  }
 
   return (
     <PortfolioShell
@@ -119,6 +131,7 @@ export default async function DashboardPage() {
       liabilities={liabilities as Liability[]}
       liabilityValuations={liabilityValuations as LiabilityValuation[]}
       targetAllocations={targetAllocations as TargetAllocation[]}
+      priceCache={priceCache as PriceCacheRow[]}
     />
   );
 }

@@ -9,15 +9,25 @@ export type Holding = {
   asset_class_id: string;
   name: string;
   currency: string;
+  // Populated together, or both null (ticket 07 — enforced by
+  // src/lib/holdings/price-lookup.ts, not a DB constraint): a Holding with
+  // a symbol gets a Live Estimate (quantity × the latest price_cache row
+  // for that symbol); one without (e.g. a house) has neither.
+  price_lookup_symbol: string | null;
+  quantity: number | null;
   archived_at: string | null;
   created_at: string;
 };
 
-/** The editable fields of a Holding — name, Asset Class, and currency
- * (user story 17) — as one type, since HoldingDetailPanel's edit form,
- * PortfolioShell's save handler, and the PATCH body it sends all pass this
- * same trio around together. */
-export type HoldingPatch = Pick<Holding, "name" | "asset_class_id" | "currency">;
+/** The editable fields of a Holding — name, Asset Class, currency, and its
+ * optional market symbol/quantity pair (user story 17; ticket 07) — as one
+ * type, since HoldingDetailPanel's edit form, PortfolioShell's save
+ * handler, and the PATCH body it sends all pass this same set around
+ * together. */
+export type HoldingPatch = Pick<
+  Holding,
+  "name" | "asset_class_id" | "currency" | "price_lookup_symbol" | "quantity"
+>;
 
 export type HoldingValuation = {
   id: string;

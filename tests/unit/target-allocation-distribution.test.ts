@@ -15,6 +15,8 @@ function holding(overrides: Partial<Holding>): Holding {
     asset_class_id: "ac1",
     name: "Checking",
     currency: "USD",
+    price_lookup_symbol: null,
+    quantity: null,
     archived_at: null,
     created_at: "2026-01-01T00:00:00Z",
     ...overrides,
