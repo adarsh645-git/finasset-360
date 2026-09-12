@@ -66,6 +66,30 @@ describe("GET/POST /api/holdings, PATCH/DELETE /api/holdings/[id]", () => {
     expect(response.status).toBe(400);
   });
 
+  // Ticket 07: price_lookup_symbol and quantity are populated together
+  // (docs/SPEC.md's schema note) — quantity exists solely to compute the
+  // Live Estimate, so it's meaningless without a symbol and vice versa.
+  it("creates a Holding with a market symbol and quantity together", async () => {
+    const response = await createHolding(userA, { price_lookup_symbol: "aapl", quantity: 10 });
+    expect(response.status).toBe(201);
+    expect(await response.json()).toMatchObject({ price_lookup_symbol: "AAPL", quantity: 10 });
+  });
+
+  it("rejects a market symbol without a quantity", async () => {
+    const response = await createHolding(userA, { price_lookup_symbol: "AAPL" });
+    expect(response.status).toBe(400);
+  });
+
+  it("rejects a quantity without a market symbol", async () => {
+    const response = await createHolding(userA, { quantity: 10 });
+    expect(response.status).toBe(400);
+  });
+
+  it("a Holding created with no market symbol has no quantity either", async () => {
+    const response = await createHolding(userA);
+    expect(await response.json()).toMatchObject({ price_lookup_symbol: null, quantity: null });
+  });
+
   it("rejects an asset_class_id that doesn't exist or isn't visible to the caller", async () => {
     const response = await createHolding(userA, {
       asset_class_id: "00000000-0000-0000-0000-000000000000",
@@ -106,6 +130,50 @@ describe("GET/POST /api/holdings, PATCH/DELETE /api/holdings/[id]", () => {
       asset_class_id: DEFAULT_ASSET_CLASS_ID.cash,
       currency: "EUR",
     });
+  });
+
+  it("adds a market symbol and quantity to a Holding that had none", async () => {
+    const created = await createHolding(userA);
+    const { id } = await created.json();
+
+    const response = await PATCH(
+      requestAs(userA, `${HOLDINGS_URL}/${id}`, {
+        method: "PATCH",
+        ...jsonBody({ price_lookup_symbol: "voo", quantity: 5 }),
+      }),
+      { params: Promise.resolve({ id }) },
+    );
+    expect(response.status).toBe(200);
+    expect(await response.json()).toMatchObject({ price_lookup_symbol: "VOO", quantity: 5 });
+  });
+
+  it("clears a Holding's market symbol and quantity together", async () => {
+    const created = await createHolding(userA, { price_lookup_symbol: "AAPL", quantity: 10 });
+    const { id } = await created.json();
+
+    const response = await PATCH(
+      requestAs(userA, `${HOLDINGS_URL}/${id}`, {
+        method: "PATCH",
+        ...jsonBody({ price_lookup_symbol: null, quantity: null }),
+      }),
+      { params: Promise.resolve({ id }) },
+    );
+    expect(response.status).toBe(200);
+    expect(await response.json()).toMatchObject({ price_lookup_symbol: null, quantity: null });
+  });
+
+  it("rejects setting a market symbol without a quantity via PATCH", async () => {
+    const created = await createHolding(userA);
+    const { id } = await created.json();
+
+    const response = await PATCH(
+      requestAs(userA, `${HOLDINGS_URL}/${id}`, {
+        method: "PATCH",
+        ...jsonBody({ price_lookup_symbol: "AAPL" }),
+      }),
+      { params: Promise.resolve({ id }) },
+    );
+    expect(response.status).toBe(400);
   });
 
   it("deletes a Holding", async () => {

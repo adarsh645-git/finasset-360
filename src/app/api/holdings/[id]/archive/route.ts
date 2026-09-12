@@ -1,4 +1,5 @@
 import type { NextRequest } from "next/server";
+import { HOLDING_COLUMNS } from "@/lib/holdings/columns";
 import { createRouteClient, jsonWithCookies, requireUser } from "@/lib/supabase/route";
 
 // POST /api/holdings/[id]/archive — the primary "remove" action for a
@@ -22,7 +23,7 @@ export async function POST(request: NextRequest, context: RouteContext<"/api/hol
     .from("holding")
     .update({ archived_at: new Date().toISOString() })
     .eq("id", id)
-    .select("id, asset_class_id, name, currency, archived_at, created_at")
+    .select(HOLDING_COLUMNS)
     .maybeSingle();
 
   if (error) {

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { AssetClassIcon } from "@/components/icons/AssetClassIcon";
 import { LiabilitiesRootIcon, LiabilityClassIcon } from "@/components/icons/LiabilityClassIcon";
 import { formatMoney } from "@/lib/currency/format";
+import type { PriceCacheRow } from "@/lib/market-data/live-estimate";
 import { computeNetWorth } from "@/lib/net-worth/compute";
 import { buildNetWorthTimeline } from "@/lib/net-worth/timeline";
 import { latestValuationByHolding, latestValuationByLiability } from "@/lib/valuations/latest";
@@ -51,6 +52,7 @@ export function PortfolioShell({
   liabilityClasses,
   liabilities,
   liabilityValuations,
+  priceCache,
 }: {
   userName: string;
   homeCurrency: string;
@@ -65,6 +67,7 @@ export function PortfolioShell({
   liabilityClasses: LiabilityClass[];
   liabilities: Liability[];
   liabilityValuations: LiabilityValuation[];
+  priceCache: PriceCacheRow[];
 }) {
   const router = useRouter();
   const [selectedClassId, setSelectedClassId] = useState<string | null>(null);
@@ -114,6 +117,13 @@ export function PortfolioShell({
   const latestByLiability = useMemo(
     () => latestValuationByLiability(liabilityValuations),
     [liabilityValuations],
+  );
+
+  // Keyed by symbol, not by Holding — the cache is global and shared
+  // across every Holding that happens to track the same symbol (ticket 07).
+  const priceCacheBySymbol = useMemo(
+    () => new Map(priceCache.map((row) => [row.symbol, row])),
+    [priceCache],
   );
 
   // Current Net Worth reads only active owners' latest Valuations (user
@@ -215,12 +225,21 @@ export function PortfolioShell({
     return null;
   }
 
-  async function addHolding(name: string, currency: string): Promise<string | null> {
+  async function addHolding(
+    name: string,
+    currency: string,
+    priceLookup: { price_lookup_symbol: string; quantity: number } | null,
+  ): Promise<string | null> {
     if (!selectedClassId || isLiabilitiesRoot) return "Select an Asset Class first.";
     const failure = await submitJson("/api/holdings", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, currency, asset_class_id: selectedClassId }),
+      body: JSON.stringify({
+        name,
+        currency,
+        asset_class_id: selectedClassId,
+        ...priceLookup,
+      }),
     });
     if (failure) return failure;
     router.refresh();
@@ -494,6 +513,11 @@ export function PortfolioShell({
             assetClasses={assetClasses}
             latestValuation={latestByHolding.get(selectedHolding.id) ?? null}
             history={selectedHoldingHistory}
+            priceCache={
+              selectedHolding.price_lookup_symbol
+                ? (priceCacheBySymbol.get(selectedHolding.price_lookup_symbol) ?? null)
+                : null
+            }
             onRecordValuation={(amount, recordedAt) =>
               recordValuation(selectedHolding.id, amount, recordedAt)
             }
