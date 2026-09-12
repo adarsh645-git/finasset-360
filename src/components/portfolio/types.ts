@@ -72,3 +72,15 @@ export type TargetAllocation = {
   asset_class_id: string;
   target_percent: number;
 };
+
+/** The Projection assumption set (user stories 67, 68, 70, 72) — one active
+ * set per Portfolio, not multiple named scenarios. Rates are decimal
+ * fractions (0.07, not 7), matching `inflation_rate`'s documented default in
+ * docs/SPEC.md. `target_amount`/`target_date` (ticket 13) and
+ * `inflation_rate` (ticket 12) aren't part of this ticket's shape. */
+export type ProjectionAssumptions = {
+  growth_rate: number;
+  monthly_contribution: number;
+  contribution_escalation_rate: number;
+  horizon_years: number;
+};

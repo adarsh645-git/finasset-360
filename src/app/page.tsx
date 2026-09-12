@@ -11,6 +11,7 @@ import type {
   Liability,
   LiabilityClass,
   LiabilityValuation,
+  ProjectionAssumptions,
   TargetAllocation,
 } from "@/components/portfolio/types";
 
@@ -42,6 +43,7 @@ export default async function DashboardPage() {
     { data: liabilityValuations, error: liabilityValuationsError },
     { data: targetAllocations, error: targetAllocationsError },
     { data: priceCache, error: priceCacheError },
+    { data: projection, error: projectionError },
   ] = await Promise.all([
     supabase.from("portfolio").select("user_id, home_currency").single(),
     supabase
@@ -87,6 +89,12 @@ export default async function DashboardPage() {
     supabase
       .from("price_cache")
       .select("symbol, price, price_currency, source, last_error, fetched_at"),
+    // `null` for a User who has never saved the Plan page's Projection
+    // form — there is no auto-created default row, unlike `portfolio`.
+    supabase
+      .from("projection")
+      .select("growth_rate, monthly_contribution, contribution_escalation_rate, horizon_years")
+      .maybeSingle(),
   ]);
 
   if (portfolioError || !portfolio) {
@@ -118,6 +126,9 @@ export default async function DashboardPage() {
   if (priceCacheError) {
     throw new Error(`Could not load the price cache: ${priceCacheError.message}`);
   }
+  if (projectionError) {
+    throw new Error(`Could not load the Projection: ${projectionError.message}`);
+  }
 
   return (
     <PortfolioShell
@@ -132,6 +143,7 @@ export default async function DashboardPage() {
       liabilityValuations={liabilityValuations as LiabilityValuation[]}
       targetAllocations={targetAllocations as TargetAllocation[]}
       priceCache={priceCache as PriceCacheRow[]}
+      projectionAssumptions={projection as ProjectionAssumptions | null}
     />
   );
 }

@@ -2,12 +2,14 @@
 
 import { useState } from "react";
 import { CurrencySelect } from "@/components/CurrencySelect";
+import { formatMoney } from "@/lib/currency/format";
 import { validatePriceLookupInput } from "@/lib/holdings/price-lookup-input";
 import type { PriceCacheRow } from "@/lib/market-data/live-estimate";
+import { projectHoldingValue } from "@/lib/projection/engine";
 import { LiveEstimate } from "./LiveEstimate";
 import { ValuationEditor } from "./ValuationEditor";
 import { ValuationHistoryTable } from "./ValuationHistoryTable";
-import type { AssetClass, Holding, HoldingPatch, HoldingValuation } from "./types";
+import type { AssetClass, Holding, HoldingPatch, HoldingValuation, ProjectionAssumptions } from "./types";
 
 // The rightmost detail panel for a selected Holding — record a Valuation
 // (user stories 22–26), see its full Valuation History (user story 27), see
@@ -21,6 +23,8 @@ export function HoldingDetailPanel({
   latestValuation,
   history,
   priceCache,
+  today,
+  projectionAssumptions,
   onRecordValuation,
   onSave,
   onArchive,
@@ -31,6 +35,10 @@ export function HoldingDetailPanel({
   latestValuation: HoldingValuation | null;
   history: HoldingValuation[];
   priceCache: PriceCacheRow | null;
+  today: string;
+  // `null` until the User has saved the Plan page's Projection form at
+  // least once — the ad-hoc projection below has nothing to run on yet.
+  projectionAssumptions: ProjectionAssumptions | null;
   onRecordValuation: (amount: number, recordedAt: string) => Promise<string | null>;
   onSave: (patch: HoldingPatch) => Promise<string | null>;
   onArchive: () => Promise<string | null>;
@@ -48,6 +56,21 @@ export function HoldingDetailPanel({
   const [error, setError] = useState<string | null>(null);
 
   const priceLookup = validatePriceLookupInput(symbol, quantity);
+
+  // Ad-hoc projection of this one Holding (user story 78) — no contribution
+  // allocated to it, since contributions are portfolio-level; growth alone,
+  // at the Portfolio's own assumption. `null` until both a Valuation and a
+  // saved Projection assumption set exist.
+  let projectedValue: number | null = null;
+  if (projectionAssumptions && latestValuation) {
+    const projectedPoints = projectHoldingValue({
+      today,
+      currentAmount: latestValuation.amount,
+      growthRate: projectionAssumptions.growth_rate,
+      horizonYears: projectionAssumptions.horizon_years,
+    });
+    projectedValue = projectedPoints[projectedPoints.length - 1].amount;
+  }
 
   const isDirty =
     name !== holding.name ||
@@ -114,6 +137,13 @@ export function HoldingDetailPanel({
           holdingCurrency={holding.currency}
           onUse={onRecordValuation}
         />
+      )}
+
+      {projectedValue !== null && projectionAssumptions && (
+        <p className="text-sm text-zinc-600 dark:text-zinc-400">
+          Projected in {projectionAssumptions.horizon_years} years:{" "}
+          {formatMoney(projectedValue, holding.currency)}
+        </p>
       )}
 
       <div className="flex flex-col gap-2">

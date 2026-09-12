@@ -8,6 +8,7 @@ import { formatMoney } from "@/lib/currency/format";
 import type { PriceCacheRow } from "@/lib/market-data/live-estimate";
 import { computeNetWorth } from "@/lib/net-worth/compute";
 import { buildNetWorthTimeline } from "@/lib/net-worth/timeline";
+import { projectNetWorth, type ProjectedNetWorthPoint } from "@/lib/projection/engine";
 import { latestValuationByHolding, latestValuationByLiability } from "@/lib/valuations/latest";
 import { daysAgoLabel, isStale } from "@/lib/valuations/staleness";
 import { AddAssetClassRow } from "./AddAssetClassRow";
@@ -34,6 +35,7 @@ import type {
   LiabilityClass,
   LiabilityPatch,
   LiabilityValuation,
+  ProjectionAssumptions,
   TargetAllocation,
 } from "./types";
 import { submitJson } from "@/lib/http/client";
@@ -57,6 +59,7 @@ export function PortfolioShell({
   liabilityValuations,
   targetAllocations,
   priceCache,
+  projectionAssumptions,
 }: {
   userName: string;
   homeCurrency: string;
@@ -73,6 +76,7 @@ export function PortfolioShell({
   liabilityValuations: LiabilityValuation[];
   targetAllocations: TargetAllocation[];
   priceCache: PriceCacheRow[];
+  projectionAssumptions: ProjectionAssumptions | null;
 }) {
   const router = useRouter();
   // Portfolio and Plan are sibling breadcrumb roots (ticket 09) — Plan
@@ -210,6 +214,40 @@ export function PortfolioShell({
     return computeDistribution(assetClasses, actualAmountByClass, targetPercentByClass);
   }, [assetClasses, activeHoldings, latestByHolding, targetPercentByClass]);
 
+  // The injected "today" the Projection engine runs from (ticket 10's pure
+  // module takes no clock of its own) — computed once per mount rather than
+  // per render, so the chart doesn't silently shift dates while a User sits
+  // on the page.
+  const today = useMemo(() => new Date().toISOString().slice(0, 10), []);
+
+  // Each active Liability held flat at its current home-currency balance —
+  // the engine's whole Liability input until ticket 11 adds Amortization
+  // Assumptions (user story 62).
+  const liabilitiesForProjection = useMemo(
+    () =>
+      activeLiabilities.map((liability) => {
+        const latest = latestByLiability.get(liability.id);
+        return {
+          id: liability.id,
+          currentAmount: latest ? latest.amount * latest.fx_rate_to_home : 0,
+        };
+      }),
+    [activeLiabilities, latestByLiability],
+  );
+
+  // The dashboard's projected line always reads the last *saved* assumption
+  // set — unlike the Plan page's own chart, which the User is actively
+  // editing and which reacts to the unsaved draft instead (ProjectionSection).
+  const projectedFromSavedAssumptions: ProjectedNetWorthPoint[] = useMemo(() => {
+    if (!projectionAssumptions) return [];
+    return projectNetWorth({
+      today,
+      holdingsTotal: netWorth.holdingsTotal,
+      liabilities: liabilitiesForProjection,
+      assumptions: projectionAssumptions,
+    });
+  }, [today, netWorth.holdingsTotal, liabilitiesForProjection, projectionAssumptions]);
+
   function activatePortfolioRoot() {
     setActiveRoot("portfolio");
   }
@@ -225,6 +263,17 @@ export function PortfolioShell({
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ allocations }),
+    });
+    if (failure) return failure;
+    router.refresh();
+    return null;
+  }
+
+  async function saveProjectionAssumptions(assumptions: ProjectionAssumptions): Promise<string | null> {
+    const failure = await submitJson("/api/projection", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(assumptions),
     });
     if (failure) return failure;
     router.refresh();
@@ -507,7 +556,17 @@ export function PortfolioShell({
       <Breadcrumb roots={breadcrumbRoots} segments={breadcrumbSegments} />
       {activeRoot === "plan" ? (
         <div className="flex flex-1 overflow-hidden border-t border-hairline">
-          <PlanPanel rows={distribution} onSaveTargets={saveTargetAllocations} />
+          <PlanPanel
+            rows={distribution}
+            onSaveTargets={saveTargetAllocations}
+            today={today}
+            homeCurrency={homeCurrency}
+            holdingsTotal={netWorth.holdingsTotal}
+            liabilities={liabilitiesForProjection}
+            recordedTimeline={timeline}
+            projectionAssumptions={projectionAssumptions}
+            onSaveProjection={saveProjectionAssumptions}
+          />
         </div>
       ) : (
         <div className="flex flex-1 overflow-hidden border-t border-hairline">
@@ -570,6 +629,8 @@ export function PortfolioShell({
               assetClasses={assetClasses}
               latestValuation={latestByHolding.get(selectedHolding.id) ?? null}
               history={selectedHoldingHistory}
+              today={today}
+              projectionAssumptions={projectionAssumptions}
               priceCache={
                 selectedHolding.price_lookup_symbol
                   ? (priceCacheBySymbol.get(selectedHolding.price_lookup_symbol) ?? null)
@@ -610,6 +671,7 @@ export function PortfolioShell({
               homeCurrency={homeCurrency}
               netWorth={netWorth}
               timeline={timeline}
+              projected={projectedFromSavedAssumptions}
               staleItems={staleItems}
               distribution={distribution}
             />

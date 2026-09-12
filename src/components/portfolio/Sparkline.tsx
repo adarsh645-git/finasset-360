@@ -1,8 +1,9 @@
 // A minimal single-stroke trend line — no charting library, matching this
 // app's near-monochrome visual system (one Asset/Liability Class icon per
-// ticket 03, everything else a plain stroke). Used both for a single
-// Holding's Valuation History and, at a larger size, the dashboard's
-// recorded Net Worth timeline.
+// ticket 03, everything else a plain stroke). Used for a single Holding's
+// Valuation History; the dashboard's Net Worth timeline draws its own SVG
+// (NetWorthTimelineChart) since it needs a second, dashed series and a
+// Today seam that this single-series component doesn't support.
 export function Sparkline({
   values,
   width = 160,

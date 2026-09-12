@@ -4,6 +4,7 @@ import { DistributionBar } from "@/components/plan/DistributionBar";
 import { formatMoney } from "@/lib/currency/format";
 import type { NetWorthSummary } from "@/lib/net-worth/compute";
 import type { NetWorthTimelinePoint } from "@/lib/net-worth/timeline";
+import type { ProjectedNetWorthPoint } from "@/lib/projection/engine";
 import type { AssetClassDistributionRow } from "@/lib/target-allocation/distribution";
 import { NetWorthTimelineChart } from "./NetWorthTimelineChart";
 import { StalenessList, type StaleItem } from "./StalenessList";
@@ -25,12 +26,14 @@ export function DashboardPanel({
   homeCurrency,
   netWorth,
   timeline,
+  projected,
   staleItems,
   distribution,
 }: {
   homeCurrency: string;
   netWorth: NetWorthSummary;
   timeline: NetWorthTimelinePoint[];
+  projected: ProjectedNetWorthPoint[];
   staleItems: StaleItem[];
   distribution: AssetClassDistributionRow[];
 }) {
@@ -49,7 +52,7 @@ export function DashboardPanel({
               {netWorth.asOfDate ? ` · as of ${netWorth.asOfDate}` : ""}
             </p>
           </div>
-          <NetWorthTimelineChart homeCurrency={homeCurrency} timeline={timeline} />
+          <NetWorthTimelineChart homeCurrency={homeCurrency} recorded={timeline} projected={projected} />
         </section>
 
         <section className="flex flex-col gap-3 rounded-lg border border-hairline p-6">
