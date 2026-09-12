@@ -42,9 +42,13 @@ export default async function DashboardPage() {
       .select("id, owner_id, name")
       .order("owner_id", { ascending: true, nullsFirst: true })
       .order("name", { ascending: true }),
+    // Unfiltered by `archived_at` — PortfolioShell needs both the active
+    // set (for the tree and current Net Worth) and the archived rows (so
+    // the recorded Net Worth timeline still reflects the period each was
+    // owned, per ticket 06).
     supabase
       .from("holding")
-      .select("id, asset_class_id, name, currency, created_at")
+      .select("id, asset_class_id, name, currency, archived_at, created_at")
       .order("created_at", { ascending: true }),
     // Newest-first, so latestValuationByHolding can pick the first row seen
     // per Holding as its latest without a separate per-Holding query.
@@ -57,9 +61,10 @@ export default async function DashboardPage() {
       .select("id, owner_id, name")
       .order("owner_id", { ascending: true, nullsFirst: true })
       .order("name", { ascending: true }),
+    // Unfiltered by `archived_at` — mirrors the `holding` query above.
     supabase
       .from("liability")
-      .select("id, liability_class_id, name, currency, created_at")
+      .select("id, liability_class_id, name, currency, archived_at, created_at")
       .order("created_at", { ascending: true }),
     // Newest-first, so latestValuationByLiability can pick the first row
     // seen per Liability as its latest without a separate per-Liability

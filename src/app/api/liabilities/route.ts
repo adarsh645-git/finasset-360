@@ -4,8 +4,9 @@ import { isValidCurrencyCode } from "@/lib/currency/iso4217";
 import { readTrimmedString } from "@/lib/http/body";
 import { createRouteClient, jsonWithCookies, requireUser } from "@/lib/supabase/route";
 
-// GET /api/liabilities — every Liability the signed-in User owns. Mirrors
-// GET /api/holdings — see that route for the RLS reasoning.
+// GET /api/liabilities — every active (non-archived) Liability the
+// signed-in User owns. Mirrors GET /api/holdings — see that route for the
+// RLS and archival reasoning.
 export async function GET(request: NextRequest) {
   const { supabase, responseCookies } = createRouteClient(request);
 
@@ -14,7 +15,8 @@ export async function GET(request: NextRequest) {
 
   const { data, error } = await supabase
     .from("liability")
-    .select("id, liability_class_id, name, currency, created_at")
+    .select("id, liability_class_id, name, currency, archived_at, created_at")
+    .is("archived_at", null)
     .order("created_at", { ascending: true });
 
   if (error) {
@@ -63,7 +65,7 @@ export async function POST(request: NextRequest) {
   const { data, error } = await supabase
     .from("liability")
     .insert({ user_id: auth.user.id, liability_class_id: liabilityClassId, name, currency })
-    .select("id, liability_class_id, name, currency, created_at")
+    .select("id, liability_class_id, name, currency, archived_at, created_at")
     .single();
 
   if (error) {

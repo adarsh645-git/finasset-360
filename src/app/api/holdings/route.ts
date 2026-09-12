@@ -4,9 +4,10 @@ import { isValidCurrencyCode } from "@/lib/currency/iso4217";
 import { readTrimmedString } from "@/lib/http/body";
 import { createRouteClient, jsonWithCookies, requireUser } from "@/lib/supabase/route";
 
-// GET /api/holdings — every Holding the signed-in User owns. RLS
-// (`user_id = auth.uid()`) is what enforces that this can never return
-// another User's Holdings.
+// GET /api/holdings — every active (non-archived) Holding the signed-in
+// User owns. RLS (`user_id = auth.uid()`) is what enforces that this can
+// never return another User's Holdings; the `archived_at` filter is what
+// makes an archived one behave, from here, like it's gone (ticket 06).
 export async function GET(request: NextRequest) {
   const { supabase, responseCookies } = createRouteClient(request);
 
@@ -15,7 +16,8 @@ export async function GET(request: NextRequest) {
 
   const { data, error } = await supabase
     .from("holding")
-    .select("id, asset_class_id, name, currency, created_at")
+    .select("id, asset_class_id, name, currency, archived_at, created_at")
+    .is("archived_at", null)
     .order("created_at", { ascending: true });
 
   if (error) {
@@ -64,7 +66,7 @@ export async function POST(request: NextRequest) {
   const { data, error } = await supabase
     .from("holding")
     .insert({ user_id: auth.user.id, asset_class_id: assetClassId, name, currency })
-    .select("id, asset_class_id, name, currency, created_at")
+    .select("id, asset_class_id, name, currency, archived_at, created_at")
     .single();
 
   if (error) {

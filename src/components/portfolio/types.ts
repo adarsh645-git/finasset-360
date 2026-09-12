@@ -9,6 +9,7 @@ export type Holding = {
   asset_class_id: string;
   name: string;
   currency: string;
+  archived_at: string | null;
   created_at: string;
 };
 
@@ -38,6 +39,7 @@ export type Liability = {
   liability_class_id: string;
   name: string;
   currency: string;
+  archived_at: string | null;
   created_at: string;
 };
 

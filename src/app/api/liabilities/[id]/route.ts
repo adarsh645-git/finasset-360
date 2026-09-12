@@ -59,7 +59,7 @@ export async function PATCH(request: NextRequest, context: RouteContext<"/api/li
     .from("liability")
     .update(update)
     .eq("id", id)
-    .select("id, liability_class_id, name, currency, created_at")
+    .select("id, liability_class_id, name, currency, archived_at, created_at")
     .maybeSingle();
 
   if (error) {
@@ -73,9 +73,11 @@ export async function PATCH(request: NextRequest, context: RouteContext<"/api/li
   return jsonWithCookies(data, { status: 200 }, responseCookies);
 }
 
-// DELETE /api/liabilities/[id] — a true delete (ticket 06 adds archival as
-// the primary removal path, mirroring Holding). RLS means this can never
-// delete another User's Liability regardless of what id is passed.
+// DELETE /api/liabilities/[id] — a true delete, cascading its Valuations.
+// Mirrors DELETE /api/holdings/[id]: not the primary removal path (see
+// POST /api/liabilities/[id]/archive), only for correcting a mistake. RLS
+// means this can never delete another User's Liability regardless of what
+// id is passed.
 export async function DELETE(request: NextRequest, context: RouteContext<"/api/liabilities/[id]">) {
   const { supabase, responseCookies } = createRouteClient(request);
 

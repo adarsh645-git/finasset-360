@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react";
 import { formatMoney } from "@/lib/currency/format";
+import { daysAgoLabel, isStale } from "@/lib/valuations/staleness";
 
 function todayIsoDate(): string {
   return new Date().toISOString().slice(0, 10);
@@ -99,11 +100,17 @@ export function ValuationEditor({
     }
   }
 
+  // Days-since is shown wherever a Valuation appears (user story 29) — here,
+  // that's the "as of" line itself, once there's a recorded date to count
+  // from rather than the pending backdate the User is still typing.
+  const latestIsStale = latestValuation ? isStale(latestValuation.recorded_at) : false;
   const asOfLabel =
     recordedAt !== today
       ? `Recording for ${recordedAt}`
       : latestValuation
-        ? `as of ${latestValuation.recorded_at === today ? "today" : latestValuation.recorded_at}`
+        ? latestValuation.recorded_at === today
+          ? "as of today"
+          : `as of ${latestValuation.recorded_at} (${daysAgoLabel(latestValuation.recorded_at)})`
         : "No Valuation yet";
 
   return (
@@ -146,7 +153,9 @@ export function ValuationEditor({
         <button
           type="button"
           onClick={() => setIsEditingDate(true)}
-          className="w-fit text-left text-xs text-zinc-500 hover:text-foreground dark:text-zinc-400"
+          className={`w-fit text-left text-xs hover:text-foreground ${
+            latestIsStale ? "text-zinc-400 dark:text-zinc-600" : "text-zinc-500 dark:text-zinc-400"
+          }`}
         >
           {asOfLabel} ▾
         </button>

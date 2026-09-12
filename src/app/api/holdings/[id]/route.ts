@@ -59,7 +59,7 @@ export async function PATCH(request: NextRequest, context: RouteContext<"/api/ho
     .from("holding")
     .update(update)
     .eq("id", id)
-    .select("id, asset_class_id, name, currency, created_at")
+    .select("id, asset_class_id, name, currency, archived_at, created_at")
     .maybeSingle();
 
   if (error) {
@@ -73,8 +73,9 @@ export async function PATCH(request: NextRequest, context: RouteContext<"/api/ho
   return jsonWithCookies(data, { status: 200 }, responseCookies);
 }
 
-// DELETE /api/holdings/[id] — a true delete (ticket 06 adds archival as the
-// primary removal path; this ticket has no archive column yet). RLS
+// DELETE /api/holdings/[id] — a true delete, cascading its Valuations. Not
+// the primary removal path (see POST /api/holdings/[id]/archive for that);
+// this exists for correcting a mistaken entry (user story 21). RLS
 // (`user_id = auth.uid()`) means this can never delete another User's
 // Holding regardless of what id is passed.
 export async function DELETE(request: NextRequest, context: RouteContext<"/api/holdings/[id]">) {
