@@ -1,5 +1,5 @@
 Type: build
-Status: ready-for-agent
+Status: resolved
 
 # 09: Target Allocation and the Plan page
 
@@ -11,12 +11,12 @@ Spec: [`docs/SPEC.md`](../../../docs/SPEC.md) — user stories 52–54, 112–11
 
 **Blocked by:** 04.
 
-- [ ] `target_allocation` keyed on `(user_id, asset_class_id)` with `target_percent`, `on delete cascade` from Asset Class (a current-state goal has no historical significance)
-- [ ] Plan is the second breadcrumb root, sibling to Portfolio
-- [ ] Target Allocation editor: percent per Asset Class, actual shown beside it, running total
-- [ ] The running total makes a set that doesn't sum to 100 visible; it is not silently normalised
-- [ ] Dashboard distribution bars in tree order with a target tick on the same track
-- [ ] The gap is shown in home-currency money as well as percent
-- [ ] Two-column dashboard above ~1200px — headline and timeline beside allocation, staleness and Start Check-in — stacking below
-- [ ] Allocation tracks keep a minimum width so the target tick stays visible when labels and figures are wide (this regressed once in prototyping and defeated the chart's purpose)
-- [ ] Test: User A cannot read or write User B's Target Allocation
+- [x] `target_allocation` keyed on `(user_id, asset_class_id)` with `target_percent`, `on delete cascade` from Asset Class (a current-state goal has no historical significance)
+- [x] Plan is the second breadcrumb root, sibling to Portfolio
+- [x] Target Allocation editor: percent per Asset Class, actual shown beside it, running total
+- [x] The running total makes a set that doesn't sum to 100 visible; it is not silently normalised
+- [x] Dashboard distribution bars in tree order with a target tick on the same track
+- [x] The gap is shown in home-currency money as well as percent
+- [x] Two-column dashboard above ~1200px — headline and timeline beside allocation, staleness and Start Check-in — stacking below. "Start Check-in" is ticket 08's button, not yet built as of this ticket, so the stacked section below the grid currently holds only staleness; ticket 08 should slot its button in there.
+- [x] Allocation tracks keep a minimum width so the target tick stays visible when labels and figures are wide (this regressed once in prototyping and defeated the chart's purpose)
+- [x] Test: User A cannot read or write User B's Target Allocation
