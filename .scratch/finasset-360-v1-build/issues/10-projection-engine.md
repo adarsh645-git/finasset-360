@@ -1,5 +1,5 @@
 Type: build
-Status: ready-for-agent
+Status: resolved
 
 # 10: Projection: growth, contribution, escalation
 
@@ -31,16 +31,16 @@ Spec: [`docs/SPEC.md`](../../../docs/SPEC.md) — user stories 62, 67–73, 77�
 
 **Blocked by:** 05, 06, 09.
 
-- [ ] `projection` is a singleton per Portfolio (`user_id` primary key) holding assumptions only — one active set, not multiple named scenarios
-- [ ] Growth rate, `monthly_contribution` (a **scalar**), `contribution_escalation_rate` defaulting to **0**, horizon in years
-- [ ] Helper text on the contribution field prompting for the employer match (the single largest thing people forget, worth 9%)
-- [ ] The engine is a pure module: plain data in, plain data out, no I/O, with an injected "today"
-- [ ] Holdings total projected; each Liability projected on its own rule; netted per year. **Liabilities with no loan details are held exactly flat** — the projection invents no payoff schedule the User never entered
-- [ ] Nothing is persisted: the trajectory is derived live, like Net Worth itself
-- [ ] Ad-hoc projection of a single Holding's value (no contribution allocation — contributions are portfolio-level)
-- [ ] Projected line on the timeline with a Today seam; assumptions block on the Plan page
-- [ ] The projection recomputes live as an assumption is edited, without blanking the pane
-- [ ] Test: the closed form matches an independent **month-by-month simulation** to a stated tolerance. Ticket 12 of the planning effort verified agreement to 1×10⁻⁷ across 21 segments — carry that simulation in as a reference implementation, not as a recorded snapshot of the code's own output
-- [ ] Test: segmentation from escalation, asserted across a multi-segment case
-- [ ] Test: a Liability with no Amortization Assumptions stays exactly flat across the horizon
-- [ ] Test: degenerate inputs — zero horizon, **zero growth (which divides by `r`)**, no Liabilities, no Holdings
+- [x] `projection` is a singleton per Portfolio (`user_id` primary key) holding assumptions only — one active set, not multiple named scenarios
+- [x] Growth rate, `monthly_contribution` (a **scalar**), `contribution_escalation_rate` defaulting to **0**, horizon in years
+- [x] Helper text on the contribution field prompting for the employer match (the single largest thing people forget, worth 9%)
+- [x] The engine is a pure module: plain data in, plain data out, no I/O, with an injected "today"
+- [x] Holdings total projected; each Liability projected on its own rule; netted per year. **Liabilities with no loan details are held exactly flat** — the projection invents no payoff schedule the User never entered. (No Liability has loan details yet — those fields are ticket 11's — so "held flat" is this ticket's entire Liability behavior.)
+- [x] Nothing is persisted: the trajectory is derived live, like Net Worth itself
+- [x] Ad-hoc projection of a single Holding's value (no contribution allocation — contributions are portfolio-level) — shown in HoldingDetailPanel
+- [x] Projected line on the timeline with a Today seam; assumptions block on the Plan page — the dashboard's timeline gets the same treatment, reading the last-saved assumption set
+- [x] The projection recomputes live as an assumption is edited, without blanking the pane
+- [x] Test: the closed form matches an independent **month-by-month simulation** to a stated tolerance. Ticket 12 of the planning effort verified agreement to 1×10⁻⁷ across 21 segments — carry that simulation in as a reference implementation, not as a recorded snapshot of the code's own output
+- [x] Test: segmentation from escalation, asserted across a multi-segment case
+- [x] Test: a Liability with no Amortization Assumptions stays exactly flat across the horizon
+- [x] Test: degenerate inputs — zero horizon, **zero growth (which divides by `r`)**, no Liabilities, no Holdings
