@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { firstNameOrEmail } from "@/lib/auth/display-name";
 import { createClient } from "@/lib/supabase/server";
 import { PortfolioShell } from "@/components/portfolio/PortfolioShell";
 import type {
@@ -101,7 +102,7 @@ export default async function DashboardPage() {
 
   return (
     <PortfolioShell
-      userEmail={user.email ?? ""}
+      userName={firstNameOrEmail(user)}
       homeCurrency={portfolio.home_currency}
       currentUserId={user.id}
       assetClasses={assetClasses as AssetClass[]}

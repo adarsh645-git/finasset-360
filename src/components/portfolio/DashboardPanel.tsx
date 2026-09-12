@@ -11,13 +11,11 @@ import { StalenessList, type StaleItem } from "./StalenessList";
 // component breakdown and as-of date (user stories 48–49), the recorded Net
 // Worth timeline (user story 55), and the staleness list (user story 31).
 export function DashboardPanel({
-  userEmail,
   homeCurrency,
   netWorth,
   timeline,
   staleItems,
 }: {
-  userEmail: string;
   homeCurrency: string;
   netWorth: NetWorthSummary;
   timeline: NetWorthTimelinePoint[];
@@ -25,11 +23,6 @@ export function DashboardPanel({
 }) {
   return (
     <div className="flex flex-1 flex-col gap-8 overflow-y-auto px-8 py-8">
-      <header>
-        <h1 className="text-xl font-semibold tracking-tight">FinAsset 360</h1>
-        <p className="text-sm text-zinc-600 dark:text-zinc-400">{userEmail}</p>
-      </header>
-
       <section className="flex flex-col gap-3 rounded-lg border border-hairline p-6">
         <div>
           <h2 className="text-sm font-medium text-zinc-500 dark:text-zinc-400">Net Worth</h2>

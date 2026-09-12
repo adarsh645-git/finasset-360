@@ -42,7 +42,7 @@ import { submitJson } from "@/lib/http/client";
 const LIABILITIES_ROOT_ID = "liabilities-root";
 
 export function PortfolioShell({
-  userEmail,
+  userName,
   homeCurrency,
   currentUserId,
   assetClasses,
@@ -52,7 +52,7 @@ export function PortfolioShell({
   liabilities,
   liabilityValuations,
 }: {
-  userEmail: string;
+  userName: string;
   homeCurrency: string;
   currentUserId: string;
   assetClasses: AssetClass[];
@@ -432,7 +432,7 @@ export function PortfolioShell({
 
   return (
     <div className="flex flex-1 flex-col">
-      <NetWorthStrip homeCurrency={homeCurrency} netWorth={netWorth} />
+      <NetWorthStrip homeCurrency={homeCurrency} netWorth={netWorth} userName={userName} />
       <Breadcrumb segments={breadcrumbSegments} />
       <div className="flex flex-1 overflow-hidden border-t border-hairline">
         <MillerColumn
@@ -526,7 +526,6 @@ export function PortfolioShell({
           />
         ) : (
           <DashboardPanel
-            userEmail={userEmail}
             homeCurrency={homeCurrency}
             netWorth={netWorth}
             timeline={timeline}
