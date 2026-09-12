@@ -5,8 +5,7 @@ import type { NetWorthSummary } from "@/lib/net-worth/compute";
 
 // Shown in the rightmost column when nothing is selected (user story 98) —
 // the ticket 01 dashboard content plus the Net Worth headline with its
-// component breakdown and as-of date (user stories 48–49). Liabilities
-// don't exist yet (ticket 05), so the breakdown is Holdings-only for now.
+// component breakdown and as-of date (user stories 48–49).
 export function DashboardPanel({
   userEmail,
   homeCurrency,
@@ -29,7 +28,8 @@ export function DashboardPanel({
           {formatMoney(netWorth.netWorth, homeCurrency)}
         </p>
         <p className="text-sm text-zinc-600 dark:text-zinc-400">
-          Holdings {formatMoney(netWorth.holdingsTotal, homeCurrency)}
+          Holdings {formatMoney(netWorth.holdingsTotal, homeCurrency)} · Liabilities{" "}
+          {formatMoney(netWorth.liabilitiesTotal, homeCurrency)}
           {netWorth.asOfDate ? ` · as of ${netWorth.asOfDate}` : ""}
         </p>
       </section>
@@ -38,7 +38,7 @@ export function DashboardPanel({
         <div>
           <h2 className="text-lg font-medium">Your Portfolio</h2>
           <p className="text-sm text-zinc-600 dark:text-zinc-400">
-            Select an Asset Class on the left to browse your Holdings, or add one to get started.
+            Select an Asset Class or Liabilities on the left to browse, or add one to get started.
           </p>
         </div>
         <HomeCurrencyPicker currentCurrency={homeCurrency} />

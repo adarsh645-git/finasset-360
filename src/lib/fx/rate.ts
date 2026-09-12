@@ -24,18 +24,20 @@ async function fetchLiveFxRate(from: string, to: string): Promise<number | null>
   }
 }
 
+type LastKnownRate = { rate: number; recordedAt: string };
+
 /** This User's most recently recorded `fx_rate_to_home` for this exact
- * currency pair, across any of their Holdings — the fallback used only when
- * the live API is unreachable, so a provider outage never blocks recording
- * a Valuation. */
-async function lastKnownFxRate(
+ * currency pair, across any of their Holdings — one of two fallback sources
+ * used only when the live API is unreachable, so a provider outage never
+ * blocks recording a Valuation. */
+async function lastKnownHoldingFxRate(
   supabase: SupabaseClient,
   from: string,
   to: string,
-): Promise<number | null> {
+): Promise<LastKnownRate | null> {
   const { data } = await supabase
     .from("holding_valuation")
-    .select("fx_rate_to_home, holding:holding_id!inner(currency)")
+    .select("fx_rate_to_home, recorded_at, holding:holding_id!inner(currency)")
     .eq("home_currency_at_recording", to)
     .eq("holding.currency", from)
     .order("recorded_at", { ascending: false })
@@ -43,7 +45,46 @@ async function lastKnownFxRate(
     .maybeSingle();
 
   const rate = Number(data?.fx_rate_to_home);
-  return Number.isFinite(rate) ? rate : null;
+  return Number.isFinite(rate) ? { rate, recordedAt: data!.recorded_at } : null;
+}
+
+/** Same fallback as `lastKnownHoldingFxRate`, across this User's Liabilities
+ * instead — a Liability's currency may never have appeared on a Holding, so
+ * recording a Liability balance needs its own fallback source too. */
+async function lastKnownLiabilityFxRate(
+  supabase: SupabaseClient,
+  from: string,
+  to: string,
+): Promise<LastKnownRate | null> {
+  const { data } = await supabase
+    .from("liability_valuation")
+    .select("fx_rate_to_home, recorded_at, liability:liability_id!inner(currency)")
+    .eq("home_currency_at_recording", to)
+    .eq("liability.currency", from)
+    .order("recorded_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  const rate = Number(data?.fx_rate_to_home);
+  return Number.isFinite(rate) ? { rate, recordedAt: data!.recorded_at } : null;
+}
+
+/** The more recent of the two fallback sources, or whichever one exists,
+ * or `null` if neither has ever recorded this currency pair. */
+async function lastKnownFxRate(
+  supabase: SupabaseClient,
+  from: string,
+  to: string,
+): Promise<number | null> {
+  const [holdingRate, liabilityRate] = await Promise.all([
+    lastKnownHoldingFxRate(supabase, from, to),
+    lastKnownLiabilityFxRate(supabase, from, to),
+  ]);
+
+  if (holdingRate && liabilityRate) {
+    return holdingRate.recordedAt >= liabilityRate.recordedAt ? holdingRate.rate : liabilityRate.rate;
+  }
+  return (holdingRate ?? liabilityRate)?.rate ?? null;
 }
 
 /** The rate to convert an amount in `from` into `to`, captured at the

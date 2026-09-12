@@ -26,3 +26,30 @@ export type HoldingValuation = {
   home_currency_at_recording: string;
   recorded_at: string;
 };
+
+export type LiabilityClass = {
+  id: string;
+  owner_id: string | null;
+  name: string;
+};
+
+export type Liability = {
+  id: string;
+  liability_class_id: string;
+  name: string;
+  currency: string;
+  created_at: string;
+};
+
+/** The editable fields of a Liability — name, Liability Class, and currency
+ * — mirrors HoldingPatch. */
+export type LiabilityPatch = Pick<Liability, "name" | "liability_class_id" | "currency">;
+
+export type LiabilityValuation = {
+  id: string;
+  liability_id: string;
+  amount: number;
+  fx_rate_to_home: number;
+  home_currency_at_recording: string;
+  recorded_at: string;
+};

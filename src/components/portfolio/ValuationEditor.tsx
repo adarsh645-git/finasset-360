@@ -2,25 +2,30 @@
 
 import { useRef, useState } from "react";
 import { formatMoney } from "@/lib/currency/format";
-import type { HoldingValuation } from "./types";
 
 function todayIsoDate(): string {
   return new Date().toISOString().slice(0, 10);
 }
 
-// Click-to-edit recording of a Holding's Valuation — the value itself is
-// the control (user stories 22–24): click it, type a number, Enter or blur
-// records a Valuation dated today. The "as of" line beneath doubles as the
-// backdating affordance — click it to swap in a date picker before typing
-// the amount — so the common case (today, no backdating) never shows a
-// date field at all.
+/** Only the fields this editor actually reads — both HoldingValuation and
+ * LiabilityValuation satisfy this structurally, since recording a
+ * Liability's balance works identically to recording a Holding's value
+ * (ticket 05). */
+type RecordedValuation = { amount: number; recorded_at: string };
+
+// Click-to-edit recording of a Holding's or Liability's Valuation — the
+// value itself is the control (user stories 22–24, 28): click it, type a
+// number, Enter or blur records a Valuation dated today. The "as of" line
+// beneath doubles as the backdating affordance — click it to swap in a date
+// picker before typing the amount — so the common case (today, no
+// backdating) never shows a date field at all.
 export function ValuationEditor({
   currency,
   latestValuation,
   onRecord,
 }: {
   currency: string;
-  latestValuation: HoldingValuation | null;
+  latestValuation: RecordedValuation | null;
   onRecord: (amount: number, recordedAt: string) => Promise<string | null>;
 }) {
   const today = todayIsoDate();

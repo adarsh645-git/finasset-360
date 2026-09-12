@@ -1,11 +1,23 @@
 import { describe, expect, it } from "vitest";
-import { latestValuationByHolding } from "@/lib/valuations/latest";
-import type { HoldingValuation } from "@/components/portfolio/types";
+import { latestValuationByHolding, latestValuationByLiability } from "@/lib/valuations/latest";
+import type { HoldingValuation, LiabilityValuation } from "@/components/portfolio/types";
 
 function valuation(overrides: Partial<HoldingValuation>): HoldingValuation {
   return {
     id: "v1",
     holding_id: "h1",
+    amount: 100,
+    fx_rate_to_home: 1,
+    home_currency_at_recording: "USD",
+    recorded_at: "2026-09-01",
+    ...overrides,
+  };
+}
+
+function liabilityValuation(overrides: Partial<LiabilityValuation>): LiabilityValuation {
+  return {
+    id: "v1",
+    liability_id: "l1",
     amount: 100,
     fx_rate_to_home: 1,
     home_currency_at_recording: "USD",
@@ -33,6 +45,32 @@ describe("latestValuationByHolding", () => {
     const forB = valuation({ id: "vb", holding_id: "b", recorded_at: "2026-09-06" });
 
     const latest = latestValuationByHolding([forB, forA]);
+
+    expect(latest.size).toBe(2);
+    expect(latest.get("a")).toBe(forA);
+    expect(latest.get("b")).toBe(forB);
+  });
+});
+
+describe("latestValuationByLiability", () => {
+  it("returns an empty map for an empty list", () => {
+    expect(latestValuationByLiability([]).size).toBe(0);
+  });
+
+  it("picks the first row seen per Liability, given newest-first input", () => {
+    const newer = liabilityValuation({ id: "v2", recorded_at: "2026-09-10", amount: 200 });
+    const older = liabilityValuation({ id: "v1", recorded_at: "2026-09-01", amount: 100 });
+
+    const latest = latestValuationByLiability([newer, older]);
+
+    expect(latest.get("l1")).toBe(newer);
+  });
+
+  it("keeps one entry per distinct Liability", () => {
+    const forA = liabilityValuation({ id: "va", liability_id: "a", recorded_at: "2026-09-05" });
+    const forB = liabilityValuation({ id: "vb", liability_id: "b", recorded_at: "2026-09-06" });
+
+    const latest = latestValuationByLiability([forB, forA]);
 
     expect(latest.size).toBe(2);
     expect(latest.get("a")).toBe(forA);
