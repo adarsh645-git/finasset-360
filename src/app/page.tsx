@@ -9,14 +9,16 @@ import type {
   Liability,
   LiabilityClass,
   LiabilityValuation,
+  TargetAllocation,
 } from "@/components/portfolio/types";
 
 // The Miller-column shell (ticket 03, extended by ticket 05 for the
-// Liabilities branch): Portfolio is the breadcrumb root, Asset/Liability
-// Classes and Holdings/Liabilities are fetched once here as Server
-// Components data, and PortfolioShell owns which column is selected and
-// renders the rightmost detail panel (or the dashboard, when nothing is
-// selected — user story 98).
+// Liabilities branch and ticket 09 for the Plan sibling root): Portfolio
+// and Plan are the two breadcrumb roots, Asset/Liability Classes,
+// Holdings/Liabilities, and Target Allocation are fetched once here as
+// Server Components data, and PortfolioShell owns which root and column is
+// selected and renders the rightmost detail panel (or the dashboard, when
+// nothing is selected — user story 98).
 export default async function DashboardPage() {
   const supabase = await createClient();
 
@@ -36,6 +38,7 @@ export default async function DashboardPage() {
     { data: liabilityClasses, error: liabilityClassesError },
     { data: liabilities, error: liabilitiesError },
     { data: liabilityValuations, error: liabilityValuationsError },
+    { data: targetAllocations, error: targetAllocationsError },
   ] = await Promise.all([
     supabase.from("portfolio").select("user_id, home_currency").single(),
     supabase
@@ -74,6 +77,7 @@ export default async function DashboardPage() {
       .from("liability_valuation")
       .select("id, liability_id, amount, fx_rate_to_home, home_currency_at_recording, recorded_at")
       .order("recorded_at", { ascending: false }),
+    supabase.from("target_allocation").select("asset_class_id, target_percent"),
   ]);
 
   if (portfolioError || !portfolio) {
@@ -99,6 +103,9 @@ export default async function DashboardPage() {
   if (liabilityValuationsError) {
     throw new Error(`Could not load Liability Valuations: ${liabilityValuationsError.message}`);
   }
+  if (targetAllocationsError) {
+    throw new Error(`Could not load Target Allocation: ${targetAllocationsError.message}`);
+  }
 
   return (
     <PortfolioShell
@@ -111,6 +118,7 @@ export default async function DashboardPage() {
       liabilityClasses={liabilityClasses as LiabilityClass[]}
       liabilities={liabilities as Liability[]}
       liabilityValuations={liabilityValuations as LiabilityValuation[]}
+      targetAllocations={targetAllocations as TargetAllocation[]}
     />
   );
 }

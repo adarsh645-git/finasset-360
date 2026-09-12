@@ -55,3 +55,10 @@ export type LiabilityValuation = {
   home_currency_at_recording: string;
   recorded_at: string;
 };
+
+/** A User's goal percent for one Asset Class (user stories 52–54, 112–113).
+ * Asset Class only — there is no Liability Class equivalent. */
+export type TargetAllocation = {
+  asset_class_id: string;
+  target_percent: number;
+};

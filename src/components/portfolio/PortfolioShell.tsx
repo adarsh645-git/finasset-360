@@ -22,6 +22,7 @@ import { LiabilityClassDetailPanel } from "./LiabilityClassDetailPanel";
 import { LiabilityDetailPanel } from "./LiabilityDetailPanel";
 import { MillerColumn, type MillerRow } from "./MillerColumn";
 import { NetWorthStrip } from "./NetWorthStrip";
+import { PlanPanel } from "@/components/plan/PlanPanel";
 import type { StaleItem } from "./StalenessList";
 import type {
   AssetClass,
@@ -32,8 +33,10 @@ import type {
   LiabilityClass,
   LiabilityPatch,
   LiabilityValuation,
+  TargetAllocation,
 } from "./types";
 import { submitJson } from "@/lib/http/client";
+import { computeDistribution, sumHoldingsByAssetClass } from "@/lib/target-allocation/distribution";
 
 // Column 1's sentinel row id for the "Liabilities" top-level branch (user
 // story 56) — distinct from any real Asset Class id (those are uuids), so
@@ -51,6 +54,7 @@ export function PortfolioShell({
   liabilityClasses,
   liabilities,
   liabilityValuations,
+  targetAllocations,
 }: {
   userName: string;
   homeCurrency: string;
@@ -65,8 +69,13 @@ export function PortfolioShell({
   liabilityClasses: LiabilityClass[];
   liabilities: Liability[];
   liabilityValuations: LiabilityValuation[];
+  targetAllocations: TargetAllocation[];
 }) {
   const router = useRouter();
+  // Portfolio and Plan are sibling breadcrumb roots (ticket 09) — Plan
+  // carries no further drill-down of its own, so it needs no selection
+  // state beyond which root is active.
+  const [activeRoot, setActiveRoot] = useState<"portfolio" | "plan">("portfolio");
   const [selectedClassId, setSelectedClassId] = useState<string | null>(null);
   const [selectedHoldingId, setSelectedHoldingId] = useState<string | null>(null);
   const [selectedLiabilityClassId, setSelectedLiabilityClassId] = useState<string | null>(null);
@@ -176,6 +185,41 @@ export function PortfolioShell({
     });
     return [...staleHoldings, ...staleLiabilities].sort((a, b) => (a.recordedAt < b.recordedAt ? -1 : 1));
   }, [activeHoldings, activeLiabilities, latestByHolding, latestByLiability]);
+
+  // Distribution across Asset Classes (user stories 52–54, 112–113) — the
+  // same computed rows feed both the dashboard's bars and the Plan page's
+  // editor, since "actual" means the same thing in both places. Built from
+  // `activeHoldings` only: an archived Holding no longer counts toward
+  // today's distribution, mirroring current Net Worth above.
+  const targetPercentByClass = useMemo(
+    () => new Map(targetAllocations.map((t) => [t.asset_class_id, t.target_percent])),
+    [targetAllocations],
+  );
+  const distribution = useMemo(() => {
+    const actualAmountByClass = sumHoldingsByAssetClass(activeHoldings, latestByHolding);
+    return computeDistribution(assetClasses, actualAmountByClass, targetPercentByClass);
+  }, [assetClasses, activeHoldings, latestByHolding, targetPercentByClass]);
+
+  function activatePortfolioRoot() {
+    setActiveRoot("portfolio");
+  }
+
+  function activatePlanRoot() {
+    setActiveRoot("plan");
+  }
+
+  async function saveTargetAllocations(
+    allocations: Array<{ asset_class_id: string; target_percent: number }>,
+  ): Promise<string | null> {
+    const failure = await submitJson("/api/target-allocation", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ allocations }),
+    });
+    if (failure) return failure;
+    router.refresh();
+    return null;
+  }
 
   function selectRoot(id: string) {
     setSelectedClassId(id);
@@ -406,133 +450,148 @@ export function PortfolioShell({
     };
   });
 
-  const breadcrumbSegments = [
-    { label: "Portfolio", onClick: goToPortfolioRoot },
-    ...(isLiabilitiesRoot
-      ? [
-          {
-            label: "Liabilities",
-            onClick: () => {
-              setSelectedLiabilityClassId(null);
-              setSelectedLiabilityId(null);
+  // Plan has no further drill-down of its own (ticket 09), so it only ever
+  // contributes the empty continuation — the breadcrumb roots below are
+  // Plan's entire trail.
+  const breadcrumbSegments =
+    activeRoot === "plan"
+      ? []
+      : isLiabilitiesRoot
+        ? [
+            {
+              label: "Liabilities",
+              onClick: () => {
+                setSelectedLiabilityClassId(null);
+                setSelectedLiabilityId(null);
+              },
             },
-          },
-          ...(selectedLiabilityClass
-            ? [{ label: selectedLiabilityClass.name, onClick: () => setSelectedLiabilityId(null) }]
-            : []),
-          ...(selectedLiability ? [{ label: selectedLiability.name }] : []),
-        ]
-      : [
-          ...(selectedClass
-            ? [{ label: selectedClass.name, onClick: () => setSelectedHoldingId(null) }]
-            : []),
-          ...(selectedHolding ? [{ label: selectedHolding.name }] : []),
-        ]),
+            ...(selectedLiabilityClass
+              ? [{ label: selectedLiabilityClass.name, onClick: () => setSelectedLiabilityId(null) }]
+              : []),
+            ...(selectedLiability ? [{ label: selectedLiability.name }] : []),
+          ]
+        : [
+            ...(selectedClass
+              ? [{ label: selectedClass.name, onClick: () => setSelectedHoldingId(null) }]
+              : []),
+            ...(selectedHolding ? [{ label: selectedHolding.name }] : []),
+          ];
+
+  const breadcrumbRoots = [
+    { label: "Portfolio", isActive: activeRoot === "portfolio", onSelect: activatePortfolioRoot },
+    { label: "Plan", isActive: activeRoot === "plan", onSelect: activatePlanRoot },
   ];
 
   return (
     <div className="flex flex-1 flex-col">
       <NetWorthStrip homeCurrency={homeCurrency} netWorth={netWorth} userName={userName} />
-      <Breadcrumb segments={breadcrumbSegments} />
-      <div className="flex flex-1 overflow-hidden border-t border-hairline">
-        <MillerColumn
-          label="Portfolio"
-          rows={classRows}
-          selectedId={selectedClassId}
-          onSelect={selectRoot}
-          footer={<AddAssetClassRow onAdd={addAssetClass} />}
-        />
-
-        {isLiabilitiesRoot && (
+      <Breadcrumb roots={breadcrumbRoots} segments={breadcrumbSegments} />
+      {activeRoot === "plan" ? (
+        <div className="flex flex-1 overflow-hidden border-t border-hairline">
+          <PlanPanel rows={distribution} onSaveTargets={saveTargetAllocations} />
+        </div>
+      ) : (
+        <div className="flex flex-1 overflow-hidden border-t border-hairline">
           <MillerColumn
-            label="Liability Classes"
-            rows={liabilityClassRows}
-            selectedId={selectedLiabilityClassId}
-            onSelect={selectLiabilityClass}
-            footer={<AddLiabilityClassRow onAdd={addLiabilityClass} />}
+            label="Portfolio"
+            rows={classRows}
+            selectedId={selectedClassId}
+            onSelect={selectRoot}
+            footer={<AddAssetClassRow onAdd={addAssetClass} />}
           />
-        )}
 
-        {isLiabilitiesRoot && selectedLiabilityClass && (
-          <MillerColumn
-            label="Liabilities"
-            rows={liabilityRows}
-            selectedId={selectedLiabilityId}
-            onSelect={setSelectedLiabilityId}
-            footer={<AddLiabilityRow onAdd={addLiability} />}
-          />
-        )}
+          {isLiabilitiesRoot && (
+            <MillerColumn
+              label="Liability Classes"
+              rows={liabilityClassRows}
+              selectedId={selectedLiabilityClassId}
+              onSelect={selectLiabilityClass}
+              footer={<AddLiabilityClassRow onAdd={addLiabilityClass} />}
+            />
+          )}
 
-        {selectedClass && (
-          <MillerColumn
-            label="Holdings"
-            rows={holdingRows}
-            selectedId={selectedHoldingId}
-            onSelect={setSelectedHoldingId}
-            footer={<AddHoldingRow onAdd={addHolding} />}
-          />
-        )}
+          {isLiabilitiesRoot && selectedLiabilityClass && (
+            <MillerColumn
+              label="Liabilities"
+              rows={liabilityRows}
+              selectedId={selectedLiabilityId}
+              onSelect={setSelectedLiabilityId}
+              footer={<AddLiabilityRow onAdd={addLiability} />}
+            />
+          )}
 
-        {selectedLiability ? (
-          <LiabilityDetailPanel
-            key={selectedLiability.id}
-            liability={selectedLiability}
-            liabilityClasses={liabilityClasses}
-            latestValuation={latestByLiability.get(selectedLiability.id) ?? null}
-            history={selectedLiabilityHistory}
-            onRecordValuation={(amount, recordedAt) =>
-              recordLiabilityValuation(selectedLiability.id, amount, recordedAt)
-            }
-            onSave={(patch) => saveLiability(selectedLiability.id, patch)}
-            onArchive={() => archiveLiability(selectedLiability.id)}
-            onDelete={() => deleteLiability(selectedLiability.id)}
-          />
-        ) : selectedHolding ? (
-          <HoldingDetailPanel
-            key={selectedHolding.id}
-            holding={selectedHolding}
-            assetClasses={assetClasses}
-            latestValuation={latestByHolding.get(selectedHolding.id) ?? null}
-            history={selectedHoldingHistory}
-            onRecordValuation={(amount, recordedAt) =>
-              recordValuation(selectedHolding.id, amount, recordedAt)
-            }
-            onSave={(patch) => saveHolding(selectedHolding.id, patch)}
-            onArchive={() => archiveHolding(selectedHolding.id)}
-            onDelete={() => deleteHolding(selectedHolding.id)}
-          />
-        ) : selectedLiabilityClass ? (
-          <LiabilityClassDetailPanel
-            key={selectedLiabilityClass.id}
-            liabilityClass={selectedLiabilityClass}
-            isOwnedByCurrentUser={selectedLiabilityClass.owner_id === currentUserId}
-            liabilityCount={liabilitiesInClass.length}
-            onDelete={() => deleteLiabilityClass(selectedLiabilityClass.id)}
-          />
-        ) : selectedClass ? (
-          <AssetClassDetailPanel
-            key={selectedClass.id}
-            assetClass={selectedClass}
-            isOwnedByCurrentUser={selectedClass.owner_id === currentUserId}
-            holdingCount={holdingsInClass.length}
-            onDelete={() => deleteAssetClass(selectedClass.id)}
-          />
-        ) : isLiabilitiesRoot ? (
-          <LiabilitiesRootPanel
-            homeCurrency={homeCurrency}
-            liabilitiesTotal={netWorth.liabilitiesTotal}
-            liabilityClassCount={liabilityClasses.length}
-            liabilityCount={activeLiabilities.length}
-          />
-        ) : (
-          <DashboardPanel
-            homeCurrency={homeCurrency}
-            netWorth={netWorth}
-            timeline={timeline}
-            staleItems={staleItems}
-          />
-        )}
-      </div>
+          {selectedClass && (
+            <MillerColumn
+              label="Holdings"
+              rows={holdingRows}
+              selectedId={selectedHoldingId}
+              onSelect={setSelectedHoldingId}
+              footer={<AddHoldingRow onAdd={addHolding} />}
+            />
+          )}
+
+          {selectedLiability ? (
+            <LiabilityDetailPanel
+              key={selectedLiability.id}
+              liability={selectedLiability}
+              liabilityClasses={liabilityClasses}
+              latestValuation={latestByLiability.get(selectedLiability.id) ?? null}
+              history={selectedLiabilityHistory}
+              onRecordValuation={(amount, recordedAt) =>
+                recordLiabilityValuation(selectedLiability.id, amount, recordedAt)
+              }
+              onSave={(patch) => saveLiability(selectedLiability.id, patch)}
+              onArchive={() => archiveLiability(selectedLiability.id)}
+              onDelete={() => deleteLiability(selectedLiability.id)}
+            />
+          ) : selectedHolding ? (
+            <HoldingDetailPanel
+              key={selectedHolding.id}
+              holding={selectedHolding}
+              assetClasses={assetClasses}
+              latestValuation={latestByHolding.get(selectedHolding.id) ?? null}
+              history={selectedHoldingHistory}
+              onRecordValuation={(amount, recordedAt) =>
+                recordValuation(selectedHolding.id, amount, recordedAt)
+              }
+              onSave={(patch) => saveHolding(selectedHolding.id, patch)}
+              onArchive={() => archiveHolding(selectedHolding.id)}
+              onDelete={() => deleteHolding(selectedHolding.id)}
+            />
+          ) : selectedLiabilityClass ? (
+            <LiabilityClassDetailPanel
+              key={selectedLiabilityClass.id}
+              liabilityClass={selectedLiabilityClass}
+              isOwnedByCurrentUser={selectedLiabilityClass.owner_id === currentUserId}
+              liabilityCount={liabilitiesInClass.length}
+              onDelete={() => deleteLiabilityClass(selectedLiabilityClass.id)}
+            />
+          ) : selectedClass ? (
+            <AssetClassDetailPanel
+              key={selectedClass.id}
+              assetClass={selectedClass}
+              isOwnedByCurrentUser={selectedClass.owner_id === currentUserId}
+              holdingCount={holdingsInClass.length}
+              onDelete={() => deleteAssetClass(selectedClass.id)}
+            />
+          ) : isLiabilitiesRoot ? (
+            <LiabilitiesRootPanel
+              homeCurrency={homeCurrency}
+              liabilitiesTotal={netWorth.liabilitiesTotal}
+              liabilityClassCount={liabilityClasses.length}
+              liabilityCount={activeLiabilities.length}
+            />
+          ) : (
+            <DashboardPanel
+              homeCurrency={homeCurrency}
+              netWorth={netWorth}
+              timeline={timeline}
+              staleItems={staleItems}
+              distribution={distribution}
+            />
+          )}
+        </div>
+      )}
     </div>
   );
 }
