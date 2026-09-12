@@ -7,7 +7,7 @@ A deployed, working FinAsset 360 v1, built from [`docs/SPEC.md`](../../docs/SPEC
 ## Notes
 
 - Domain vocabulary lives in [CONTEXT.md](../../CONTEXT.md); consult it before naming anything, and update it inline if a ticket sharpens or adds a term.
-- ADRs in [`docs/adr/`](../../docs/adr/). One standing offer: **ADR 0004** for the archive-not-delete rule, raised on the planning effort's schema ticket and carried into [06](issues/06-history-staleness-archival.md).
+- ADRs in [`docs/adr/`](../../docs/adr/). **ADR 0004** (archive-not-delete) accepted while closing [06](issues/06-history-staleness-archival.md), after being raised and left open since the planning effort's schema ticket.
 - **Two test seams only**, settled with the user 2026-09-08: the projection engine as a pure function (lands in [10](issues/10-projection-engine.md)), and the HTTP route boundary against a real Postgres with RLS enabled and two Users (stood up in [01](issues/01-sign-in-get-a-portfolio.md)). Not lowered to repository functions over a mocked DB — that would exercise zero lines of the RLS policies, and RLS *is* the tenancy guarantee.
 - UI correctness is verified by hand at the user's own viewport. **Any UI verification claim must name the width it was made at** — agent browser tooling clamps to ~1288px while the user reviews at ~2000px.
 - Tickets are tracer-bullet vertical slices, each sized for one fresh context window. Greenfield repo, so there was nothing to prefactor and no wide refactors.
