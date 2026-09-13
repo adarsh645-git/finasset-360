@@ -1,5 +1,5 @@
 Type: build
-Status: ready-for-agent
+Status: resolved
 
 # 08: Check-in mode
 
@@ -11,12 +11,12 @@ Spec: [`docs/SPEC.md`](../../../docs/SPEC.md) — user stories 39–46.
 
 **Blocked by:** 06, 07.
 
-- [ ] Start Check-in from the dashboard, choosing all or stale-only
-- [ ] One Holding per step, pre-filled with its last recorded value
-- [ ] Enter on an unchanged value advances **without recording a Valuation** — confirming must not pollute history with duplicate snapshots
-- [ ] `L` accepts the Live Estimate for a live-priced Holding
-- [ ] Progress indicator ("12 of 27")
-- [ ] Esc leaves cleanly at any point
-- [ ] The pass ends with the Net Worth delta since the last check-in
-- [ ] Check-in suspends column browsing for a linear one-card-at-a-time queue
-- [ ] Test: a pass where every value is confirmed unchanged records zero new Valuations and reports a delta of zero
+- [x] Start Check-in from the dashboard, choosing all or stale-only
+- [x] One Holding per step, pre-filled with its last recorded value
+- [x] Enter on an unchanged value advances **without recording a Valuation** — confirming must not pollute history with duplicate snapshots
+- [x] `L` accepts the Live Estimate for a live-priced Holding
+- [x] Progress indicator ("12 of 27")
+- [x] Esc leaves cleanly at any point
+- [x] The pass ends with the Net Worth delta since the last check-in — persisted in a new append-only `check_in` table (server-computed Net Worth, never client-supplied), since nothing else in the schema tracked "when was the last check-in"
+- [x] Check-in suspends column browsing for a linear one-card-at-a-time queue — the breadcrumb is hidden too, not just inert, while a pass is active
+- [x] Test: a pass where every value is confirmed unchanged records zero new Valuations and reports a delta of zero (tests/route/check-in.test.ts)
