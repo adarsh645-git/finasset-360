@@ -1,5 +1,5 @@
 Type: build
-Status: ready-for-agent
+Status: resolved
 
 # 12: Inflation — nominal and real, both charted
 
@@ -19,10 +19,10 @@ Spec: [`docs/SPEC.md`](../../../docs/SPEC.md) — user stories 80–84.
 
 **Blocked by:** 10.
 
-- [ ] `inflation_rate` on `projection`, defaulting to 0.03, so a meaningful answer exists before the User has thought about it
-- [ ] Deflation applied last, at display time; every stored and entered rate stays nominal
-- [ ] Both lines charted, forking at the Today seam
-- [ ] Recorded history stays nominal — it is not deflated
-- [ ] **The real line is primary**: headline figures read from it, with nominal drawn as a fainter reference. No user toggle
-- [ ] Test: the two lines coincide at today (deflator = 1) and diverge thereafter
-- [ ] Test: history is unchanged by the inflation assumption
+- [x] `inflation_rate` on `projection`, defaulting to 0.03, so a meaningful answer exists before the User has thought about it
+- [x] Deflation applied last, at display time; every stored and entered rate stays nominal
+- [x] Both lines charted, forking at the Today seam
+- [x] Recorded history stays nominal — it is not deflated
+- [x] **The real line is primary**: headline figures read from it, with nominal drawn as a fainter reference. No user toggle
+- [x] Test: the two lines coincide at today (deflator = 1) and diverge thereafter
+- [x] Test: history is unchanged by the inflation assumption
