@@ -27,6 +27,7 @@ export function StockSymbolPicker({
   disabled,
   placeholder,
   className,
+  autoFocus,
 }: {
   value: string;
   onChangeText: (text: string) => void;
@@ -34,6 +35,7 @@ export function StockSymbolPicker({
   disabled?: boolean;
   placeholder?: string;
   className?: string;
+  autoFocus?: boolean;
 }) {
   const [suggestions, setSuggestions] = useState<StockSymbolMatch[]>([]);
   const [isOpen, setIsOpen] = useState(false);
@@ -84,6 +86,7 @@ export function StockSymbolPicker({
   return (
     <div className="relative w-full">
       <input
+        autoFocus={autoFocus}
         value={value}
         onChange={(e) => {
           onChangeText(e.target.value);

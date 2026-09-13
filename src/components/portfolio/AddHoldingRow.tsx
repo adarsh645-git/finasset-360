@@ -8,10 +8,12 @@ import { StockSymbolPicker } from "./StockSymbolPicker";
 // Add a Holding under the Asset Class the User is currently browsing (user
 // story 12) — name and currency, plus an optional market symbol/quantity
 // pair that gives it a Live Estimate (ticket 07). The Asset Class itself is
-// implicit in which column this control lives in. The symbol field is the
-// stock-picker (ticket 18): selecting a suggestion fills Sector and
-// autofills Name, but a freeform symbol with no match stays fully
-// supported.
+// implicit in which column this control lives in. Market symbol leads the
+// form, ahead of Name: it's the stock-picker (ticket 18), and selecting a
+// suggestion autofills Name and Sector, so by the time a User reaches Name
+// it's often already filled in. A freeform symbol with no match still
+// works — Name stays required, since a manually-entered Holding (Real
+// Estate, Cash) has no symbol to autofill it from.
 export function AddHoldingRow({
   onAdd,
 }: {
@@ -68,53 +70,51 @@ export function AddHoldingRow({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-1.5 border-t border-hairline p-2.5">
-      <input
+    <form
+      onSubmit={handleSubmit}
+      onKeyDown={(e) => {
+        if (e.key === "Escape") setIsOpen(false);
+      }}
+      className="flex flex-col gap-1.5 border-t border-hairline p-2.5"
+    >
+      <StockSymbolPicker
         autoFocus
+        value={symbol}
+        onChangeText={(text) => {
+          setSymbol(text);
+          setSector(null);
+        }}
+        onSelect={(match) => {
+          setSymbol(match.symbol);
+          setSector(match.sector);
+          setName(match.name);
+        }}
+        disabled={isSaving}
+        placeholder="Market symbol (optional)"
+        className="w-full rounded-md border border-hairline bg-transparent px-2 py-1.5 text-sm"
+      />
+      {sector && <p className="text-xs text-zinc-500 dark:text-zinc-400">Sector: {sector}</p>}
+      <input
+        type="text"
+        inputMode="decimal"
+        value={quantity}
+        onChange={(e) => setQuantity(e.target.value)}
+        placeholder="Quantity"
+        disabled={isSaving}
+        className="rounded-md border border-hairline bg-transparent px-2 py-1.5 text-sm"
+      />
+      {priceLookup.isMismatched && (
+        <p className="text-xs font-medium">Market symbol and quantity must be set together.</p>
+      )}
+      {priceLookup.isInvalid && <p className="text-xs font-medium">Quantity must be a positive number.</p>}
+      <input
         value={name}
         onChange={(e) => setName(e.target.value)}
-        onKeyDown={(e) => {
-          if (e.key === "Escape") setIsOpen(false);
-        }}
         placeholder="Holding name"
         disabled={isSaving}
         className="rounded-md border border-hairline bg-transparent px-2 py-1.5 text-sm"
       />
       <CurrencySelect value={currency} onChange={setCurrency} disabled={isSaving} />
-      <div className="flex gap-1.5">
-        <div className="w-1/2">
-          <StockSymbolPicker
-            value={symbol}
-            onChangeText={(text) => {
-              setSymbol(text);
-              setSector(null);
-            }}
-            onSelect={(match) => {
-              setSymbol(match.symbol);
-              setSector(match.sector);
-              setName(match.name);
-            }}
-            disabled={isSaving}
-            placeholder="Market symbol (optional)"
-            className="w-full rounded-md border border-hairline bg-transparent px-2 py-1.5 text-sm"
-          />
-        </div>
-        <input
-          type="number"
-          inputMode="decimal"
-          step="any"
-          value={quantity}
-          onChange={(e) => setQuantity(e.target.value)}
-          placeholder="Quantity"
-          disabled={isSaving}
-          className="w-1/2 rounded-md border border-hairline bg-transparent px-2 py-1.5 text-sm"
-        />
-      </div>
-      {sector && <p className="text-xs text-zinc-500 dark:text-zinc-400">Sector: {sector}</p>}
-      {priceLookup.isMismatched && (
-        <p className="text-xs font-medium">Market symbol and quantity must be set together.</p>
-      )}
-      {priceLookup.isInvalid && <p className="text-xs font-medium">Quantity must be a positive number.</p>}
       {error && <p className="text-xs font-medium">{error}</p>}
       <div className="flex gap-1.5">
         <button

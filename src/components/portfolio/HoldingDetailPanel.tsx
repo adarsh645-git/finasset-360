@@ -23,9 +23,11 @@ import type {
 // The rightmost detail panel for a selected Holding — record a Valuation
 // (user stories 22–26), see its full Valuation History (user story 27), see
 // its Live Estimate against that history (user stories 32-35, ticket 07),
-// edit its name, Asset Class, currency, and market symbol/quantity (user
+// edit its market symbol/quantity, name, Asset Class, and currency (user
 // story 17), archive it (user story 18, the primary removal path), or fall
 // back to a true delete for correcting a mistaken entry (user story 21).
+// Market symbol/Quantity lead the edit form, ahead of Name (ticket 18):
+// picking a suggestion from the stock-picker autofills Name and Sector.
 export function HoldingDetailPanel({
   holding,
   assetClasses,
@@ -183,6 +185,40 @@ export function HoldingDetailPanel({
 
       <div className="flex flex-col gap-4">
         <label className="flex flex-col gap-1 text-sm">
+          Market symbol
+          <StockSymbolPicker
+            value={symbol}
+            onChangeText={(text) => {
+              setSymbol(text);
+              setSector(null);
+            }}
+            onSelect={(match) => {
+              setSymbol(match.symbol);
+              setSector(match.sector);
+              setName(match.name);
+            }}
+            placeholder="e.g. AAPL, XAU (optional)"
+            className="rounded-md border border-hairline bg-transparent px-2 py-1.5 text-sm"
+          />
+          {sector && <span className="text-xs text-zinc-500 dark:text-zinc-400">Sector: {sector}</span>}
+        </label>
+
+        <label className="flex flex-col gap-1 text-sm">
+          Quantity
+          <input
+            type="text"
+            inputMode="decimal"
+            value={quantity}
+            onChange={(e) => setQuantity(e.target.value)}
+            className="rounded-md border border-hairline bg-transparent px-2 py-1.5 text-sm"
+          />
+        </label>
+        {priceLookup.isMismatched && (
+          <p className="text-xs font-medium">Market symbol and quantity must be set together.</p>
+        )}
+        {priceLookup.isInvalid && <p className="text-xs font-medium">Quantity must be a positive number.</p>}
+
+        <label className="flex flex-col gap-1 text-sm">
           Name
           <input
             value={name}
@@ -210,42 +246,6 @@ export function HoldingDetailPanel({
           Currency
           <CurrencySelect value={currency} onChange={setCurrency} />
         </label>
-
-        <div className="flex gap-4">
-          <label className="flex flex-1 flex-col gap-1 text-sm">
-            Market symbol
-            <StockSymbolPicker
-              value={symbol}
-              onChangeText={(text) => {
-                setSymbol(text);
-                setSector(null);
-              }}
-              onSelect={(match) => {
-                setSymbol(match.symbol);
-                setSector(match.sector);
-                setName(match.name);
-              }}
-              placeholder="e.g. AAPL, XAU (optional)"
-              className="rounded-md border border-hairline bg-transparent px-2 py-1.5 text-sm"
-            />
-            {sector && <span className="text-xs text-zinc-500 dark:text-zinc-400">Sector: {sector}</span>}
-          </label>
-          <label className="flex flex-1 flex-col gap-1 text-sm">
-            Quantity
-            <input
-              type="number"
-              inputMode="decimal"
-              step="any"
-              value={quantity}
-              onChange={(e) => setQuantity(e.target.value)}
-              className="rounded-md border border-hairline bg-transparent px-2 py-1.5 text-sm"
-            />
-          </label>
-        </div>
-        {priceLookup.isMismatched && (
-          <p className="text-xs font-medium">Market symbol and quantity must be set together.</p>
-        )}
-        {priceLookup.isInvalid && <p className="text-xs font-medium">Quantity must be a positive number.</p>}
       </div>
 
       {error && <p className="text-sm font-medium">{error}</p>}
