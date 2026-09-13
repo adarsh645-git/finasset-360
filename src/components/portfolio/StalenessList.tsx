@@ -22,7 +22,7 @@ export function StalenessList({ items }: { items: StaleItem[] }) {
           <button
             type="button"
             onClick={item.onSelect}
-            className="flex w-full items-center justify-between gap-2 py-2 text-left text-sm hover:opacity-70"
+            className="flex min-h-11 w-full items-center justify-between gap-2 py-2 text-left text-sm hover:opacity-70"
           >
             <span className="truncate">{item.name}</span>
             <span className="shrink-0 text-xs text-zinc-500 dark:text-zinc-400">

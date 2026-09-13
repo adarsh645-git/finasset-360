@@ -14,8 +14,9 @@ type RecordValuation = (holdingId: string, amount: number, recordedAt: string) =
 // step, pre-filled with its last recorded value, rendered by PortfolioShell
 // in place of the Miller columns while active (suspends column browsing for
 // this linear queue, per the ticket). Desktop drives it by keyboard
-// (Enter/L/Esc); ticket 15's narrow-viewport tap targets call the exact same
-// `submitDraft`/`acceptLiveEstimate`/`onExit` paths inside CheckInStep below,
+// (Enter/L/Esc); ticket 15's narrow-viewport Keep/Use estimate/Done tap
+// targets call the exact same `keep`/`acceptLiveEstimate`/`recordDraft`
+// functions inside CheckInStep below that Enter/L already dispatch to,
 // never a second implementation of the same decision.
 export function CheckInFlow({
   queue,
@@ -127,29 +128,48 @@ function CheckInStep({
     onAdvance();
   }
 
-  // Enter's behaviour branches on whether the draft differs from the
-  // pre-filled figure (user story 42): unchanged (or left blank, when
-  // there's nothing to compare against anyway) advances with no network
-  // call at all, so confirming can never write a duplicate same-value
-  // Valuation under today's date.
-  function submitDraft() {
+  // Confirming an unchanged figure (user story 42) — advances with no
+  // network call at all, so confirming can never write a duplicate
+  // same-value Valuation under today's date. This is the one function both
+  // Enter-on-an-unchanged-draft and the narrow "Keep" tap target call
+  // (ticket 15's "routed through one shared action" requirement) — neither
+  // ever records anything on its own.
+  function keep() {
+    onAdvance();
+  }
+
+  // Explicitly commits whatever's in the draft, even if it happens to equal
+  // the pre-filled figure — distinct from `keep`, which never records.
+  // Shared by Enter-on-a-changed-draft and the narrow "Done" tap target.
+  function recordDraft() {
     const trimmed = draftAmount.trim();
-    if (trimmed === "") {
-      onAdvance();
-      return;
-    }
     const parsed = Number(trimmed);
-    if (!Number.isFinite(parsed)) {
+    if (trimmed === "" || !Number.isFinite(parsed)) {
       setError("Enter a valid number.");
-      return;
-    }
-    if (latestValuation && parsed === latestValuation.amount) {
-      onAdvance();
       return;
     }
     void recordAndAdvance(parsed);
   }
 
+  // Enter's own behaviour: dispatch to `keep` or `recordDraft` depending on
+  // whether the draft actually differs from the pre-filled figure — the
+  // "Keep"/"Done" split doesn't exist for a keyboard User, who just presses
+  // one key either way.
+  function submitDraft() {
+    const trimmed = draftAmount.trim();
+    if (trimmed === "") {
+      keep();
+      return;
+    }
+    const parsed = Number(trimmed);
+    if (latestValuation && Number.isFinite(parsed) && parsed === latestValuation.amount) {
+      keep();
+      return;
+    }
+    recordDraft();
+  }
+
+  // Shared by the "L" key and the narrow "Use estimate" tap target.
   function acceptLiveEstimate() {
     if (liveEstimate) void recordAndAdvance(liveEstimate.amount);
   }
@@ -168,7 +188,20 @@ function CheckInStep({
   }
 
   return (
-    <div className="flex flex-1 flex-col items-center justify-center gap-6 p-8">
+    <div className="relative flex flex-1 flex-col items-center justify-center gap-6 p-8">
+      {/* Esc has no equivalent on a touchscreen, so this stays visible at
+         every width rather than joining the narrow-only tap targets below —
+         without it, a touch User pressing "Keep" through every remaining
+         step just to escape would be exactly the trap ticket 08 exists to
+         prevent. */}
+      <button
+        type="button"
+        onClick={onExit}
+        className="absolute top-2 right-2 min-h-11 min-w-11 text-sm text-zinc-500 dark:text-zinc-400"
+      >
+        Leave
+      </button>
+
       <p className="text-xs font-medium tracking-wide text-zinc-500 dark:text-zinc-400">
         {position} of {total}
       </p>
@@ -195,16 +228,51 @@ function CheckInStep({
         />
 
         {liveEstimate && (
-          <p className="text-xs text-zinc-500 dark:text-zinc-400">
+          <p className="text-xs text-zinc-500 dark:text-zinc-400 max-[899px]:hidden">
             Live Estimate {formatMoney(liveEstimate.amount, liveEstimate.currency)} — press L to accept
           </p>
         )}
 
         {error && <p className="text-xs font-medium">{error}</p>}
 
-        <p className="text-xs text-zinc-400 dark:text-zinc-600">
+        {/* Desktop: keyboard hints only. Below 900px there's no keyboard to
+           hint at, so Keep/Use estimate/Done tap targets take over instead
+           (ticket 15, user story 47) — calling the exact same
+           `keep`/`acceptLiveEstimate`/`recordDraft` functions Enter/L
+           already use, never a second implementation. The key bindings
+           themselves stay live at every width (ticket 15: "retained"). */}
+        <p className="text-xs text-zinc-400 max-[899px]:hidden dark:text-zinc-600">
           Enter to confirm{liveEstimate ? " · L for Live Estimate" : ""} · Esc to leave
         </p>
+
+        <div className="hidden gap-2 max-[899px]:flex">
+          <button
+            type="button"
+            onClick={keep}
+            disabled={isSaving}
+            className="min-h-11 flex-1 rounded-md border border-hairline px-3 text-sm disabled:opacity-60"
+          >
+            Keep
+          </button>
+          {liveEstimate && (
+            <button
+              type="button"
+              onClick={acceptLiveEstimate}
+              disabled={isSaving}
+              className="min-h-11 flex-1 rounded-md border border-hairline px-3 text-sm disabled:opacity-60"
+            >
+              Use estimate
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={recordDraft}
+            disabled={isSaving}
+            className="min-h-11 flex-1 rounded-md border border-hairline px-3 text-sm font-medium disabled:opacity-60"
+          >
+            Done
+          </button>
+        </div>
       </div>
     </div>
   );

@@ -130,12 +130,19 @@ export function ValuationEditor({
           className="w-48 rounded-md border border-hairline bg-transparent px-2 py-1 text-2xl font-semibold tracking-tight"
         />
       ) : (
+        // Below 900px (ticket 15) this affordance can't be hover-gated —
+        // there's no hover on touch — so it's a persistent dotted underline
+        // plus a trailing pencil, always visible rather than revealed on
+        // interaction. Desktop keeps its existing hover-only look untouched.
         <button
           type="button"
           onClick={startEditing}
-          className="w-fit text-2xl font-semibold tracking-tight hover:opacity-70"
+          className="flex w-fit items-baseline gap-1.5 text-2xl font-semibold tracking-tight hover:opacity-70 max-[899px]:underline max-[899px]:decoration-dotted max-[899px]:decoration-1 max-[899px]:underline-offset-4"
         >
           {latestValuation ? formatMoney(latestValuation.amount, currency) : "Click to record a value"}
+          <span aria-hidden="true" className="hidden text-sm text-zinc-400 max-[899px]:inline dark:text-zinc-600">
+            ✎
+          </span>
         </button>
       )}
 

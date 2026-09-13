@@ -1,15 +1,14 @@
 import { HomeCurrencyPicker } from "@/components/HomeCurrencyPicker";
 import { SignOutButton } from "@/components/SignOutButton";
 import { DistributionBar } from "@/components/plan/DistributionBar";
-import { formatMoney } from "@/lib/currency/format";
 import type { CheckInScope } from "@/lib/check-in/queue";
 import type { NetWorthSummary } from "@/lib/net-worth/compute";
 import type { NetWorthTimelinePoint } from "@/lib/net-worth/timeline";
 import type { PayoffMarker, ProjectedNetWorthPoint } from "@/lib/projection/engine";
-import { toChartPayoffMarkers } from "@/lib/projection/payoff-marker-label";
 import { passedTargetMessage } from "@/lib/projection/target-gap";
 import type { AssetClassDistributionRow } from "@/lib/target-allocation/distribution";
-import { NetWorthTimelineChart } from "./NetWorthTimelineChart";
+import { CheckInLauncher } from "./CheckInLauncher";
+import { NetWorthHero } from "./NetWorthHero";
 import { StalenessList, type StaleItem } from "./StalenessList";
 
 // Shown in the rightmost column when nothing is selected (user story 98) —
@@ -55,7 +54,6 @@ export function DashboardPanel({
   // PortfolioShell, which is what suspends column browsing for it.
   onStartCheckIn: (scope: CheckInScope) => void;
 }) {
-  const chartPayoffMarkers = toChartPayoffMarkers(payoffMarkers, liabilityNames, homeCurrency);
   const passedTarget = passedTargetMessage({
     today,
     targetAmount,
@@ -70,22 +68,13 @@ export function DashboardPanel({
 
       <div className="grid grid-cols-1 gap-8 min-[1200px]:grid-cols-2">
         <section className="flex flex-col gap-3 rounded-lg border border-hairline p-6">
-          <div>
-            <h2 className="text-sm font-medium text-zinc-500 dark:text-zinc-400">Net Worth</h2>
-            <p className="text-3xl font-semibold tracking-tight">
-              {formatMoney(netWorth.netWorth, homeCurrency)}
-            </p>
-            <p className="text-sm text-zinc-600 dark:text-zinc-400">
-              Holdings {formatMoney(netWorth.holdingsTotal, homeCurrency)} · Liabilities{" "}
-              {formatMoney(netWorth.liabilitiesTotal, homeCurrency)}
-              {netWorth.asOfDate ? ` · as of ${netWorth.asOfDate}` : ""}
-            </p>
-          </div>
-          <NetWorthTimelineChart
+          <NetWorthHero
             homeCurrency={homeCurrency}
-            recorded={timeline}
+            netWorth={netWorth}
+            timeline={timeline}
             projected={projected}
-            payoffMarkers={chartPayoffMarkers}
+            payoffMarkers={payoffMarkers}
+            liabilityNames={liabilityNames}
             targetAmount={targetAmount}
           />
         </section>
@@ -111,23 +100,7 @@ export function DashboardPanel({
       <section className="flex flex-col gap-3 rounded-lg border border-hairline p-6">
         <h2 className="text-sm font-medium text-zinc-500 dark:text-zinc-400">Needs an update</h2>
         <StalenessList items={staleItems} />
-        <div className="flex gap-2 pt-1">
-          <button
-            type="button"
-            onClick={() => onStartCheckIn("all")}
-            className="rounded-md border border-hairline px-3 py-1.5 text-sm font-medium"
-          >
-            Start Check-in
-          </button>
-          <button
-            type="button"
-            onClick={() => onStartCheckIn("stale")}
-            disabled={staleItems.length === 0}
-            className="rounded-md border border-hairline px-3 py-1.5 text-sm text-zinc-500 disabled:opacity-50 dark:text-zinc-400"
-          >
-            Check in on what&rsquo;s stale
-          </button>
-        </div>
+        <CheckInLauncher staleCount={staleItems.length} onStartCheckIn={onStartCheckIn} />
       </section>
 
       <section className="flex flex-col gap-6 rounded-lg border border-hairline p-6">

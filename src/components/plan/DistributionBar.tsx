@@ -32,7 +32,10 @@ export function DistributionBar({
 
   return (
     <div className="flex items-center gap-3">
-      <span className="w-24 shrink-0 truncate text-sm" title={row.assetClassName}>
+      <span
+        className="w-24 shrink-0 truncate text-sm max-[899px]:w-14"
+        title={row.assetClassName}
+      >
         {row.assetClassName}
       </span>
       {/* min-w keeps the target tick visible even when the label and money
@@ -40,8 +43,11 @@ export function DistributionBar({
          the chart's purpose (ticket 09's checklist), so the track must
          never be squeezed toward zero width by its flex siblings. Neutral
          zinc tones throughout: the app's one accent colour is reserved for
-         selection (globals.css), not for this chart. */}
-      <div className="relative h-2.5 min-w-[96px] flex-1 rounded-full bg-zinc-100 dark:bg-zinc-800">
+         selection (globals.css), not for this chart. Narrower below 900px
+         (ticket 15) since the row's other columns already shrink there and
+         "no horizontal scrolling anywhere" leaves no room for the desktop
+         minimum. */}
+      <div className="relative h-2.5 min-w-[96px] flex-1 rounded-full bg-zinc-100 max-[899px]:min-w-[48px] dark:bg-zinc-800">
         <div
           className="h-full rounded-full bg-zinc-500 dark:bg-zinc-400"
           style={{ width: `${actualFill}%` }}
@@ -55,7 +61,11 @@ export function DistributionBar({
       <span className="w-12 shrink-0 text-right text-xs text-zinc-500 dark:text-zinc-400">
         {row.actualPercent.toFixed(0)}%
       </span>
-      <span className="w-36 shrink-0 text-right text-xs text-zinc-500 dark:text-zinc-400">
+      {/* The wordy gap caption is the one column dropped below 900px rather
+         than shrunk further — at that point it's the only way to keep this
+         row inside a phone's width without scrolling it sideways; the tick
+         and percent above still carry the comparison. */}
+      <span className="w-36 shrink-0 text-right text-xs text-zinc-500 max-[899px]:hidden dark:text-zinc-400">
         {gapLabel}
       </span>
     </div>
