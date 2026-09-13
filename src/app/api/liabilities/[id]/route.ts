@@ -1,12 +1,22 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { isVisibleLiabilityClass } from "@/lib/liability-classes/visibility";
 import { isValidCurrencyCode } from "@/lib/currency/iso4217";
+import { readAmortizationPatch } from "@/lib/liabilities/amortization";
+import { LIABILITY_COLUMNS } from "@/lib/liabilities/columns";
+import { isOwnedHolding } from "@/lib/holdings/ownership";
 import { hasKey, readTrimmedString } from "@/lib/http/body";
 import { createRouteClient, jsonWithCookies, requireUser } from "@/lib/supabase/route";
 
 // PATCH /api/liabilities/[id] — edit a Liability's name, Liability Class,
-// and/or currency (user story 17). Mirrors PATCH /api/holdings/[id]: every
-// field is optional, validated the same way POST /api/liabilities does.
+// currency (user story 17), and/or Amortization Assumptions (ticket 11,
+// user stories 57–61, 64): every field is independently optional, an
+// omitted key leaves the column as-is. A nullable Amortization field
+// (everything except extra_monthly_payment/escrow_portion, which always
+// default to 0) accepts an explicit `null` to clear it back to "not
+// entered" — the same "populated together" question doesn't arise here the
+// way it does for a Holding's price-lookup pair, since any subset of these
+// fields is a meaningful, independently-useful state (docs/SPEC.md: "any
+// Liability opts in by filling the fields").
 export async function PATCH(request: NextRequest, context: RouteContext<"/api/liabilities/[id]">) {
   const { supabase, responseCookies } = createRouteClient(request);
 
@@ -22,7 +32,7 @@ export async function PATCH(request: NextRequest, context: RouteContext<"/api/li
     return NextResponse.json({ error: "Invalid JSON body." }, { status: 400 });
   }
 
-  const update: Record<string, string> = {};
+  const update: Record<string, unknown> = {};
 
   if (hasKey(body, "name")) {
     const name = readTrimmedString(body, "name");
@@ -51,6 +61,22 @@ export async function PATCH(request: NextRequest, context: RouteContext<"/api/li
     update.currency = currency;
   }
 
+  const amortizationPatch = readAmortizationPatch(body);
+  if (typeof amortizationPatch === "string") {
+    return NextResponse.json({ error: amortizationPatch }, { status: 400 });
+  }
+  Object.assign(update, amortizationPatch);
+
+  if (hasKey(body, "linked_holding_id")) {
+    const value = (body as Record<string, unknown>).linked_holding_id;
+    if (value !== null && (typeof value !== "string" || !(await isOwnedHolding(supabase, value)))) {
+      return NextResponse.json({ error: "linked_holding_id must name a Holding you own, or null." }, {
+        status: 400,
+      });
+    }
+    update.linked_holding_id = value;
+  }
+
   if (Object.keys(update).length === 0) {
     return NextResponse.json({ error: "Nothing to update." }, { status: 400 });
   }
@@ -59,7 +85,7 @@ export async function PATCH(request: NextRequest, context: RouteContext<"/api/li
     .from("liability")
     .update(update)
     .eq("id", id)
-    .select("id, liability_class_id, name, currency, archived_at, created_at")
+    .select(LIABILITY_COLUMNS)
     .maybeSingle();
 
   if (error) {

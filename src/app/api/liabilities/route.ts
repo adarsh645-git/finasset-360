@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { isVisibleLiabilityClass } from "@/lib/liability-classes/visibility";
 import { isValidCurrencyCode } from "@/lib/currency/iso4217";
+import { LIABILITY_COLUMNS } from "@/lib/liabilities/columns";
 import { readTrimmedString } from "@/lib/http/body";
 import { createRouteClient, jsonWithCookies, requireUser } from "@/lib/supabase/route";
 
@@ -15,7 +16,7 @@ export async function GET(request: NextRequest) {
 
   const { data, error } = await supabase
     .from("liability")
-    .select("id, liability_class_id, name, currency, archived_at, created_at")
+    .select(LIABILITY_COLUMNS)
     .is("archived_at", null)
     .order("created_at", { ascending: true });
 
@@ -65,7 +66,7 @@ export async function POST(request: NextRequest) {
   const { data, error } = await supabase
     .from("liability")
     .insert({ user_id: auth.user.id, liability_class_id: liabilityClassId, name, currency })
-    .select("id, liability_class_id, name, currency, archived_at, created_at")
+    .select(LIABILITY_COLUMNS)
     .single();
 
   if (error) {

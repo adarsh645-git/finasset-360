@@ -6,10 +6,18 @@ import { formatMoney } from "@/lib/currency/format";
 import { validatePriceLookupInput } from "@/lib/holdings/price-lookup-input";
 import type { PriceCacheRow } from "@/lib/market-data/live-estimate";
 import { projectHoldingValue } from "@/lib/projection/engine";
+import { formatNetPositionLabel } from "@/lib/projection/net-position";
 import { LiveEstimate } from "./LiveEstimate";
 import { ValuationEditor } from "./ValuationEditor";
 import { ValuationHistoryTable } from "./ValuationHistoryTable";
-import type { AssetClass, Holding, HoldingPatch, HoldingValuation, ProjectionAssumptions } from "./types";
+import type {
+  AssetClass,
+  Holding,
+  HoldingPatch,
+  HoldingValuation,
+  Liability,
+  ProjectionAssumptions,
+} from "./types";
 
 // The rightmost detail panel for a selected Holding — record a Valuation
 // (user stories 22–26), see its full Valuation History (user story 27), see
@@ -25,6 +33,8 @@ export function HoldingDetailPanel({
   priceCache,
   today,
   projectionAssumptions,
+  linkedLiabilities,
+  netPosition,
   onRecordValuation,
   onSave,
   onArchive,
@@ -39,6 +49,11 @@ export function HoldingDetailPanel({
   // `null` until the User has saved the Plan page's Projection form at
   // least once — the ad-hoc projection below has nothing to run on yet.
   projectionAssumptions: ProjectionAssumptions | null;
+  // Every active Liability that names this Holding as `linked_holding_id`
+  // (ticket 11, user stories 64-65) — usually one (a mortgage on a house),
+  // but nothing stops a second loan financing the same Holding.
+  linkedLiabilities: Liability[];
+  netPosition: number | null;
   onRecordValuation: (amount: number, recordedAt: string) => Promise<string | null>;
   onSave: (patch: HoldingPatch) => Promise<string | null>;
   onArchive: () => Promise<string | null>;
@@ -143,6 +158,17 @@ export function HoldingDetailPanel({
         <p className="text-sm text-zinc-600 dark:text-zinc-400">
           Projected in {projectionAssumptions.horizon_years} years:{" "}
           {formatMoney(projectedValue, holding.currency)}
+        </p>
+      )}
+
+      {netPosition !== null && linkedLiabilities.length > 0 && projectionAssumptions && (
+        <p className="text-sm text-zinc-600 dark:text-zinc-400">
+          {formatNetPositionLabel(
+            linkedLiabilities.map((l) => l.name).join(", "),
+            projectionAssumptions.horizon_years,
+            netPosition,
+            holding.currency,
+          )}
         </p>
       )}
 

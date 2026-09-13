@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { firstNameOrEmail } from "@/lib/auth/display-name";
 import { HOLDING_COLUMNS } from "@/lib/holdings/columns";
+import { LIABILITY_COLUMNS } from "@/lib/liabilities/columns";
 import type { PriceCacheRow } from "@/lib/market-data/live-estimate";
 import { createClient } from "@/lib/supabase/server";
 import { PortfolioShell } from "@/components/portfolio/PortfolioShell";
@@ -73,7 +74,7 @@ export default async function DashboardPage() {
     // Unfiltered by `archived_at` — mirrors the `holding` query above.
     supabase
       .from("liability")
-      .select("id, liability_class_id, name, currency, archived_at, created_at")
+      .select(LIABILITY_COLUMNS)
       .order("created_at", { ascending: true }),
     // Newest-first, so latestValuationByLiability can pick the first row
     // seen per Liability as its latest without a separate per-Liability

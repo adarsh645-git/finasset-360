@@ -1,4 +1,5 @@
 import type { NextRequest } from "next/server";
+import { LIABILITY_COLUMNS } from "@/lib/liabilities/columns";
 import { createRouteClient, jsonWithCookies, requireUser } from "@/lib/supabase/route";
 
 // POST /api/liabilities/[id]/archive — the primary "remove" action for a
@@ -19,7 +20,7 @@ export async function POST(
     .from("liability")
     .update({ archived_at: new Date().toISOString() })
     .eq("id", id)
-    .select("id, liability_class_id, name, currency, archived_at, created_at")
+    .select(LIABILITY_COLUMNS)
     .maybeSingle();
 
   if (error) {

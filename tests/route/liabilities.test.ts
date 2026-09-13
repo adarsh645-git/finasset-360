@@ -3,12 +3,15 @@ import { NextRequest } from "next/server";
 import { DELETE, PATCH } from "@/app/api/liabilities/[id]/route";
 import { GET, POST } from "@/app/api/liabilities/route";
 import { POST as POST_LIABILITY_CLASS } from "@/app/api/liability-classes/route";
+import { POST as POST_HOLDING } from "@/app/api/holdings/route";
 import { DEFAULT_LIABILITY_CLASS_ID } from "@/lib/liability-classes/defaults";
+import { DEFAULT_ASSET_CLASS_ID } from "@/lib/asset-classes/defaults";
 import { createTestUser, deleteTestUser, type TestUser } from "../fixtures/users";
 import { jsonBody, requestAs } from "../fixtures/http";
 
 const LIABILITIES_URL = "http://localhost:3000/api/liabilities";
 const LIABILITY_CLASSES_URL = "http://localhost:3000/api/liability-classes";
+const HOLDINGS_URL = "http://localhost:3000/api/holdings";
 
 async function createLiability(user: TestUser, overrides: Record<string, unknown> = {}) {
   const response = await POST(
@@ -167,5 +170,184 @@ describe("GET/POST /api/liabilities, PATCH/DELETE /api/liabilities/[id]", () => 
     const stillB = await GET(requestAs(userB, LIABILITIES_URL));
     const ids = (await stillB.json()).map((l: { id: string }) => l.id);
     expect(ids).toContain(id);
+  });
+
+  // Ticket 11: Amortization Assumptions and payoff.
+  describe("PATCH Amortization Assumptions", () => {
+    async function patchLiability(user: TestUser, id: string, body: Record<string, unknown>) {
+      return PATCH(
+        requestAs(user, `${LIABILITIES_URL}/${id}`, { method: "PATCH", ...jsonBody(body) }),
+        { params: Promise.resolve({ id }) },
+      );
+    }
+
+    it("sets a full set of Amortization Assumptions on a Liability", async () => {
+      const created = await createLiability(userA, { name: "Mortgage to amortize" });
+      const { id } = await created.json();
+
+      const response = await patchLiability(userA, id, {
+        interest_rate: 0.06,
+        original_loan_amount: 300_000,
+        term_months: 360,
+        custom_monthly_payment: 1_800,
+        extra_monthly_payment: 200,
+        escrow_portion: 650,
+        start_date: "2024-05-01",
+      });
+
+      expect(response.status).toBe(200);
+      expect(await response.json()).toMatchObject({
+        interest_rate: 0.06,
+        original_loan_amount: 300_000,
+        term_months: 360,
+        custom_monthly_payment: 1_800,
+        extra_monthly_payment: 200,
+        escrow_portion: 650,
+        start_date: "2024-05-01",
+      });
+    });
+
+    it("any Liability can carry Amortization Assumptions, not only a Mortgage Class one", async () => {
+      const created = await createLiability(userA, {
+        name: "Car loan",
+        liability_class_id: DEFAULT_LIABILITY_CLASS_ID.autoLoan,
+      });
+      const { id } = await created.json();
+
+      const response = await patchLiability(userA, id, {
+        interest_rate: 0.07,
+        original_loan_amount: 20_000,
+        term_months: 60,
+      });
+      expect(response.status).toBe(200);
+      expect((await response.json()).interest_rate).toBe(0.07);
+    });
+
+    it("clears a field back to null with an explicit null", async () => {
+      const created = await createLiability(userA, { name: "Loan to clear" });
+      const { id } = await created.json();
+      await patchLiability(userA, id, { interest_rate: 0.05, custom_monthly_payment: 500 });
+
+      const response = await patchLiability(userA, id, { custom_monthly_payment: null });
+      expect(response.status).toBe(200);
+      const updated = await response.json();
+      expect(updated.custom_monthly_payment).toBeNull();
+      expect(updated.interest_rate).toBe(0.05); // untouched keys are left as-is
+    });
+
+    it("rejects a negative interest_rate", async () => {
+      const created = await createLiability(userA, { name: "Bad rate" });
+      const { id } = await created.json();
+      const response = await patchLiability(userA, id, { interest_rate: -0.01 });
+      expect(response.status).toBe(400);
+    });
+
+    it("rejects a non-positive term_months", async () => {
+      const created = await createLiability(userA, { name: "Bad term" });
+      const { id } = await created.json();
+      const response = await patchLiability(userA, id, { term_months: 0 });
+      expect(response.status).toBe(400);
+    });
+
+    it("rejects a malformed start_date", async () => {
+      const created = await createLiability(userA, { name: "Bad date" });
+      const { id } = await created.json();
+      const response = await patchLiability(userA, id, { start_date: "05/01/2024" });
+      expect(response.status).toBe(400);
+    });
+
+    it("rejects a negative extra_monthly_payment or escrow_portion", async () => {
+      const created = await createLiability(userA, { name: "Bad extras" });
+      const { id } = await created.json();
+      expect((await patchLiability(userA, id, { extra_monthly_payment: -1 })).status).toBe(400);
+      expect((await patchLiability(userA, id, { escrow_portion: -1 })).status).toBe(400);
+    });
+
+    it("User A cannot set Amortization Assumptions on User B's Liability", async () => {
+      const created = await createLiability(userB, { name: "B's loan" });
+      const { id } = await created.json();
+      const response = await patchLiability(userA, id, { interest_rate: 0.05 });
+      expect(response.status).toBe(404);
+    });
+  });
+
+  describe("PATCH linked_holding_id", () => {
+    async function createHolding(user: TestUser) {
+      const response = await POST_HOLDING(
+        requestAs(user, HOLDINGS_URL, {
+          method: "POST",
+          ...jsonBody({ name: "The house it financed", asset_class_id: DEFAULT_ASSET_CLASS_ID.realEstate, currency: "USD" }),
+        }),
+      );
+      return (await response.json()).id as string;
+    }
+
+    it("links a Liability to a Holding the same User owns", async () => {
+      const holdingId = await createHolding(userA);
+      const created = await createLiability(userA, { name: "Mortgage on the house" });
+      const { id } = await created.json();
+
+      const response = await PATCH(
+        requestAs(userA, `${LIABILITIES_URL}/${id}`, {
+          method: "PATCH",
+          ...jsonBody({ linked_holding_id: holdingId }),
+        }),
+        { params: Promise.resolve({ id }) },
+      );
+      expect(response.status).toBe(200);
+      expect((await response.json()).linked_holding_id).toBe(holdingId);
+    });
+
+    it("rejects linking to a Holding the caller doesn't own", async () => {
+      const holdingId = await createHolding(userB);
+      const created = await createLiability(userA, { name: "Mortgage attempt" });
+      const { id } = await created.json();
+
+      const response = await PATCH(
+        requestAs(userA, `${LIABILITIES_URL}/${id}`, {
+          method: "PATCH",
+          ...jsonBody({ linked_holding_id: holdingId }),
+        }),
+        { params: Promise.resolve({ id }) },
+      );
+      expect(response.status).toBe(400);
+    });
+
+    it("rejects a linked_holding_id that doesn't exist", async () => {
+      const created = await createLiability(userA, { name: "Mortgage attempt 2" });
+      const { id } = await created.json();
+
+      const response = await PATCH(
+        requestAs(userA, `${LIABILITIES_URL}/${id}`, {
+          method: "PATCH",
+          ...jsonBody({ linked_holding_id: "00000000-0000-0000-0000-000000000000" }),
+        }),
+        { params: Promise.resolve({ id }) },
+      );
+      expect(response.status).toBe(400);
+    });
+
+    it("unlinks with an explicit null", async () => {
+      const holdingId = await createHolding(userA);
+      const created = await createLiability(userA, { name: "Mortgage to unlink" });
+      const { id } = await created.json();
+      await PATCH(
+        requestAs(userA, `${LIABILITIES_URL}/${id}`, {
+          method: "PATCH",
+          ...jsonBody({ linked_holding_id: holdingId }),
+        }),
+        { params: Promise.resolve({ id }) },
+      );
+
+      const response = await PATCH(
+        requestAs(userA, `${LIABILITIES_URL}/${id}`, {
+          method: "PATCH",
+          ...jsonBody({ linked_holding_id: null }),
+        }),
+        { params: Promise.resolve({ id }) },
+      );
+      expect(response.status).toBe(200);
+      expect((await response.json()).linked_holding_id).toBeNull();
+    });
   });
 });

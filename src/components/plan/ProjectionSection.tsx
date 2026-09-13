@@ -5,9 +5,11 @@ import { NetWorthTimelineChart } from "@/components/portfolio/NetWorthTimelineCh
 import type { NetWorthTimelinePoint } from "@/lib/net-worth/timeline";
 import {
   projectNetWorth,
+  projectPayoffMarkers,
   type ProjectedNetWorthPoint,
   type ProjectionLiabilityInput,
 } from "@/lib/projection/engine";
+import { toChartPayoffMarkers } from "@/lib/projection/payoff-marker-label";
 import type { ProjectionAssumptions } from "@/components/portfolio/types";
 
 // UI starting values for a User who has never saved the form — there is no
@@ -87,6 +89,7 @@ export function ProjectionSection({
   homeCurrency,
   holdingsTotal,
   liabilities,
+  liabilityNames,
   recordedTimeline,
   assumptions,
   onSave,
@@ -95,6 +98,7 @@ export function ProjectionSection({
   homeCurrency: string;
   holdingsTotal: number;
   liabilities: ProjectionLiabilityInput[];
+  liabilityNames: Map<string, string>;
   recordedTimeline: NetWorthTimelinePoint[];
   assumptions: ProjectionAssumptions | null;
   onSave: (assumptions: ProjectionAssumptions) => Promise<string | null>;
@@ -108,6 +112,18 @@ export function ProjectionSection({
   const projected: ProjectedNetWorthPoint[] = useMemo(
     () => projectNetWorth({ today, holdingsTotal, liabilities, assumptions: liveAssumptions }),
     [today, holdingsTotal, liabilities, liveAssumptions],
+  );
+  // Recomputed off the live draft too (user story 79: "recomputed live as I
+  // edit an assumption") — an edited horizon or contribution can move a
+  // payoff in or out of view just as much as it moves the line itself.
+  const payoffMarkers = useMemo(
+    () =>
+      toChartPayoffMarkers(
+        projectPayoffMarkers({ liabilities, today, horizonYears: liveAssumptions.horizon_years }),
+        liabilityNames,
+        homeCurrency,
+      ),
+    [liabilities, today, liveAssumptions.horizon_years, liabilityNames, homeCurrency],
   );
 
   const isDirty = !assumptionsEqual(liveAssumptions, savedAssumptions) || assumptions === null;
@@ -129,7 +145,12 @@ export function ProjectionSection({
 
   return (
     <div className="flex flex-col gap-4">
-      <NetWorthTimelineChart homeCurrency={homeCurrency} recorded={recordedTimeline} projected={projected} />
+      <NetWorthTimelineChart
+        homeCurrency={homeCurrency}
+        recorded={recordedTimeline}
+        projected={projected}
+        payoffMarkers={payoffMarkers}
+      />
 
       <form onSubmit={handleSave} className="flex flex-col gap-4">
         <div className="grid grid-cols-2 gap-4">
@@ -195,6 +216,13 @@ export function ProjectionSection({
             </div>
           </label>
         </div>
+
+        {/* User story 77: the freed-payment redirect is always on, with no
+            toggle, so it's disclosed here rather than left implicit. */}
+        <p className="text-xs text-zinc-500 dark:text-zinc-400">
+          When an amortizing Liability pays off, its payment (minus any escrow) is automatically added
+          to your monthly contribution from that point on — there&apos;s no setting to turn this off.
+        </p>
 
         {error && <p className="text-sm font-medium">{error}</p>}
 

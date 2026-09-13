@@ -44,6 +44,25 @@ export type LiabilityClass = {
   name: string;
 };
 
+/** A Liability's optional Amortization Assumptions (ticket 11, user
+ * stories 57–61) — any Liability opts in by filling these in, never keyed
+ * to a Liability Class. `extra_monthly_payment`/`escrow_portion` default to
+ * 0 at the schema layer (mirroring `contribution_escalation_rate`) so they
+ * are always present; the rest stay `null` until entered.
+ * `linked_holding_id` pairs this Liability with the Holding it financed
+ * (user story 64) and is otherwise unrelated to the payoff math. */
+export type AmortizationAssumptions = {
+  interest_rate: number | null;
+  original_loan_amount: number | null;
+  term_months: number | null;
+  custom_monthly_payment: number | null;
+  extra_monthly_payment: number;
+  escrow_portion: number;
+  /** Display-only, read by no formula (docs/SPEC.md). */
+  start_date: string | null;
+  linked_holding_id: string | null;
+};
+
 export type Liability = {
   id: string;
   liability_class_id: string;
@@ -51,11 +70,14 @@ export type Liability = {
   currency: string;
   archived_at: string | null;
   created_at: string;
-};
+} & AmortizationAssumptions;
 
-/** The editable fields of a Liability — name, Liability Class, and currency
- * — mirrors HoldingPatch. */
-export type LiabilityPatch = Pick<Liability, "name" | "liability_class_id" | "currency">;
+/** The editable fields of a Liability — name, Liability Class, currency,
+ * and its optional Amortization Assumptions — mirrors HoldingPatch. Every
+ * Amortization field is independently optional on a PATCH (the route
+ * leaves an omitted one as-is); `Partial` lets a caller send any subset. */
+export type LiabilityPatch = Pick<Liability, "name" | "liability_class_id" | "currency"> &
+  Partial<AmortizationAssumptions>;
 
 export type LiabilityValuation = {
   id: string;

@@ -4,7 +4,8 @@ import { DistributionBar } from "@/components/plan/DistributionBar";
 import { formatMoney } from "@/lib/currency/format";
 import type { NetWorthSummary } from "@/lib/net-worth/compute";
 import type { NetWorthTimelinePoint } from "@/lib/net-worth/timeline";
-import type { ProjectedNetWorthPoint } from "@/lib/projection/engine";
+import type { PayoffMarker, ProjectedNetWorthPoint } from "@/lib/projection/engine";
+import { toChartPayoffMarkers } from "@/lib/projection/payoff-marker-label";
 import type { AssetClassDistributionRow } from "@/lib/target-allocation/distribution";
 import { NetWorthTimelineChart } from "./NetWorthTimelineChart";
 import { StalenessList, type StaleItem } from "./StalenessList";
@@ -27,6 +28,8 @@ export function DashboardPanel({
   netWorth,
   timeline,
   projected,
+  payoffMarkers,
+  liabilityNames,
   staleItems,
   distribution,
 }: {
@@ -34,9 +37,13 @@ export function DashboardPanel({
   netWorth: NetWorthSummary;
   timeline: NetWorthTimelinePoint[];
   projected: ProjectedNetWorthPoint[];
+  payoffMarkers: PayoffMarker[];
+  liabilityNames: Map<string, string>;
   staleItems: StaleItem[];
   distribution: AssetClassDistributionRow[];
 }) {
+  const chartPayoffMarkers = toChartPayoffMarkers(payoffMarkers, liabilityNames, homeCurrency);
+
   return (
     <div className="flex flex-1 flex-col gap-8 overflow-y-auto px-8 py-8">
       <div className="grid grid-cols-1 gap-8 min-[1200px]:grid-cols-2">
@@ -52,7 +59,12 @@ export function DashboardPanel({
               {netWorth.asOfDate ? ` · as of ${netWorth.asOfDate}` : ""}
             </p>
           </div>
-          <NetWorthTimelineChart homeCurrency={homeCurrency} recorded={timeline} projected={projected} />
+          <NetWorthTimelineChart
+            homeCurrency={homeCurrency}
+            recorded={timeline}
+            projected={projected}
+            payoffMarkers={chartPayoffMarkers}
+          />
         </section>
 
         <section className="flex flex-col gap-3 rounded-lg border border-hairline p-6">

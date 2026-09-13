@@ -8,7 +8,14 @@ import { formatMoney } from "@/lib/currency/format";
 import type { PriceCacheRow } from "@/lib/market-data/live-estimate";
 import { computeNetWorth } from "@/lib/net-worth/compute";
 import { buildNetWorthTimeline } from "@/lib/net-worth/timeline";
-import { projectNetWorth, type ProjectedNetWorthPoint } from "@/lib/projection/engine";
+import {
+  projectNetWorth,
+  projectPayoffMarkers,
+  type PayoffMarker,
+  type ProjectedNetWorthPoint,
+} from "@/lib/projection/engine";
+import { computeProjectedNetPosition } from "@/lib/projection/net-position";
+import { toAmortizationInput } from "@/lib/liabilities/to-amortization-input";
 import { latestValuationByHolding, latestValuationByLiability } from "@/lib/valuations/latest";
 import { daysAgoLabel, isStale } from "@/lib/valuations/staleness";
 import { AddAssetClassRow } from "./AddAssetClassRow";
@@ -220,19 +227,32 @@ export function PortfolioShell({
   // on the page.
   const today = useMemo(() => new Date().toISOString().slice(0, 10), []);
 
-  // Each active Liability held flat at its current home-currency balance —
-  // the engine's whole Liability input until ticket 11 adds Amortization
-  // Assumptions (user story 62).
+  // Each active Liability's current home-currency balance, plus its
+  // Amortization Assumptions (ticket 11) converted by the same fx rate as
+  // the balance — every dollar-valued input the engine runs on needs to be
+  // in the same currency terms, and the Portfolio's projection already
+  // treats today's fx rate as holding forward, exactly like the balance
+  // itself. `interest_rate`/`term_months` aren't dollar amounts and are
+  // passed through unconverted.
   const liabilitiesForProjection = useMemo(
     () =>
       activeLiabilities.map((liability) => {
         const latest = latestByLiability.get(liability.id);
+        const fxRate = latest ? latest.fx_rate_to_home : 1;
         return {
           id: liability.id,
-          currentAmount: latest ? latest.amount * latest.fx_rate_to_home : 0,
+          currentAmount: latest ? latest.amount * fxRate : 0,
+          amortization: toAmortizationInput(liability, fxRate),
         };
       }),
     [activeLiabilities, latestByLiability],
+  );
+
+  // Named liability lookups the payoff-marker labels need — kept here
+  // rather than duplicated in each consumer.
+  const liabilityNames = useMemo(
+    () => new Map(liabilities.map((l) => [l.id, l.name])),
+    [liabilities],
   );
 
   // The dashboard's projected line always reads the last *saved* assumption
@@ -247,6 +267,77 @@ export function PortfolioShell({
       assumptions: projectionAssumptions,
     });
   }, [today, netWorth.holdingsTotal, liabilitiesForProjection, projectionAssumptions]);
+
+  // One payoff marker per amortizing Liability inside the horizon (user
+  // story 76), named for the dashboard's own timeline — the Plan page's
+  // chart computes its own set off the live draft (ProjectionSection).
+  const payoffMarkersFromSavedAssumptions: PayoffMarker[] = useMemo(() => {
+    if (!projectionAssumptions) return [];
+    return projectPayoffMarkers({
+      liabilities: liabilitiesForProjection,
+      today,
+      horizonYears: projectionAssumptions.horizon_years,
+    });
+  }, [today, liabilitiesForProjection, projectionAssumptions]);
+
+  // Projected Net Position of a linked Holding/Liability pair, read from
+  // whichever side is selected (user stories 64–65) — never called
+  // "equity" (collides with the Equity Asset Class). `null` until both a
+  // link exists and a saved Projection assumption set gives it a growth
+  // rate and horizon to run on, mirroring the ad-hoc single-Holding
+  // projection's own gating.
+  const selectedLiabilityLinkedHolding = useMemo(() => {
+    if (!selectedLiability?.linked_holding_id) return null;
+    return holdings.find((h) => h.id === selectedLiability.linked_holding_id) ?? null;
+  }, [selectedLiability, holdings]);
+
+  const selectedLiabilityNetPosition = useMemo(() => {
+    if (!projectionAssumptions || !selectedLiability || !selectedLiabilityLinkedHolding) return null;
+    const holdingLatest = latestByHolding.get(selectedLiabilityLinkedHolding.id);
+    if (!holdingLatest) return null;
+    const liabilityLatest = latestByLiability.get(selectedLiability.id);
+    return computeProjectedNetPosition({
+      today,
+      holdingCurrentAmount: holdingLatest.amount,
+      holdingGrowthRate: projectionAssumptions.growth_rate,
+      horizonYears: projectionAssumptions.horizon_years,
+      linkedLiabilities: [
+        {
+          currentAmount: liabilityLatest ? liabilityLatest.amount : 0,
+          amortization: toAmortizationInput(selectedLiability),
+        },
+      ],
+    });
+  }, [projectionAssumptions, selectedLiability, selectedLiabilityLinkedHolding, latestByHolding, latestByLiability, today]);
+
+  // The reverse direction: every active Liability linking to the selected
+  // Holding (usually one, but nothing stops two loans financing the same
+  // Holding), summed against that Holding's own trajectory.
+  const liabilitiesLinkedToSelectedHolding = useMemo(() => {
+    if (!selectedHolding) return [];
+    return activeLiabilities.filter((l) => l.linked_holding_id === selectedHolding.id);
+  }, [selectedHolding, activeLiabilities]);
+
+  const selectedHoldingNetPosition = useMemo(() => {
+    if (!projectionAssumptions || !selectedHolding || liabilitiesLinkedToSelectedHolding.length === 0) {
+      return null;
+    }
+    const holdingLatest = latestByHolding.get(selectedHolding.id);
+    if (!holdingLatest) return null;
+    return computeProjectedNetPosition({
+      today,
+      holdingCurrentAmount: holdingLatest.amount,
+      holdingGrowthRate: projectionAssumptions.growth_rate,
+      horizonYears: projectionAssumptions.horizon_years,
+      linkedLiabilities: liabilitiesLinkedToSelectedHolding.map((liability) => {
+        const latest = latestByLiability.get(liability.id);
+        return {
+          currentAmount: latest ? latest.amount : 0,
+          amortization: toAmortizationInput(liability),
+        };
+      }),
+    });
+  }, [projectionAssumptions, selectedHolding, liabilitiesLinkedToSelectedHolding, latestByHolding, latestByLiability, today]);
 
   function activatePortfolioRoot() {
     setActiveRoot("portfolio");
@@ -563,6 +654,7 @@ export function PortfolioShell({
             homeCurrency={homeCurrency}
             holdingsTotal={netWorth.holdingsTotal}
             liabilities={liabilitiesForProjection}
+            liabilityNames={liabilityNames}
             recordedTimeline={timeline}
             projectionAssumptions={projectionAssumptions}
             onSaveProjection={saveProjectionAssumptions}
@@ -615,6 +707,11 @@ export function PortfolioShell({
               liabilityClasses={liabilityClasses}
               latestValuation={latestByLiability.get(selectedLiability.id) ?? null}
               history={selectedLiabilityHistory}
+              today={today}
+              projectionAssumptions={projectionAssumptions}
+              linkableHoldings={activeHoldings}
+              linkedHolding={selectedLiabilityLinkedHolding}
+              netPosition={selectedLiabilityNetPosition}
               onRecordValuation={(amount, recordedAt) =>
                 recordLiabilityValuation(selectedLiability.id, amount, recordedAt)
               }
@@ -631,6 +728,8 @@ export function PortfolioShell({
               history={selectedHoldingHistory}
               today={today}
               projectionAssumptions={projectionAssumptions}
+              linkedLiabilities={liabilitiesLinkedToSelectedHolding}
+              netPosition={selectedHoldingNetPosition}
               priceCache={
                 selectedHolding.price_lookup_symbol
                   ? (priceCacheBySymbol.get(selectedHolding.price_lookup_symbol) ?? null)
@@ -672,6 +771,8 @@ export function PortfolioShell({
               netWorth={netWorth}
               timeline={timeline}
               projected={projectedFromSavedAssumptions}
+              payoffMarkers={payoffMarkersFromSavedAssumptions}
+              liabilityNames={liabilityNames}
               staleItems={staleItems}
               distribution={distribution}
             />

@@ -12,14 +12,27 @@ const HEIGHT = 64;
 // today's date (see PortfolioShell) — *is* that seam, so the two lines are
 // drawn to share that one point rather than needing a separate marker
 // reconciled against it.
+export type ChartPayoffMarker = {
+  /** Months from `projected[0]` (today) to the redirect boundary — the same
+   * `ceil(payoff_months)` `projectPayoffMarkers` reports. */
+  monthsFromToday: number;
+  label: string;
+};
+
 export function NetWorthTimelineChart({
   homeCurrency,
   recorded,
   projected,
+  payoffMarkers = [],
 }: {
   homeCurrency: string;
   recorded: NetWorthTimelinePoint[];
   projected: ProjectedNetWorthPoint[];
+  // One payoff marker per amortizing Liability inside the horizon (user
+  // story 76) — a tick on the line plus its own label below, since this
+  // 320×64 chart has no room for inline text without crowding the line
+  // it's annotating.
+  payoffMarkers?: ChartPayoffMarker[];
 }) {
   const recordedValues = recorded.map((point) => point.netWorth);
   const projectedValues = projected.map((point) => point.netWorth);
@@ -56,6 +69,13 @@ export function NetWorthTimelineChart({
     .map((value, i) => `${x(anchorIndex + i)},${y(value)}`)
     .join(" ");
   const todayX = x(anchorIndex);
+
+  // A marker's own index is fractional (a payoff rarely lands on a year
+  // boundary) — the same `anchorIndex`-relative space as the projected
+  // line, just not rounded to a sampled point.
+  const visibleMarkers = payoffMarkers
+    .map((marker) => ({ ...marker, index: anchorIndex + marker.monthsFromToday / 12 }))
+    .filter((marker) => marker.index <= totalPoints);
 
   const first = recorded[0] ?? projected[0];
   const lastLabel = projected[projected.length - 1] ?? recorded[recorded.length - 1];
@@ -101,6 +121,19 @@ export function NetWorthTimelineChart({
               opacity={0.3}
             />
           )}
+          {visibleMarkers.map((marker) => (
+            <line
+              key={marker.label}
+              x1={x(marker.index)}
+              y1={0}
+              x2={x(marker.index)}
+              y2={HEIGHT}
+              stroke="currentColor"
+              strokeWidth={1}
+              strokeDasharray="1 2"
+              opacity={0.5}
+            />
+          ))}
         </svg>
       </div>
       <div className="flex justify-between text-xs text-zinc-500 dark:text-zinc-400">
@@ -112,6 +145,13 @@ export function NetWorthTimelineChart({
           {lastLabel.date} · {formatMoney(lastLabel.netWorth, homeCurrency)}
         </span>
       </div>
+      {visibleMarkers.length > 0 && (
+        <ul className="flex flex-col gap-0.5 text-xs text-zinc-500 dark:text-zinc-400">
+          {visibleMarkers.map((marker) => (
+            <li key={marker.label}>{marker.label}</li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 }

@@ -16,6 +16,7 @@ export function PlanPanel({
   homeCurrency,
   holdingsTotal,
   liabilities,
+  liabilityNames,
   recordedTimeline,
   projectionAssumptions,
   onSaveProjection,
@@ -28,6 +29,7 @@ export function PlanPanel({
   homeCurrency: string;
   holdingsTotal: number;
   liabilities: ProjectionLiabilityInput[];
+  liabilityNames: Map<string, string>;
   recordedTimeline: NetWorthTimelinePoint[];
   projectionAssumptions: ProjectionAssumptions | null;
   onSaveProjection: (assumptions: ProjectionAssumptions) => Promise<string | null>;
@@ -53,6 +55,7 @@ export function PlanPanel({
           homeCurrency={homeCurrency}
           holdingsTotal={holdingsTotal}
           liabilities={liabilities}
+          liabilityNames={liabilityNames}
           recordedTimeline={recordedTimeline}
           assumptions={projectionAssumptions}
           onSave={onSaveProjection}
