@@ -6,6 +6,7 @@ import type { NetWorthSummary } from "@/lib/net-worth/compute";
 import type { NetWorthTimelinePoint } from "@/lib/net-worth/timeline";
 import type { PayoffMarker, ProjectedNetWorthPoint } from "@/lib/projection/engine";
 import { toChartPayoffMarkers } from "@/lib/projection/payoff-marker-label";
+import { passedTargetMessage } from "@/lib/projection/target-gap";
 import type { AssetClassDistributionRow } from "@/lib/target-allocation/distribution";
 import { NetWorthTimelineChart } from "./NetWorthTimelineChart";
 import { StalenessList, type StaleItem } from "./StalenessList";
@@ -24,6 +25,7 @@ import { StalenessList, type StaleItem } from "./StalenessList";
 // tickets lands second should slot it into this section rather than
 // restructure the grid.
 export function DashboardPanel({
+  today,
   homeCurrency,
   netWorth,
   timeline,
@@ -32,7 +34,10 @@ export function DashboardPanel({
   liabilityNames,
   staleItems,
   distribution,
+  targetAmount,
+  targetDate,
 }: {
+  today: string;
   homeCurrency: string;
   netWorth: NetWorthSummary;
   timeline: NetWorthTimelinePoint[];
@@ -41,11 +46,27 @@ export function DashboardPanel({
   liabilityNames: Map<string, string>;
   staleItems: StaleItem[];
   distribution: AssetClassDistributionRow[];
+  // The Target Net Worth (ticket 13), drawn on this hero timeline too, not
+  // only the Plan page's own copy of this same chart.
+  targetAmount: number | null;
+  // Paired with `targetAmount` so this, the actual landing view on a
+  // fresh visit, can carry the passed-target-date prompt (user story 90)
+  // rather than that prompt only ever surfacing on the Plan page.
+  targetDate: string | null;
 }) {
   const chartPayoffMarkers = toChartPayoffMarkers(payoffMarkers, liabilityNames, homeCurrency);
+  const passedTarget = passedTargetMessage({
+    today,
+    targetAmount,
+    targetDate,
+    currentNetWorth: netWorth.netWorth,
+    homeCurrency,
+  });
 
   return (
     <div className="flex flex-1 flex-col gap-8 overflow-y-auto px-8 py-8">
+      {passedTarget && <p className="text-sm font-medium">{passedTarget}</p>}
+
       <div className="grid grid-cols-1 gap-8 min-[1200px]:grid-cols-2">
         <section className="flex flex-col gap-3 rounded-lg border border-hairline p-6">
           <div>
@@ -64,6 +85,7 @@ export function DashboardPanel({
             recorded={timeline}
             projected={projected}
             payoffMarkers={chartPayoffMarkers}
+            targetAmount={targetAmount}
           />
         </section>
 

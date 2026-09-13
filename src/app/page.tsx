@@ -3,6 +3,7 @@ import { firstNameOrEmail } from "@/lib/auth/display-name";
 import { HOLDING_COLUMNS } from "@/lib/holdings/columns";
 import { LIABILITY_COLUMNS } from "@/lib/liabilities/columns";
 import type { PriceCacheRow } from "@/lib/market-data/live-estimate";
+import { PROJECTION_COLUMNS } from "@/lib/projection/columns";
 import { createClient } from "@/lib/supabase/server";
 import { PortfolioShell } from "@/components/portfolio/PortfolioShell";
 import type {
@@ -92,10 +93,7 @@ export default async function DashboardPage() {
       .select("symbol, price, price_currency, source, last_error, fetched_at"),
     // `null` for a User who has never saved the Plan page's Projection
     // form — there is no auto-created default row, unlike `portfolio`.
-    supabase
-      .from("projection")
-      .select("growth_rate, monthly_contribution, contribution_escalation_rate, horizon_years")
-      .maybeSingle(),
+    supabase.from("projection").select(PROJECTION_COLUMNS).maybeSingle(),
   ]);
 
   if (portfolioError || !portfolio) {

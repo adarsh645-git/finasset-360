@@ -1,15 +1,16 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createRouteClient, jsonWithCookies, requireUser } from "@/lib/supabase/route";
+import { isWellFormedDate } from "@/lib/liabilities/amortization";
+import { PROJECTION_COLUMNS } from "@/lib/projection/columns";
 import type { ProjectionAssumptions } from "@/components/portfolio/types";
-
-const PROJECTION_COLUMNS =
-  "growth_rate, monthly_contribution, contribution_escalation_rate, horizon_years, inflation_rate";
 
 /** `null` when the body isn't a well-formed `ProjectionAssumptions` — every
  * rate a finite number and the horizon a non-negative integer, mirroring
  * `readAllocations` in `/api/target-allocation`. Values outside a sane
  * range (a negative rate, a huge horizon) are accepted as-is: the User's
- * own "what if" is not this route's business to second-guess. */
+ * own "what if" is not this route's business to second-guess.
+ * `target_amount`/`target_date` (ticket 13) must be `null` together or set
+ * together — a Projection can have a Target or not, never a half of one. */
 function readAssumptions(body: unknown): ProjectionAssumptions | null {
   if (typeof body !== "object" || body === null) return null;
   const {
@@ -18,6 +19,8 @@ function readAssumptions(body: unknown): ProjectionAssumptions | null {
     contribution_escalation_rate: contributionEscalationRate,
     horizon_years: horizonYears,
     inflation_rate: inflationRate,
+    target_amount: targetAmount = null,
+    target_date: targetDate = null,
   } = body as Record<string, unknown>;
 
   if (typeof growthRate !== "number" || !Number.isFinite(growthRate)) return null;
@@ -30,12 +33,19 @@ function readAssumptions(body: unknown): ProjectionAssumptions | null {
   }
   if (typeof inflationRate !== "number" || !Number.isFinite(inflationRate)) return null;
 
+  const hasNoTarget = targetAmount === null && targetDate === null;
+  const hasCompleteTarget =
+    typeof targetAmount === "number" && Number.isFinite(targetAmount) && isWellFormedDate(targetDate);
+  if (!hasNoTarget && !hasCompleteTarget) return null;
+
   return {
     growth_rate: growthRate,
     monthly_contribution: monthlyContribution,
     contribution_escalation_rate: contributionEscalationRate,
     horizon_years: horizonYears,
     inflation_rate: inflationRate,
+    target_amount: targetAmount as number | null,
+    target_date: targetDate as string | null,
   };
 }
 
@@ -82,7 +92,7 @@ export async function PUT(request: NextRequest) {
     return NextResponse.json(
       {
         error:
-          "growth_rate, monthly_contribution, contribution_escalation_rate and inflation_rate must be finite numbers, and horizon_years a non-negative integer.",
+          "growth_rate, monthly_contribution, contribution_escalation_rate and inflation_rate must be finite numbers, horizon_years a non-negative integer, and target_amount/target_date either both null or a finite number with a YYYY-MM-DD date.",
       },
       { status: 400 },
     );

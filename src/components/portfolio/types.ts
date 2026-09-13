@@ -97,8 +97,7 @@ export type TargetAllocation = {
 
 /** The Projection assumption set (user stories 67, 68, 70, 72, 80) — one
  * active set per Portfolio, not multiple named scenarios. Rates are decimal
- * fractions (0.07, not 7). `target_amount`/`target_date` (ticket 13) aren't
- * part of this ticket's shape. */
+ * fractions (0.07, not 7). */
 export type ProjectionAssumptions = {
   growth_rate: number;
   monthly_contribution: number;
@@ -109,4 +108,10 @@ export type ProjectionAssumptions = {
    * this one included, stays nominal; only the projection engine's output
    * gets deflated. Defaults to 0.03 (user story 81). */
   inflation_rate: number;
+  /** The Target Net Worth (ticket 13, user stories 85-90) — an amount and a
+   * date, always set or cleared together (`null` alongside `target_date`):
+   * a Projection without a Target is valid. Stated in today's purchasing
+   * power, so it's compared against `realNetWorth`, never `netWorth`. */
+  target_amount: number | null;
+  target_date: string | null;
 };

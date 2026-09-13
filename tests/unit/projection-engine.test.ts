@@ -17,6 +17,8 @@ function assumptions(overrides: Partial<ProjectionAssumptions>): ProjectionAssum
     contribution_escalation_rate: 0,
     horizon_years: 10,
     inflation_rate: 0,
+    target_amount: null,
+    target_date: null,
     ...overrides,
   };
 }

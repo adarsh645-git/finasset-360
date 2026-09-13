@@ -767,6 +767,7 @@ export function PortfolioShell({
             />
           ) : (
             <DashboardPanel
+              today={today}
               homeCurrency={homeCurrency}
               netWorth={netWorth}
               timeline={timeline}
@@ -775,6 +776,8 @@ export function PortfolioShell({
               liabilityNames={liabilityNames}
               staleItems={staleItems}
               distribution={distribution}
+              targetAmount={projectionAssumptions?.target_amount ?? null}
+              targetDate={projectionAssumptions?.target_date ?? null}
             />
           )}
         </div>

@@ -26,6 +26,7 @@ export function NetWorthTimelineChart({
   recorded,
   projected,
   payoffMarkers = [],
+  targetAmount = null,
 }: {
   homeCurrency: string;
   recorded: NetWorthTimelinePoint[];
@@ -35,6 +36,10 @@ export function NetWorthTimelineChart({
   // 320×64 chart has no room for inline text without crowding the line
   // it's annotating.
   payoffMarkers?: ChartPayoffMarker[];
+  // The Target Net Worth (ticket 13, user story 87) — a flat line across
+  // the whole chart, since the target itself doesn't move with the years,
+  // only the trajectory does.
+  targetAmount?: number | null;
 }) {
   const recordedValues = recorded.map((point) => point.netWorth);
   // Ticket 12: the projection forks into two lines at today — the real one
@@ -44,7 +49,14 @@ export function NetWorthTimelineChart({
   // single line it always was.
   const nominalValues = projected.map((point) => point.netWorth);
   const realValues = projected.map((point) => point.realNetWorth);
-  const allValues = [...recordedValues, ...nominalValues, ...realValues];
+  const allValues = [
+    ...recordedValues,
+    ...nominalValues,
+    ...realValues,
+    // Included in the range so the target line is never clipped off the
+    // top or bottom of a chart it hasn't been reached on yet.
+    ...(targetAmount === null ? [] : [targetAmount]),
+  ];
 
   if (allValues.length < 2) {
     return (
@@ -101,6 +113,20 @@ export function NetWorthTimelineChart({
           fill="none"
           aria-hidden="true"
         >
+          {/* Target Net Worth — drawn first so the trajectory lines sit on
+              top of it rather than the reverse. */}
+          {targetAmount !== null && (
+            <line
+              x1={0}
+              y1={y(targetAmount)}
+              x2={WIDTH}
+              y2={y(targetAmount)}
+              stroke="currentColor"
+              strokeWidth={1}
+              strokeDasharray="3 2"
+              opacity={0.4}
+            />
+          )}
           {recordedValues.length > 1 && (
             <polyline
               points={recordedPoints}

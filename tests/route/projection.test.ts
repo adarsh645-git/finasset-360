@@ -51,6 +51,8 @@ describe("GET/PUT /api/projection", () => {
       contribution_escalation_rate: 0.03,
       horizon_years: 20,
       inflation_rate: 0.03,
+      target_amount: null,
+      target_date: null,
     });
 
     const getResponse = await GET(requestAs(userA, PROJECTION_URL));
@@ -60,6 +62,8 @@ describe("GET/PUT /api/projection", () => {
       contribution_escalation_rate: 0.03,
       horizon_years: 20,
       inflation_rate: 0.03,
+      target_amount: null,
+      target_date: null,
     });
   });
 
@@ -96,6 +100,8 @@ describe("GET/PUT /api/projection", () => {
       contribution_escalation_rate: 0.02,
       horizon_years: 15,
       inflation_rate: 0.04,
+      target_amount: null,
+      target_date: null,
     });
   });
 
@@ -178,6 +184,8 @@ describe("GET/PUT /api/projection", () => {
       contribution_escalation_rate: 0,
       horizon_years: 25,
       inflation_rate: 0.03,
+      target_amount: null,
+      target_date: null,
     });
   });
 
@@ -191,6 +199,136 @@ describe("GET/PUT /api/projection", () => {
           contribution_escalation_rate: 0,
           horizon_years: 10,
           inflation_rate: "a lot",
+        }),
+      }),
+    );
+    expect(response.status).toBe(400);
+  });
+
+  // Ticket 13: Target Net Worth and the gap.
+
+  it("saves and reads back a Target Net Worth alongside the rest of the assumption set", async () => {
+    const putResponse = await PUT(
+      requestAs(userA, PROJECTION_URL, {
+        method: "PUT",
+        ...jsonBody({
+          growth_rate: 0.07,
+          monthly_contribution: 1500,
+          contribution_escalation_rate: 0.03,
+          horizon_years: 20,
+          inflation_rate: 0.03,
+          target_amount: 6_000_000,
+          target_date: "2046-01-01",
+        }),
+      }),
+    );
+    expect(putResponse.status).toBe(200);
+    expect(await putResponse.json()).toEqual({
+      growth_rate: 0.07,
+      monthly_contribution: 1500,
+      contribution_escalation_rate: 0.03,
+      horizon_years: 20,
+      inflation_rate: 0.03,
+      target_amount: 6_000_000,
+      target_date: "2046-01-01",
+    });
+
+    const getResponse = await GET(requestAs(userA, PROJECTION_URL));
+    expect(await getResponse.json()).toEqual({
+      growth_rate: 0.07,
+      monthly_contribution: 1500,
+      contribution_escalation_rate: 0.03,
+      horizon_years: 20,
+      inflation_rate: 0.03,
+      target_amount: 6_000_000,
+      target_date: "2046-01-01",
+    });
+  });
+
+  it("clears a previously-set Target back to null together", async () => {
+    await PUT(
+      requestAs(userA, PROJECTION_URL, {
+        method: "PUT",
+        ...jsonBody({
+          growth_rate: 0.07,
+          monthly_contribution: 1500,
+          contribution_escalation_rate: 0.03,
+          horizon_years: 20,
+          inflation_rate: 0.03,
+          target_amount: 6_000_000,
+          target_date: "2046-01-01",
+        }),
+      }),
+    );
+    await PUT(
+      requestAs(userA, PROJECTION_URL, {
+        method: "PUT",
+        ...jsonBody({
+          growth_rate: 0.07,
+          monthly_contribution: 1500,
+          contribution_escalation_rate: 0.03,
+          horizon_years: 20,
+          inflation_rate: 0.03,
+          target_amount: null,
+          target_date: null,
+        }),
+      }),
+    );
+
+    const response = await GET(requestAs(userA, PROJECTION_URL));
+    const body = await response.json();
+    expect(body.target_amount).toBeNull();
+    expect(body.target_date).toBeNull();
+  });
+
+  it("rejects a target_amount set without a target_date", async () => {
+    const response = await PUT(
+      requestAs(userA, PROJECTION_URL, {
+        method: "PUT",
+        ...jsonBody({
+          growth_rate: 0.07,
+          monthly_contribution: 100,
+          contribution_escalation_rate: 0,
+          horizon_years: 10,
+          inflation_rate: 0.03,
+          target_amount: 1_000_000,
+          target_date: null,
+        }),
+      }),
+    );
+    expect(response.status).toBe(400);
+  });
+
+  it("rejects a target_date set without a target_amount", async () => {
+    const response = await PUT(
+      requestAs(userA, PROJECTION_URL, {
+        method: "PUT",
+        ...jsonBody({
+          growth_rate: 0.07,
+          monthly_contribution: 100,
+          contribution_escalation_rate: 0,
+          horizon_years: 10,
+          inflation_rate: 0.03,
+          target_amount: null,
+          target_date: "2046-01-01",
+        }),
+      }),
+    );
+    expect(response.status).toBe(400);
+  });
+
+  it("rejects a malformed target_date", async () => {
+    const response = await PUT(
+      requestAs(userA, PROJECTION_URL, {
+        method: "PUT",
+        ...jsonBody({
+          growth_rate: 0.07,
+          monthly_contribution: 100,
+          contribution_escalation_rate: 0,
+          horizon_years: 10,
+          inflation_rate: 0.03,
+          target_amount: 1_000_000,
+          target_date: "not-a-date",
         }),
       }),
     );
