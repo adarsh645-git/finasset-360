@@ -3,6 +3,7 @@ import { isVisibleAssetClass } from "@/lib/asset-classes/visibility";
 import { isValidCurrencyCode } from "@/lib/currency/iso4217";
 import { HOLDING_COLUMNS } from "@/lib/holdings/columns";
 import { readPriceLookupPatch } from "@/lib/holdings/price-lookup";
+import { readSectorPatch } from "@/lib/holdings/sector";
 import { readTrimmedString } from "@/lib/http/body";
 import { createRouteClient, jsonWithCookies, requireUser } from "@/lib/supabase/route";
 
@@ -31,9 +32,10 @@ export async function GET(request: NextRequest) {
 
 // POST /api/holdings — add a Holding under an Asset Class (user stories 12,
 // 13), optionally with a market symbol and quantity to give it a Live
-// Estimate (ticket 07; user stories 32-38). Body: { name, asset_class_id,
-// currency, price_lookup_symbol?, quantity? } — the last two must be
-// present together or not at all.
+// Estimate (ticket 07; user stories 32-38), plus an optional Sector (ticket
+// 18). Body: { name, asset_class_id, currency, price_lookup_symbol?,
+// quantity?, sector? } — price_lookup_symbol/quantity must be present
+// together or not at all; sector is independent of that pair.
 export async function POST(request: NextRequest) {
   const { supabase, responseCookies } = createRouteClient(request);
 
@@ -69,6 +71,11 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: priceLookup }, { status: 400 });
   }
 
+  const sector = readSectorPatch(body);
+  if (!sector.ok) {
+    return NextResponse.json({ error: sector.error }, { status: 400 });
+  }
+
   if (!(await isVisibleAssetClass(supabase, assetClassId))) {
     return NextResponse.json({ error: "Asset Class not found." }, { status: 400 });
   }
@@ -81,6 +88,7 @@ export async function POST(request: NextRequest) {
       name,
       currency,
       ...priceLookup,
+      ...(sector.value !== undefined ? { sector: sector.value } : {}),
     })
     .select(HOLDING_COLUMNS)
     .single();

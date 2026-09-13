@@ -3,11 +3,15 @@
 import { useState } from "react";
 import { CurrencySelect } from "@/components/CurrencySelect";
 import { validatePriceLookupInput } from "@/lib/holdings/price-lookup-input";
+import { StockSymbolPicker } from "./StockSymbolPicker";
 
 // Add a Holding under the Asset Class the User is currently browsing (user
 // story 12) — name and currency, plus an optional market symbol/quantity
 // pair that gives it a Live Estimate (ticket 07). The Asset Class itself is
-// implicit in which column this control lives in.
+// implicit in which column this control lives in. The symbol field is the
+// stock-picker (ticket 18): selecting a suggestion fills Sector and
+// autofills Name, but a freeform symbol with no match stays fully
+// supported.
 export function AddHoldingRow({
   onAdd,
 }: {
@@ -15,6 +19,7 @@ export function AddHoldingRow({
     name: string,
     currency: string,
     priceLookup: { price_lookup_symbol: string; quantity: number } | null,
+    sector: string | null,
   ) => Promise<string | null>;
 }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -22,6 +27,7 @@ export function AddHoldingRow({
   const [currency, setCurrency] = useState("USD");
   const [symbol, setSymbol] = useState("");
   const [quantity, setQuantity] = useState("");
+  const [sector, setSector] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -36,7 +42,7 @@ export function AddHoldingRow({
     if (!name.trim() || priceLookup.isMismatched || priceLookup.isInvalid) return;
     setIsSaving(true);
     setError(null);
-    const failure = await onAdd(name.trim(), currency, priceLookup.value);
+    const failure = await onAdd(name.trim(), currency, priceLookup.value, sector);
     setIsSaving(false);
     if (failure) {
       setError(failure);
@@ -45,6 +51,7 @@ export function AddHoldingRow({
     setName("");
     setSymbol("");
     setQuantity("");
+    setSector(null);
     setIsOpen(false);
   }
 
@@ -75,13 +82,23 @@ export function AddHoldingRow({
       />
       <CurrencySelect value={currency} onChange={setCurrency} disabled={isSaving} />
       <div className="flex gap-1.5">
-        <input
-          value={symbol}
-          onChange={(e) => setSymbol(e.target.value)}
-          placeholder="Market symbol (optional)"
-          disabled={isSaving}
-          className="w-1/2 rounded-md border border-hairline bg-transparent px-2 py-1.5 text-sm"
-        />
+        <div className="w-1/2">
+          <StockSymbolPicker
+            value={symbol}
+            onChangeText={(text) => {
+              setSymbol(text);
+              setSector(null);
+            }}
+            onSelect={(match) => {
+              setSymbol(match.symbol);
+              setSector(match.sector);
+              setName(match.name);
+            }}
+            disabled={isSaving}
+            placeholder="Market symbol (optional)"
+            className="w-full rounded-md border border-hairline bg-transparent px-2 py-1.5 text-sm"
+          />
+        </div>
         <input
           type="number"
           inputMode="decimal"
@@ -93,6 +110,7 @@ export function AddHoldingRow({
           className="w-1/2 rounded-md border border-hairline bg-transparent px-2 py-1.5 text-sm"
         />
       </div>
+      {sector && <p className="text-xs text-zinc-500 dark:text-zinc-400">Sector: {sector}</p>}
       {priceLookup.isMismatched && (
         <p className="text-xs font-medium">Market symbol and quantity must be set together.</p>
       )}

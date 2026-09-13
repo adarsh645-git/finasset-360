@@ -64,3 +64,7 @@ _Avoid_: Needed savings, shortfall (the shortfall is the gap in Net Worth, not i
 **Projected Net Position**:
 For a Holding linked to a Liability with Amortization Assumptions, the paired figure at a future point in a Projection: that Holding's projected value minus its linked Liability's projected balance (e.g. a house's projected value minus its projected remaining mortgage balance).
 _Avoid_: Equity, home equity (collides with "Equity" the Asset Class, e.g. stocks) — always say "Projected Net Position"
+
+**Sector**:
+A stock's market-sector/industry label (e.g. "Technology," "Financial Services"), resolved from the market-data provider and shown alongside a Holding's ticker and company name when picked from the stock-picker's suggestions. Stored on the Holding once resolved, purely descriptive — carries no weight in Target Allocation, Projection, or Net Worth, and is unrelated to Asset Class (a User-defined ownership category) despite both being "what kind of thing is this." Only ever set for a Holding resolved through the stock-picker; a manually-entered Holding (Real Estate, etc.) has none.
+_Avoid_: Segment (the Projection already uses "segment" for its piecewise time chunks — say "Sector" here to avoid the collision), category, industry (the provider's own field name, not the term to use in this app)

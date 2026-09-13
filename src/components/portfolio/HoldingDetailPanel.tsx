@@ -8,6 +8,7 @@ import type { PriceCacheRow } from "@/lib/market-data/live-estimate";
 import { projectHoldingValue } from "@/lib/projection/engine";
 import { formatNetPositionLabel } from "@/lib/projection/net-position";
 import { LiveEstimate } from "./LiveEstimate";
+import { StockSymbolPicker } from "./StockSymbolPicker";
 import { ValuationEditor } from "./ValuationEditor";
 import { ValuationHistoryTable } from "./ValuationHistoryTable";
 import type {
@@ -64,6 +65,7 @@ export function HoldingDetailPanel({
   const [currency, setCurrency] = useState(holding.currency);
   const [symbol, setSymbol] = useState(holding.price_lookup_symbol ?? "");
   const [quantity, setQuantity] = useState(holding.quantity !== null ? String(holding.quantity) : "");
+  const [sector, setSector] = useState(holding.sector);
   const [isSaving, setIsSaving] = useState(false);
   const [isArchiving, setIsArchiving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -92,7 +94,8 @@ export function HoldingDetailPanel({
     assetClassId !== holding.asset_class_id ||
     currency !== holding.currency ||
     symbol !== (holding.price_lookup_symbol ?? "") ||
-    quantity !== (holding.quantity !== null ? String(holding.quantity) : "");
+    quantity !== (holding.quantity !== null ? String(holding.quantity) : "") ||
+    sector !== holding.sector;
 
   async function handleSave(event: React.FormEvent) {
     event.preventDefault();
@@ -105,6 +108,7 @@ export function HoldingDetailPanel({
       currency,
       price_lookup_symbol: priceLookup.value?.price_lookup_symbol ?? null,
       quantity: priceLookup.value?.quantity ?? null,
+      sector: priceLookup.value ? sector : null,
     });
     setIsSaving(false);
     if (failure) setError(failure);
@@ -210,12 +214,21 @@ export function HoldingDetailPanel({
         <div className="flex gap-4">
           <label className="flex flex-1 flex-col gap-1 text-sm">
             Market symbol
-            <input
+            <StockSymbolPicker
               value={symbol}
-              onChange={(e) => setSymbol(e.target.value)}
+              onChangeText={(text) => {
+                setSymbol(text);
+                setSector(null);
+              }}
+              onSelect={(match) => {
+                setSymbol(match.symbol);
+                setSector(match.sector);
+                setName(match.name);
+              }}
               placeholder="e.g. AAPL, XAU (optional)"
               className="rounded-md border border-hairline bg-transparent px-2 py-1.5 text-sm"
             />
+            {sector && <span className="text-xs text-zinc-500 dark:text-zinc-400">Sector: {sector}</span>}
           </label>
           <label className="flex flex-1 flex-col gap-1 text-sm">
             Quantity

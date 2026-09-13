@@ -90,6 +90,30 @@ describe("GET/POST /api/holdings, PATCH/DELETE /api/holdings/[id]", () => {
     expect(await response.json()).toMatchObject({ price_lookup_symbol: null, quantity: null });
   });
 
+  // Ticket 18: Sector rides along with a market symbol picked from the
+  // stock-picker, but is validated independently of the symbol/quantity
+  // coupling above — a Holding can be created with a symbol and no Sector
+  // yet (the lazy Finnhub lookup hasn't resolved it).
+  it("creates a Holding with a Sector", async () => {
+    const response = await createHolding(userA, {
+      price_lookup_symbol: "aapl",
+      quantity: 10,
+      sector: " Technology ",
+    });
+    expect(response.status).toBe(201);
+    expect(await response.json()).toMatchObject({ sector: "Technology" });
+  });
+
+  it("a Holding created with no Sector has none", async () => {
+    const response = await createHolding(userA);
+    expect(await response.json()).toMatchObject({ sector: null });
+  });
+
+  it("rejects a blank Sector", async () => {
+    const response = await createHolding(userA, { sector: "   " });
+    expect(response.status).toBe(400);
+  });
+
   it("rejects an asset_class_id that doesn't exist or isn't visible to the caller", async () => {
     const response = await createHolding(userA, {
       asset_class_id: "00000000-0000-0000-0000-000000000000",
@@ -174,6 +198,25 @@ describe("GET/POST /api/holdings, PATCH/DELETE /api/holdings/[id]", () => {
       { params: Promise.resolve({ id }) },
     );
     expect(response.status).toBe(400);
+  });
+
+  it("sets and clears a Holding's Sector via PATCH", async () => {
+    const created = await createHolding(userA);
+    const { id } = await created.json();
+
+    const withSector = await PATCH(
+      requestAs(userA, `${HOLDINGS_URL}/${id}`, { method: "PATCH", ...jsonBody({ sector: "Energy" }) }),
+      { params: Promise.resolve({ id }) },
+    );
+    expect(withSector.status).toBe(200);
+    expect(await withSector.json()).toMatchObject({ sector: "Energy" });
+
+    const cleared = await PATCH(
+      requestAs(userA, `${HOLDINGS_URL}/${id}`, { method: "PATCH", ...jsonBody({ sector: null }) }),
+      { params: Promise.resolve({ id }) },
+    );
+    expect(cleared.status).toBe(200);
+    expect(await cleared.json()).toMatchObject({ sector: null });
   });
 
   it("deletes a Holding", async () => {

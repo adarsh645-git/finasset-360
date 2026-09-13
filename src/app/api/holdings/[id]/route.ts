@@ -3,13 +3,14 @@ import { isVisibleAssetClass } from "@/lib/asset-classes/visibility";
 import { isValidCurrencyCode } from "@/lib/currency/iso4217";
 import { HOLDING_COLUMNS } from "@/lib/holdings/columns";
 import { readPriceLookupPatch } from "@/lib/holdings/price-lookup";
+import { readSectorPatch } from "@/lib/holdings/sector";
 import { hasKey, readTrimmedString } from "@/lib/http/body";
 import { createRouteClient, jsonWithCookies, requireUser } from "@/lib/supabase/route";
 
 // PATCH /api/holdings/[id] — edit a Holding's name, Asset Class, currency,
 // and/or its market symbol and quantity (user story 17; ticket 07 adds the
-// last two). Every field is optional; whatever is present is validated the
-// same way POST /api/holdings validates it.
+// last two), plus its Sector (ticket 18). Every field is optional; whatever
+// is present is validated the same way POST /api/holdings validates it.
 export async function PATCH(request: NextRequest, context: RouteContext<"/api/holdings/[id]">) {
   const { supabase, responseCookies } = createRouteClient(request);
 
@@ -32,6 +33,12 @@ export async function PATCH(request: NextRequest, context: RouteContext<"/api/ho
     return NextResponse.json({ error: priceLookup }, { status: 400 });
   }
   if (priceLookup) Object.assign(update, priceLookup);
+
+  const sector = readSectorPatch(body);
+  if (!sector.ok) {
+    return NextResponse.json({ error: sector.error }, { status: 400 });
+  }
+  if (sector.value !== undefined) update.sector = sector.value;
 
   if (hasKey(body, "name")) {
     const name = readTrimmedString(body, "name");

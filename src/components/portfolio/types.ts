@@ -15,18 +15,22 @@ export type Holding = {
   // for that symbol); one without (e.g. a house) has neither.
   price_lookup_symbol: string | null;
   quantity: number | null;
+  // Resolved lazily from Finnhub the first time this Holding's symbol is
+  // picked from the stock-picker (ticket 18) — display-only, `null` for a
+  // manually-entered Holding.
+  sector: string | null;
   archived_at: string | null;
   created_at: string;
 };
 
 /** The editable fields of a Holding — name, Asset Class, currency, and its
- * optional market symbol/quantity pair (user story 17; ticket 07) — as one
- * type, since HoldingDetailPanel's edit form, PortfolioShell's save
- * handler, and the PATCH body it sends all pass this same set around
- * together. */
+ * optional market symbol/quantity pair (user story 17; ticket 07), plus
+ * Sector (ticket 18) — as one type, since HoldingDetailPanel's edit form,
+ * PortfolioShell's save handler, and the PATCH body it sends all pass this
+ * same set around together. */
 export type HoldingPatch = Pick<
   Holding,
-  "name" | "asset_class_id" | "currency" | "price_lookup_symbol" | "quantity"
+  "name" | "asset_class_id" | "currency" | "price_lookup_symbol" | "quantity" | "sector"
 >;
 
 export type HoldingValuation = {
