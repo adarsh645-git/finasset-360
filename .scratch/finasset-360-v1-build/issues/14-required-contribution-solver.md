@@ -1,5 +1,5 @@
 Type: build
-Status: ready-for-agent
+Status: resolved
 
 # 14: Required Contribution solver
 
@@ -21,14 +21,14 @@ Spec: [`docs/SPEC.md`](../../../docs/SPEC.md) — user stories 91–95.
 
 **Blocked by:** 13.
 
-- [ ] Closed-form solve, no iteration, against the real line
-- [ ] Derived live, never persisted — no schema change from this ticket
-- [ ] Display always pairs the figure with the achievable date: *"you'd need 16,893/mo — or at your current 7,400/mo you reach 6M in 2051"*
-- [ ] **No unreachability threshold.** The result is never infinite or undefined — a one-year horizon yields 457,517/mo, absurd but finite and positive. Any plausibility constant would be a tuned guess that is wrong for someone
-- [ ] A required figure below the current contribution reads as headroom
-- [ ] A negative result is shown as **withdrawal capacity**, not clamped or suppressed
-- [ ] A negative contribution still escalates — a −48/mo figure at 5% escalation is a withdrawal *rising* 5% a year. Correct drawdown behaviour, but it silently repurposes a field the User set meaning "my savings will grow", so it must be **explicitly labelled**. Do not re-solve at 0% escalation when negative: that computes the displayed number under different assumptions depending on which side of zero it falls, kinking the curve at the crossing
-- [ ] Recomputed whenever assumptions or the Target change, so it never disagrees with the chart beside it
-- [ ] Test: linearity asserted directly — equal deltas across equal contribution steps
-- [ ] Test: solving against the real line, since solving against nominal is the error this decision exists to prevent
-- [ ] Test: a negative result survives with escalation applied rather than being clamped
+- [x] Closed-form solve, no iteration, against the real line
+- [x] Derived live, never persisted — no schema change from this ticket
+- [x] Display always pairs the figure with the achievable date: *"you'd need 16,893/mo — or at your current 7,400/mo you reach 6M in 2051"* — including the headroom case, caught in review: an earlier draft left that branch as a bare figure
+- [x] **No unreachability threshold.** The result is never infinite or undefined — a one-year horizon yields 457,517/mo, absurd but finite and positive. Any plausibility constant would be a tuned guess that is wrong for someone. A target date this year or already passed leaves zero full years for a monthly contribution to act on, which would otherwise divide by a zero slope (`Infinity`/`NaN`) — caught in review, fixed by flooring the solver's own horizon at one year, the spec's own worked extreme case, distinct from `computeTargetGap`'s floor at zero
+- [x] A required figure below the current contribution reads as headroom
+- [x] A negative result is shown as **withdrawal capacity**, not clamped or suppressed
+- [x] A negative contribution still escalates — a −48/mo figure at 5% escalation is a withdrawal *rising* 5% a year. Correct drawdown behaviour, but it silently repurposes a field the User set meaning "my savings will grow", so it must be **explicitly labelled**. Do not re-solve at 0% escalation when negative: that computes the displayed number under different assumptions depending on which side of zero it falls, kinking the curve at the crossing
+- [x] Recomputed whenever assumptions or the Target change, so it never disagrees with the chart beside it
+- [x] Test: linearity asserted directly — equal deltas across equal contribution steps
+- [x] Test: solving against the real line, since solving against nominal is the error this decision exists to prevent
+- [x] Test: a negative result survives with escalation applied rather than being clamped
