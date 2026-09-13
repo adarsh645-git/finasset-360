@@ -16,6 +16,7 @@ function assumptions(overrides: Partial<ProjectionAssumptions>): ProjectionAssum
     monthly_contribution: 0,
     contribution_escalation_rate: 0,
     horizon_years: 10,
+    inflation_rate: 0,
     ...overrides,
   };
 }
@@ -215,7 +216,14 @@ describe("projectNetWorth", () => {
     });
 
     expect(points).toEqual([
-      { date: "2026-01-01", yearIndex: 0, holdingsTotal: 100_000, liabilitiesTotal: 10_000, netWorth: 90_000 },
+      {
+        date: "2026-01-01",
+        yearIndex: 0,
+        holdingsTotal: 100_000,
+        liabilitiesTotal: 10_000,
+        netWorth: 90_000,
+        realNetWorth: 90_000,
+      },
     ]);
   });
 
@@ -429,6 +437,51 @@ describe("projectNetWorth", () => {
 
     const last = points[points.length - 1];
     expect(last.holdingsTotal / expected).toBeCloseTo(1, 7);
+  });
+
+  it("coincides real and nominal at today, then diverges thereafter (ticket 12)", () => {
+    const points = projectNetWorth({
+      today: "2026-01-01",
+      holdingsTotal: 100_000,
+      liabilities: [],
+      assumptions: assumptions({
+        growth_rate: 0,
+        monthly_contribution: 0,
+        horizon_years: 5,
+        inflation_rate: 0.03,
+      }),
+    });
+
+    expect(points[0].realNetWorth).toBe(points[0].netWorth);
+    for (const point of points.slice(1)) {
+      expect(point.realNetWorth).not.toBe(point.netWorth);
+      expect(point.realNetWorth).toBeCloseTo(point.netWorth / Math.pow(1.03, point.yearIndex), 9);
+    }
+  });
+
+  it("never lets the inflation assumption change a nominal figure (ticket 12)", () => {
+    const build = (inflationRate: number) =>
+      projectNetWorth({
+        today: "2026-01-01",
+        holdingsTotal: 100_000,
+        liabilities: [flatLiability("l1", 20_000)],
+        assumptions: assumptions({
+          growth_rate: 0.06,
+          monthly_contribution: 500,
+          contribution_escalation_rate: 0.02,
+          horizon_years: 8,
+          inflation_rate: inflationRate,
+        }),
+      });
+
+    const withoutInflation = build(0);
+    const withInflation = build(0.05);
+
+    withoutInflation.forEach((point, i) => {
+      expect(withInflation[i].holdingsTotal).toBe(point.holdingsTotal);
+      expect(withInflation[i].liabilitiesTotal).toBe(point.liabilitiesTotal);
+      expect(withInflation[i].netWorth).toBe(point.netWorth);
+    });
   });
 });
 

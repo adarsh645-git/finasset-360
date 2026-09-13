@@ -95,14 +95,18 @@ export type TargetAllocation = {
   target_percent: number;
 };
 
-/** The Projection assumption set (user stories 67, 68, 70, 72) — one active
- * set per Portfolio, not multiple named scenarios. Rates are decimal
- * fractions (0.07, not 7), matching `inflation_rate`'s documented default in
- * docs/SPEC.md. `target_amount`/`target_date` (ticket 13) and
- * `inflation_rate` (ticket 12) aren't part of this ticket's shape. */
+/** The Projection assumption set (user stories 67, 68, 70, 72, 80) — one
+ * active set per Portfolio, not multiple named scenarios. Rates are decimal
+ * fractions (0.07, not 7). `target_amount`/`target_date` (ticket 13) aren't
+ * part of this ticket's shape. */
 export type ProjectionAssumptions = {
   growth_rate: number;
   monthly_contribution: number;
   contribution_escalation_rate: number;
   horizon_years: number;
+  /** Applied once, at display time, to derive the real line from the
+   * nominal one (docs/SPEC.md, ticket 12) — every stored and entered rate,
+   * this one included, stays nominal; only the projection engine's output
+   * gets deflated. Defaults to 0.03 (user story 81). */
+  inflation_rate: number;
 };

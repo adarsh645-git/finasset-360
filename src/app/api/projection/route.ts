@@ -2,7 +2,8 @@ import { NextResponse, type NextRequest } from "next/server";
 import { createRouteClient, jsonWithCookies, requireUser } from "@/lib/supabase/route";
 import type { ProjectionAssumptions } from "@/components/portfolio/types";
 
-const PROJECTION_COLUMNS = "growth_rate, monthly_contribution, contribution_escalation_rate, horizon_years";
+const PROJECTION_COLUMNS =
+  "growth_rate, monthly_contribution, contribution_escalation_rate, horizon_years, inflation_rate";
 
 /** `null` when the body isn't a well-formed `ProjectionAssumptions` — every
  * rate a finite number and the horizon a non-negative integer, mirroring
@@ -16,6 +17,7 @@ function readAssumptions(body: unknown): ProjectionAssumptions | null {
     monthly_contribution: monthlyContribution,
     contribution_escalation_rate: contributionEscalationRate,
     horizon_years: horizonYears,
+    inflation_rate: inflationRate,
   } = body as Record<string, unknown>;
 
   if (typeof growthRate !== "number" || !Number.isFinite(growthRate)) return null;
@@ -26,12 +28,14 @@ function readAssumptions(body: unknown): ProjectionAssumptions | null {
   if (typeof horizonYears !== "number" || !Number.isInteger(horizonYears) || horizonYears < 0) {
     return null;
   }
+  if (typeof inflationRate !== "number" || !Number.isFinite(inflationRate)) return null;
 
   return {
     growth_rate: growthRate,
     monthly_contribution: monthlyContribution,
     contribution_escalation_rate: contributionEscalationRate,
     horizon_years: horizonYears,
+    inflation_rate: inflationRate,
   };
 }
 
@@ -78,7 +82,7 @@ export async function PUT(request: NextRequest) {
     return NextResponse.json(
       {
         error:
-          "growth_rate, monthly_contribution and contribution_escalation_rate must be finite numbers, and horizon_years a non-negative integer.",
+          "growth_rate, monthly_contribution, contribution_escalation_rate and inflation_rate must be finite numbers, and horizon_years a non-negative integer.",
       },
       { status: 400 },
     );

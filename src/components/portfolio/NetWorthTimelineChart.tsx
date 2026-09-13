@@ -6,10 +6,12 @@ const WIDTH = 320;
 const HEIGHT = 64;
 
 // The recorded-plus-projected Net Worth timeline (user story 55, extended by
-// ticket 10's user stories 73, 77, 115): recorded history as a solid line,
-// the projection continuing from it as a dashed one, meeting at a "Today"
-// seam. `projected[0]` — always today's own actual totals, restated with
-// today's date (see PortfolioShell) — *is* that seam, so the two lines are
+// ticket 10's user stories 73, 77, 115, and ticket 12's 82-84): recorded
+// history as a solid line, the projection continuing from it as two dashed
+// ones — real (primary) and nominal (fainter reference) — meeting recorded
+// history at a "Today" seam where the two coincide (deflator 1) before
+// forking apart. `projected[0]` — always today's own actual totals, restated
+// with today's date (see PortfolioShell) — *is* that seam, so the lines are
 // drawn to share that one point rather than needing a separate marker
 // reconciled against it.
 export type ChartPayoffMarker = {
@@ -35,8 +37,14 @@ export function NetWorthTimelineChart({
   payoffMarkers?: ChartPayoffMarker[];
 }) {
   const recordedValues = recorded.map((point) => point.netWorth);
-  const projectedValues = projected.map((point) => point.netWorth);
-  const allValues = [...recordedValues, ...projectedValues];
+  // Ticket 12: the projection forks into two lines at today — the real one
+  // (deflated, primary) and the nominal one (the plain future-statement
+  // number, now the fainter reference). Recorded history has no real/nominal
+  // split of its own — it's never deflated (docs/SPEC.md) — so it stays the
+  // single line it always was.
+  const nominalValues = projected.map((point) => point.netWorth);
+  const realValues = projected.map((point) => point.realNetWorth);
+  const allValues = [...recordedValues, ...nominalValues, ...realValues];
 
   if (allValues.length < 2) {
     return (
@@ -55,7 +63,7 @@ export function NetWorthTimelineChart({
   // shares with the last recorded one — index-based spacing, same
   // simplification Sparkline already makes, rather than a true date scale.
   const anchorIndex = Math.max(recordedValues.length - 1, 0);
-  const totalPoints = anchorIndex + Math.max(projectedValues.length - 1, 0);
+  const totalPoints = anchorIndex + Math.max(nominalValues.length - 1, 0);
 
   function x(index: number): number {
     return totalPoints === 0 ? WIDTH / 2 : (index / totalPoints) * WIDTH;
@@ -65,9 +73,8 @@ export function NetWorthTimelineChart({
   }
 
   const recordedPoints = recordedValues.map((value, i) => `${x(i)},${y(value)}`).join(" ");
-  const projectedPoints = projectedValues
-    .map((value, i) => `${x(anchorIndex + i)},${y(value)}`)
-    .join(" ");
+  const nominalPoints = nominalValues.map((value, i) => `${x(anchorIndex + i)},${y(value)}`).join(" ");
+  const realPoints = realValues.map((value, i) => `${x(anchorIndex + i)},${y(value)}`).join(" ");
   const todayX = x(anchorIndex);
 
   // A marker's own index is fractional (a payoff rarely lands on a year
@@ -78,7 +85,11 @@ export function NetWorthTimelineChart({
     .filter((marker) => marker.index <= totalPoints);
 
   const first = recorded[0] ?? projected[0];
-  const lastLabel = projected[projected.length - 1] ?? recorded[recorded.length - 1];
+  const lastProjected = projected[projected.length - 1];
+  const lastLabel = lastProjected ?? recorded[recorded.length - 1];
+  // Suppressed at the Today seam (yearIndex 0), where the two coincide and a
+  // "(nominal ...)" aside would just repeat the headline figure.
+  const lastHasDiverged = lastProjected !== undefined && lastProjected.yearIndex > 0;
 
   return (
     <div className="flex flex-col gap-2">
@@ -99,18 +110,33 @@ export function NetWorthTimelineChart({
               strokeLinejoin="round"
             />
           )}
-          {projectedValues.length > 1 && (
+          {/* Nominal — the fainter reference (user story 84): the plain
+              number a future statement would show. */}
+          {nominalValues.length > 1 && (
             <polyline
-              points={projectedPoints}
+              points={nominalPoints}
+              stroke="currentColor"
+              strokeWidth={1}
+              strokeDasharray="2 2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              opacity={0.35}
+            />
+          )}
+          {/* Real — the primary line (user story 84): what the projected
+              money would actually buy, in today's terms. */}
+          {realValues.length > 1 && (
+            <polyline
+              points={realPoints}
               stroke="currentColor"
               strokeWidth={1.5}
               strokeDasharray="4 3"
               strokeLinecap="round"
               strokeLinejoin="round"
-              opacity={0.7}
+              opacity={0.85}
             />
           )}
-          {projectedValues.length > 0 && (
+          {projected.length > 0 && (
             <line
               x1={todayX}
               y1={0}
@@ -140,9 +166,13 @@ export function NetWorthTimelineChart({
         <span>
           {first.date} · {formatMoney(first.netWorth, homeCurrency)}
         </span>
-        {projectedValues.length > 0 && <span>Today</span>}
+        {projected.length > 0 && <span>Today</span>}
         <span>
-          {lastLabel.date} · {formatMoney(lastLabel.netWorth, homeCurrency)}
+          {lastLabel.date} ·{" "}
+          {lastProjected
+            ? formatMoney(lastProjected.realNetWorth, homeCurrency)
+            : formatMoney(lastLabel.netWorth, homeCurrency)}
+          {lastHasDiverged && ` (nominal ${formatMoney(lastProjected.netWorth, homeCurrency)})`}
         </span>
       </div>
       {visibleMarkers.length > 0 && (

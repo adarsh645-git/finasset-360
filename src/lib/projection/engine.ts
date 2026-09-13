@@ -34,6 +34,10 @@ export type ProjectedNetWorthPoint = {
   holdingsTotal: number;
   liabilitiesTotal: number;
   netWorth: number;
+  /** `netWorth` restated in today's purchasing power (see `deflate`) —
+   * ticket 12's primary figure: headline figures read from this, `netWorth`
+   * is the fainter reference. Equal to `netWorth` at `yearIndex` 0. */
+  realNetWorth: number;
 };
 
 export type ProjectedAmountPoint = {
@@ -87,6 +91,18 @@ function futureValueOfSegment(
 
   const growth = Math.pow(1 + monthlyRate, months);
   return principal * growth + monthlyContribution * ((growth - 1) / monthlyRate);
+}
+
+/** A nominal figure restated in today's purchasing power — ticket 12's
+ * entire "real" side, applied once, at display time, never fed back into a
+ * later calculation: `real(y) = nominal(y) / (1 + inflation)^y` (docs/SPEC.md).
+ * Every rate the engine grows, escalates or amortizes by stays nominal;
+ * this is the one divide applied last. `yearIndex` 0 always returns
+ * `nominal` unchanged (deflator 1) — the fork point between the two lines,
+ * not a restatement of recorded history, which this function never
+ * touches. */
+function deflate(nominal: number, inflationRate: number, yearIndex: number): number {
+  return nominal / Math.pow(1 + inflationRate, yearIndex);
 }
 
 /** `today` plus `months`, as an ISO date — used instead of naive day-count
@@ -258,8 +274,11 @@ function chainHoldingsWithRedirects(
  * an already-netted figure. A paid-off Liability's freed payment (its
  * payment, including any extra, minus its escrow) joins the Holdings-side
  * contribution from `ceil(payoff_months)` on, always — there is no toggle
- * (user stories 74–77). Pure: no I/O, no database, no clock beyond the
- * injected `today`. */
+ * (user stories 74–77). Each point's `realNetWorth` is `netWorth` deflated
+ * by `assumptions.inflation_rate` (ticket 12) — the only place inflation
+ * enters this function; growth, escalation and amortization above all run
+ * on nominal figures throughout. Pure: no I/O, no database, no clock beyond
+ * the injected `today`. */
 export function projectNetWorth({
   today,
   holdingsTotal,
@@ -291,12 +310,14 @@ export function projectNetWorth({
       const amount = schedule ? schedule.balanceAtMonths(yearIndex * 12) : liability.currentAmount;
       return sum + amount;
     }, 0);
+    const netWorth = holdings - liabilitiesTotal;
     return {
       date: addMonths(today, yearIndex * 12),
       yearIndex,
       holdingsTotal: holdings,
       liabilitiesTotal,
-      netWorth: holdings - liabilitiesTotal,
+      netWorth,
+      realNetWorth: deflate(netWorth, assumptions.inflation_rate, yearIndex),
     };
   });
 }

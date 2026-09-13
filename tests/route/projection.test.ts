@@ -40,6 +40,7 @@ describe("GET/PUT /api/projection", () => {
           monthly_contribution: 1500,
           contribution_escalation_rate: 0.03,
           horizon_years: 20,
+          inflation_rate: 0.03,
         }),
       }),
     );
@@ -49,6 +50,7 @@ describe("GET/PUT /api/projection", () => {
       monthly_contribution: 1500,
       contribution_escalation_rate: 0.03,
       horizon_years: 20,
+      inflation_rate: 0.03,
     });
 
     const getResponse = await GET(requestAs(userA, PROJECTION_URL));
@@ -57,6 +59,7 @@ describe("GET/PUT /api/projection", () => {
       monthly_contribution: 1500,
       contribution_escalation_rate: 0.03,
       horizon_years: 20,
+      inflation_rate: 0.03,
     });
   });
 
@@ -69,6 +72,7 @@ describe("GET/PUT /api/projection", () => {
           monthly_contribution: 500,
           contribution_escalation_rate: 0,
           horizon_years: 10,
+          inflation_rate: 0.03,
         }),
       }),
     );
@@ -80,6 +84,7 @@ describe("GET/PUT /api/projection", () => {
           monthly_contribution: 800,
           contribution_escalation_rate: 0.02,
           horizon_years: 15,
+          inflation_rate: 0.04,
         }),
       }),
     );
@@ -90,6 +95,7 @@ describe("GET/PUT /api/projection", () => {
       monthly_contribution: 800,
       contribution_escalation_rate: 0.02,
       horizon_years: 15,
+      inflation_rate: 0.04,
     });
   });
 
@@ -102,6 +108,7 @@ describe("GET/PUT /api/projection", () => {
           monthly_contribution: 100,
           contribution_escalation_rate: 0,
           horizon_years: 10.5,
+          inflation_rate: 0.03,
         }),
       }),
     );
@@ -117,6 +124,7 @@ describe("GET/PUT /api/projection", () => {
           monthly_contribution: 100,
           contribution_escalation_rate: 0,
           horizon_years: -1,
+          inflation_rate: 0.03,
         }),
       }),
     );
@@ -142,6 +150,7 @@ describe("GET/PUT /api/projection", () => {
           monthly_contribution: 200,
           contribution_escalation_rate: 0,
           horizon_years: 25,
+          inflation_rate: 0.03,
         }),
       }),
     );
@@ -157,6 +166,7 @@ describe("GET/PUT /api/projection", () => {
           monthly_contribution: 50,
           contribution_escalation_rate: 0,
           horizon_years: 5,
+          inflation_rate: 0.03,
         }),
       }),
     );
@@ -167,6 +177,23 @@ describe("GET/PUT /api/projection", () => {
       monthly_contribution: 200,
       contribution_escalation_rate: 0,
       horizon_years: 25,
+      inflation_rate: 0.03,
     });
+  });
+
+  it("rejects a non-numeric inflation_rate", async () => {
+    const response = await PUT(
+      requestAs(userA, PROJECTION_URL, {
+        method: "PUT",
+        ...jsonBody({
+          growth_rate: 0.07,
+          monthly_contribution: 100,
+          contribution_escalation_rate: 0,
+          horizon_years: 10,
+          inflation_rate: "a lot",
+        }),
+      }),
+    );
+    expect(response.status).toBe(400);
   });
 });

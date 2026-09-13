@@ -13,14 +13,15 @@ import { toChartPayoffMarkers } from "@/lib/projection/payoff-marker-label";
 import type { ProjectionAssumptions } from "@/components/portfolio/types";
 
 // UI starting values for a User who has never saved the form — there is no
-// database default for growth rate or horizon (docs/SPEC.md's schema
-// section only mandates one for the escalation rate), so these exist only
-// to seed a first-time edit rather than to mean anything before Save.
+// database default for growth rate or horizon (docs/SPEC.md's schema section
+// only mandates one for escalation and inflation), so these exist only to
+// seed a first-time edit rather than to mean anything before Save.
 const STARTING_ASSUMPTIONS: ProjectionAssumptions = {
   growth_rate: 0.07,
   monthly_contribution: 0,
   contribution_escalation_rate: 0,
   horizon_years: 20,
+  inflation_rate: 0.03,
 };
 
 type Drafts = {
@@ -28,6 +29,7 @@ type Drafts = {
   monthlyContribution: string;
   escalationPercent: string;
   horizonYears: string;
+  inflationPercent: string;
 };
 
 function toDrafts(assumptions: ProjectionAssumptions): Drafts {
@@ -36,6 +38,7 @@ function toDrafts(assumptions: ProjectionAssumptions): Drafts {
     monthlyContribution: String(assumptions.monthly_contribution),
     escalationPercent: String(assumptions.contribution_escalation_rate * 100),
     horizonYears: String(assumptions.horizon_years),
+    inflationPercent: String(assumptions.inflation_rate * 100),
   };
 }
 
@@ -54,6 +57,7 @@ function draftsToAssumptions(drafts: Drafts): ProjectionAssumptions {
     monthly_contribution: safeNumber(drafts.monthlyContribution, 0),
     contribution_escalation_rate: safeNumber(drafts.escalationPercent, 0) / 100,
     horizon_years: Math.max(0, Math.trunc(safeNumber(drafts.horizonYears, 0))),
+    inflation_rate: safeNumber(drafts.inflationPercent, 0) / 100,
   };
 }
 
@@ -66,7 +70,8 @@ function hasInvalidInput(drafts: Drafts): boolean {
     !Number.isFinite(Number(drafts.monthlyContribution)) ||
     !Number.isFinite(Number(drafts.escalationPercent)) ||
     !Number.isInteger(Number(drafts.horizonYears)) ||
-    Number(drafts.horizonYears) < 0
+    Number(drafts.horizonYears) < 0 ||
+    !Number.isFinite(Number(drafts.inflationPercent))
   );
 }
 
@@ -75,7 +80,8 @@ function assumptionsEqual(a: ProjectionAssumptions, b: ProjectionAssumptions): b
     a.growth_rate === b.growth_rate &&
     a.monthly_contribution === b.monthly_contribution &&
     a.contribution_escalation_rate === b.contribution_escalation_rate &&
-    a.horizon_years === b.horizon_years
+    a.horizon_years === b.horizon_years &&
+    a.inflation_rate === b.inflation_rate
   );
 }
 
@@ -215,7 +221,30 @@ export function ProjectionSection({
               %
             </div>
           </label>
+
+          <label className="flex flex-col gap-1 text-sm">
+            Expected inflation
+            <div className="flex items-center gap-1">
+              <input
+                type="number"
+                inputMode="decimal"
+                step="any"
+                value={drafts.inflationPercent}
+                onChange={(e) => updateDraft("inflationPercent", e.target.value)}
+                className="w-full rounded-md border border-hairline bg-transparent px-2 py-1.5 text-sm"
+              />
+              %
+            </div>
+          </label>
         </div>
+
+        {/* User story 84: the real line is primary, with no toggle back to
+            nominal — disclosed here rather than left for the chart to
+            explain on its own. */}
+        <p className="text-xs text-zinc-500 dark:text-zinc-400">
+          The chart&apos;s solid figures are in today&apos;s money, deflated by this rate; the fainter
+          line is the plain number a future statement would show.
+        </p>
 
         {/* User story 77: the freed-payment redirect is always on, with no
             toggle, so it's disclosed here rather than left implicit. */}
