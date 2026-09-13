@@ -1,5 +1,5 @@
 Type: build
-Status: ready-for-agent
+Status: resolved
 
 # 11: Amortization Assumptions and payoff
 
@@ -27,19 +27,19 @@ Spec: [`docs/SPEC.md`](../../../docs/SPEC.md) — user stories 57–66, 74–76.
 
 **Blocked by:** 10.
 
-- [ ] Optional `interest_rate`, `original_loan_amount`, `term_months`, `custom_monthly_payment`, `extra_monthly_payment` (default 0), `escrow_portion` (default 0), `start_date` (display-only, read by no formula), `linked_holding_id` on `liability`
-- [ ] Any Liability can carry them, not only one in a "Mortgage" class
-- [ ] `B(k)` floors at zero and **stays** zero thereafter
-- [ ] Derived payment used by default; `custom_monthly_payment` overrides it when set; `extra_monthly_payment` adds on top either way
-- [ ] Entry-time warning when `Payment ≤ P₀·r` — the closed form produces a *growing* balance rather than flooring at zero, so this must be caught at entry (it does not change the formula's shape)
-- [ ] Freed payment joins the monthly contribution at `ceil(payoff_months)` — the loan isn't clear until the final partial payment lands
-- [ ] `escrow_portion` excluded from the redirect, retained in the payoff math
-- [ ] `extra_monthly_payment` **does** redirect — money the User already chose to divert from spending
-- [ ] One payoff marker per amortizing Liability inside the horizon, labelled with the step size ("Mortgage paid off · +3,155/mo") — generalised across Liabilities, never keyed to a hardcoded mortgage
-- [ ] The redirect is disclosed in the Plan assumptions block and the marker labels; there is no toggle
-- [ ] Payoff curve in the Liability's detail panel
-- [ ] `linked_holding_id` pairs a Liability with the Holding it financed; Projected Net Position shown from **both** sides of the link (never called "equity" — that collides with the Equity Asset Class)
-- [ ] Test: **setting `extra_monthly_payment` moves the projected Net Worth line.** Assert the sensitivity, not just that the figure looks right — a value-only test would have passed under the rejected netting reading
-- [ ] Test: `escrow_portion` changes the redirect but not the payoff date
-- [ ] Test: the redirect begins at `ceil(payoff_months)`, not before
-- [ ] Test: a payoff landing mid-escalation-year splits that year into two segments, and the segmented chain still matches the month-by-month simulation
+- [x] Optional `interest_rate`, `original_loan_amount`, `term_months`, `custom_monthly_payment`, `extra_monthly_payment` (default 0), `escrow_portion` (default 0), `start_date` (display-only, read by no formula), `linked_holding_id` on `liability`
+- [x] Any Liability can carry them, not only one in a "Mortgage" class
+- [x] `B(k)` floors at zero and **stays** zero thereafter
+- [x] Derived payment used by default; `custom_monthly_payment` overrides it when set; `extra_monthly_payment` adds on top either way
+- [x] Entry-time warning when `Payment ≤ P₀·r` — the closed form produces a *growing* balance rather than flooring at zero, so this must be caught at entry (it does not change the formula's shape)
+- [x] Freed payment joins the monthly contribution at `ceil(payoff_months)` — the loan isn't clear until the final partial payment lands
+- [x] `escrow_portion` excluded from the redirect, retained in the payoff math
+- [x] `extra_monthly_payment` **does** redirect — money the User already chose to divert from spending
+- [x] One payoff marker per amortizing Liability inside the horizon, labelled with the step size ("Mortgage paid off · +3,155/mo") — generalised across Liabilities, never keyed to a hardcoded mortgage
+- [x] The redirect is disclosed in the Plan assumptions block and the marker labels; there is no toggle
+- [x] Payoff curve in the Liability's detail panel
+- [x] `linked_holding_id` pairs a Liability with the Holding it financed; Projected Net Position shown from **both** sides of the link (never called "equity" — that collides with the Equity Asset Class)
+- [x] Test: **setting `extra_monthly_payment` moves the projected Net Worth line.** Assert the sensitivity, not just that the figure looks right — a value-only test would have passed under the rejected netting reading
+- [x] Test: `escrow_portion` changes the redirect but not the payoff date
+- [x] Test: the redirect begins at `ceil(payoff_months)`, not before
+- [x] Test: a payoff landing mid-escalation-year splits that year into two segments, and the segmented chain still matches the month-by-month simulation
