@@ -1,5 +1,5 @@
 Type: build
-Status: ready-for-agent
+Status: resolved
 
 # 15: Narrow viewport
 
@@ -17,15 +17,15 @@ Spec: [`docs/SPEC.md`](../../../docs/SPEC.md) — user stories 47, 102–107.
 
 **Blocked by:** 08, 09.
 
-- [ ] Single 900px breakpoint; `.c-col` sizing and the detail column's floor both released below it
-- [ ] Accordion outline replaces Miller columns: expand in place, multiple branches open at once
-- [ ] Section order: Net Worth (figure, subline, timeline) → Portfolio outline → Target Allocation, staleness list, Start Check-in
-- [ ] Leaf detail opens as a bottom sheet
-- [ ] **No horizontal scrolling anywhere**
-- [ ] Inline click-to-edit carries a persistent 1px dotted underline plus a trailing pencil glyph — never hover-gated, since there is no hover on touch
-- [ ] Check-in's keyboard hints replaced by Keep / Use estimate / Done tap targets, **with the key bindings retained and both routed through one shared action so they cannot drift**
-- [ ] 44px minimum row height
-- [ ] Top strip sticky, so the Net Worth readout survives scrolling
-- [ ] Decide and implement: whether the outline's expanded/collapsed state persists between visits (the prototype resets it) — left open deliberately
-- [ ] Decide and implement the bottom sheet's dismissal gesture properly. It is a second overlay concept the app doesn't otherwise use; the prototype gave it a close button plus a minimal drag-to-dismiss on the handle
-- [ ] **Any UI verification claim must name the width it was made at.** Agent browser tooling clamps to ~1288px while the User reviews at ~2000px — that gap is exactly how a dashboard shipped stranding 900px of empty window that read as "a minor aesthetic note" at the narrower width
+- [x] Single 900px breakpoint; below it the desktop Miller shell is hidden entirely (`hidden min-[900px]:flex`) rather than shrunk, so there's no `.c-col`/detail floor to release — a different component tree (NarrowShell) renders instead
+- [x] Accordion outline replaces Miller columns: expand in place (`AccordionBranch`), multiple branches open at once (`Set<string>` of expanded keys, not exclusive single-open state)
+- [x] Section order: Net Worth (figure, subline, timeline) → Portfolio outline → Target Allocation, staleness list, Start Check-in (NarrowShell.tsx)
+- [x] Leaf detail opens as a bottom sheet — reuses the exact same detail-panel content (and selection state) the desktop Miller column's rightmost panel shows, via a shared `leafDetail`
+- [x] **No horizontal scrolling anywhere** — `overflow-x-hidden` at the shell root, `truncate`/`min-w-0` throughout, DistributionBar's fixed-width columns narrowed/dropped below 900px, a defensive `overflow-x-auto` around the one remaining fixed-width element (the 320px-wide timeline chart)
+- [x] Inline click-to-edit (ValuationEditor) carries a persistent 1px dotted underline plus a trailing pencil glyph below 900px — never hover-gated; desktop's existing hover-only look is untouched
+- [x] Check-in's keyboard hints replaced by Keep / Use estimate / Done tap targets below 900px; Enter/L/Esc stay live at every width; both paths call the same `keep`/`recordDraft`/`acceptLiveEstimate` functions in CheckInStep
+- [x] 44px minimum row height on every row/tap-target this ticket touched (accordion rows, staleness rows, Check-in's buttons, the bottom sheet's close button, the launcher)
+- [x] Top strip sticky (`sticky top-0`) — a no-op above 900px, where nothing scrolls past it; the narrow accordion is the one layout where the whole page scrolls
+- [x] Decided: expand/collapse persists via `localStorage` (a per-device UI preference, hydrated after mount to avoid an SSR hydration mismatch) — no schema change
+- [x] Decided: the bottom sheet dismisses via an explicit close button, drag-down-past-threshold on the handle (tracked against the gesture's own start point, not `movementY` — more reliable for touch), and backdrop-click as a bonus
+- [x] **Width disclosure**: no browser-driven visual verification was performed for this ticket — Google-OAuth sign-in isn't something this agent can complete, and docs/SPEC.md's own Testing Decisions already make UI correctness a by-hand/User responsibility. Verification here was static: every Tailwind breakpoint and fixed-width element's fit was computed by hand against realistic phone widths (360–390px), plus typecheck/lint/full test suite/production build, all clean. The User should confirm visually and name the width they checked at, per this bullet's own rule.
