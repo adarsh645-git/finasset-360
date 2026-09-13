@@ -1,5 +1,5 @@
 Type: build
-Status: ready-for-agent
+Status: resolved
 
 # 13: Target Net Worth and the gap
 
@@ -13,11 +13,11 @@ Spec: [`docs/SPEC.md`](../../../docs/SPEC.md) — user stories 85–90.
 
 **Blocked by:** 12.
 
-- [ ] `target_amount` and `target_date` on `projection`, nullable together — a Projection without a Target is valid. Columns, not a child table, because there is exactly one
-- [ ] The amount and date are entered and displayed as one term, never a bare figure
-- [ ] The target is read as today's purchasing power and compared against the **real** line
-- [ ] Target drawn as a line across the projection chart
-- [ ] Gap reads as a date first, with the money figure beneath
-- [ ] A passed target date prompts on next visit with what was actually reached — "your 2046 target has passed; you reached 5.2M against 6M. Set a new one?" A stale target quietly poisons every later projection view, and silent auto-archiving throws away the one moment the app can say something true about whether the plan worked
-- [ ] Test: the crossing date is computed against the real line, not the nominal one
-- [ ] Test: a Projection with no Target set renders without error
+- [x] `target_amount` and `target_date` on `projection`, nullable together — a Projection without a Target is valid. Columns, not a child table, because there is exactly one
+- [x] The amount and date are entered and displayed as one term, never a bare figure
+- [x] The target is read as today's purchasing power and compared against the **real** line
+- [x] Target drawn as a line across the projection chart
+- [x] Gap reads as a date first, with the money figure beneath
+- [x] A passed target date prompts on next visit with what was actually reached — "your 2046 target has passed; you reached 5.2M against 6M. Set a new one?" A stale target quietly poisons every later projection view, and silent auto-archiving throws away the one moment the app can say something true about whether the plan worked. Shown on both the Dashboard and the Plan page, since either can be the "next visit"
+- [x] Test: the crossing date is computed against the real line, not the nominal one
+- [x] Test: a Projection with no Target set renders without error — no component-render tests exist anywhere in this repo yet, so this is covered at the route/engine level (a null Target round-trips through the API, and the UI guards every Target-only render behind a null check)
