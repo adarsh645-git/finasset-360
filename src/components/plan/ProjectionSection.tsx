@@ -16,6 +16,7 @@ import {
   formatTargetDateLabel,
   passedTargetMessage,
 } from "@/lib/projection/target-gap";
+import { computeRequiredContribution, formatRequiredContributionLabel } from "@/lib/projection/required-contribution";
 import type { ProjectionAssumptions } from "@/components/portfolio/types";
 
 // UI starting values for a User who has never saved the form — there is no
@@ -191,6 +192,22 @@ export function ProjectionSection({
     });
   }, [today, holdingsTotal, liabilities, liveAssumptions]);
 
+  // The Required Contribution (user stories 91-95): reuses `targetGap`
+  // rather than resolving the achievable date itself, so the figure and the
+  // date beside it can never disagree. Recomputed off the same live draft
+  // as the gap and chart above it.
+  const requiredContribution = useMemo(() => {
+    if (liveAssumptions.target_amount === null || liveAssumptions.target_date === null) return null;
+    return computeRequiredContribution({
+      today,
+      holdingsTotal,
+      liabilities,
+      assumptions: liveAssumptions,
+      targetAmount: liveAssumptions.target_amount,
+      targetDate: liveAssumptions.target_date,
+    });
+  }, [today, holdingsTotal, liabilities, liveAssumptions]);
+
   // The passed-target-date prompt below (user story 90) reads the *saved*
   // Target, not an in-progress draft — this is about the server-recorded
   // plan going stale on its own, not something an unsaved edit should
@@ -244,6 +261,15 @@ export function ProjectionSection({
             {formatTargetAmountLabel(targetGap, homeCurrency)}
           </p>
         </div>
+      )}
+
+      {/* Required Contribution (user stories 91-95): what this month's
+          decision actually turns on, always paired with the achievable date
+          above rather than shown as a bare figure. */}
+      {targetGap && requiredContribution && (
+        <p className="text-sm font-medium">
+          {formatRequiredContributionLabel(requiredContribution, targetGap, homeCurrency)}
+        </p>
       )}
 
       <form onSubmit={handleSave} className="flex flex-col gap-4">

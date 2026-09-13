@@ -13,7 +13,7 @@ const CROSSING_SEARCH_BUFFER_YEARS = 50;
  * a year counts as 0, not 1. Mirrors `engine.ts`'s `addMonths` in reading
  * `YYYY-MM-DD` fields directly rather than trusting `Date`'s local
  * timezone. */
-function wholeCalendarYearsBetween(from: string, to: string): number {
+export function wholeCalendarYearsBetween(from: string, to: string): number {
   const [fy, fm, fd] = from.split("-").map(Number);
   const [ty, tm, td] = to.split("-").map(Number);
   let years = ty - fy;
