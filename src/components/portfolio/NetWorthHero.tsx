@@ -31,6 +31,21 @@ export function NetWorthHero({
 }) {
   const chartPayoffMarkers = toChartPayoffMarkers(payoffMarkers, liabilityNames, homeCurrency);
 
+  // `asOfDate` is `null` exactly when nothing has ever been recorded for an
+  // active Holding or Liability (`computeNetWorth`'s own doc comment) — a
+  // Portfolio in that state has no zero to show, so the headline says so
+  // instead of formatting a `netWorth` of 0 that would read as a real result
+  // (user story 117). No chart either: `timeline`/`projected` are empty in
+  // this state too (nothing to plot a trend from).
+  if (netWorth.asOfDate === null) {
+    return (
+      <div>
+        <h2 className="text-sm font-medium text-zinc-500 dark:text-zinc-400">Net Worth</h2>
+        <p className="text-3xl font-semibold tracking-tight">Nothing recorded yet</p>
+      </div>
+    );
+  }
+
   return (
     <div>
       <h2 className="text-sm font-medium text-zinc-500 dark:text-zinc-400">Net Worth</h2>
@@ -39,8 +54,7 @@ export function NetWorthHero({
       </p>
       <p className="text-sm text-zinc-600 dark:text-zinc-400">
         Holdings {formatMoney(netWorth.holdingsTotal, homeCurrency)} · Liabilities{" "}
-        {formatMoney(netWorth.liabilitiesTotal, homeCurrency)}
-        {netWorth.asOfDate ? ` · as of ${netWorth.asOfDate}` : ""}
+        {formatMoney(netWorth.liabilitiesTotal, homeCurrency)} · as of {netWorth.asOfDate}
       </p>
       {/* The chart's viewBox is a fixed 320×64 (NetWorthTimelineChart's own
          WIDTH/HEIGHT) — comfortably inside any phone this ticket targets

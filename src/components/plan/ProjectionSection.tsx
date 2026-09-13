@@ -135,6 +135,7 @@ function assumptionsEqual(a: ProjectionAssumptions, b: ProjectionAssumptions): b
 export function ProjectionSection({
   today,
   homeCurrency,
+  hasHoldings,
   holdingsTotal,
   liabilities,
   liabilityNames,
@@ -144,6 +145,7 @@ export function ProjectionSection({
 }: {
   today: string;
   homeCurrency: string;
+  hasHoldings: boolean;
   holdingsTotal: number;
   liabilities: ProjectionLiabilityInput[];
   liabilityNames: Map<string, string>;
@@ -235,6 +237,24 @@ export function ProjectionSection({
     const failure = await onSave(liveAssumptions);
     setIsSaving(false);
     if (failure) setError(failure);
+  }
+
+  // User story 118: with neither a Holding nor a Liability, there is
+  // nothing at all to run a Projection on — the chart above would just be a
+  // flat line at 0, which isn't a projection, it's a Portfolio waiting for
+  // its first Holding, so this explains that instead of charting it. Checked
+  // together, not `!hasHoldings` alone: a Liability entered before any
+  // Holding (a mortgage on a house not yet recorded) still has a real payoff
+  // trajectory to project, and hiding it here would be the same mistake
+  // DashboardPanel avoids for the same reason (user story 117: a real result
+  // isn't an empty state). Mirrors TargetAllocationEditor's own
+  // no-Asset-Classes-yet early return.
+  if (!hasHoldings && liabilities.length === 0) {
+    return (
+      <p className="text-sm text-zinc-500 dark:text-zinc-400">
+        Add a Holding and record its Valuation to start projecting your Net Worth forward.
+      </p>
+    );
   }
 
   return (

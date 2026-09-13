@@ -64,3 +64,17 @@ export function computeDistribution(
     };
   });
 }
+
+/** Whether `rows` has anything to actually chart (ticket 16, user story
+ * 117) — every Asset Class always gets a row (`computeDistribution` never
+ * excludes one), including default ones a fresh Portfolio already has, so
+ * `rows.length` can't tell "no Holdings" from "Holdings, nothing valued
+ * yet" apart from a populated distribution. A Holding valued at exactly 0
+ * is indistinguishable from one with no Valuation recorded, and both read
+ * as "nothing to show" here — the same call `computeNetWorth`'s `asOfDate`
+ * already makes for the Net Worth headline. Shared by the dashboard and the
+ * narrow accordion (DashboardPanel, NarrowShell) so the two surfaces can't
+ * disagree on when there's something to draw. */
+export function hasDistributionData(rows: AssetClassDistributionRow[]): boolean {
+  return rows.some((row) => row.actualAmount !== 0);
+}

@@ -6,7 +6,7 @@ import type { NetWorthSummary } from "@/lib/net-worth/compute";
 import type { NetWorthTimelinePoint } from "@/lib/net-worth/timeline";
 import type { PayoffMarker, ProjectedNetWorthPoint } from "@/lib/projection/engine";
 import { passedTargetMessage } from "@/lib/projection/target-gap";
-import type { AssetClassDistributionRow } from "@/lib/target-allocation/distribution";
+import { hasDistributionData, type AssetClassDistributionRow } from "@/lib/target-allocation/distribution";
 import { CheckInLauncher } from "./CheckInLauncher";
 import { NetWorthHero } from "./NetWorthHero";
 import { StalenessList, type StaleItem } from "./StalenessList";
@@ -20,6 +20,19 @@ import { StalenessList, type StaleItem } from "./StalenessList";
 // Above ~1200px, headline+timeline sit beside the distribution bars in a
 // two-column grid, with staleness and Start Check-in stacking full-width
 // below both (ticket 09's checklist and the spec's own layout note).
+//
+// Ticket 16, user story 116: with nothing recorded at all — no Holding or
+// Liability Valuation ever entered — that whole grid has nothing to show, so
+// it's replaced by one explanatory starting point instead. Gated on
+// `netWorth.asOfDate === null`, the same "has anything actually been
+// recorded" signal NetWorthHero/NetWorthStrip already use, deliberately
+// *not* "no Holdings": a Portfolio can have a recorded Liability (a mortgage
+// entered before any Holding) with a real, non-zero Net Worth and real stale
+// items to show, and hiding that behind an empty-state message would be the
+// opposite mistake user story 117 warns against — a real result read as
+// nothing. Holdings that exist but simply haven't been valued yet are a
+// different, later state that NetWorthHero and the distribution section
+// below handle on their own.
 export function DashboardPanel({
   today,
   homeCurrency,
@@ -66,42 +79,54 @@ export function DashboardPanel({
     <div className="flex flex-1 flex-col gap-8 overflow-y-auto px-8 py-8">
       {passedTarget && <p className="text-sm font-medium">{passedTarget}</p>}
 
-      <div className="grid grid-cols-1 gap-8 min-[1200px]:grid-cols-2">
-        <section className="flex flex-col gap-3 rounded-lg border border-hairline p-6">
-          <NetWorthHero
-            homeCurrency={homeCurrency}
-            netWorth={netWorth}
-            timeline={timeline}
-            projected={projected}
-            payoffMarkers={payoffMarkers}
-            liabilityNames={liabilityNames}
-            targetAmount={targetAmount}
-          />
-        </section>
+      {netWorth.asOfDate !== null ? (
+        <>
+          <div className="grid grid-cols-1 gap-8 min-[1200px]:grid-cols-2">
+            <section className="flex flex-col gap-3 rounded-lg border border-hairline p-6">
+              <NetWorthHero
+                homeCurrency={homeCurrency}
+                netWorth={netWorth}
+                timeline={timeline}
+                projected={projected}
+                payoffMarkers={payoffMarkers}
+                liabilityNames={liabilityNames}
+                targetAmount={targetAmount}
+              />
+            </section>
 
-        <section className="flex flex-col gap-3 rounded-lg border border-hairline p-6">
-          <h2 className="text-sm font-medium text-zinc-500 dark:text-zinc-400">
-            Target Allocation
-          </h2>
-          {distribution.length === 0 ? (
-            <p className="text-sm text-zinc-500 dark:text-zinc-400">
-              Add a Holding to see your distribution.
-            </p>
-          ) : (
-            <div className="flex flex-col gap-3">
-              {distribution.map((row) => (
-                <DistributionBar key={row.assetClassId} row={row} homeCurrency={homeCurrency} />
-              ))}
-            </div>
-          )}
-        </section>
-      </div>
+            <section className="flex flex-col gap-3 rounded-lg border border-hairline p-6">
+              <h2 className="text-sm font-medium text-zinc-500 dark:text-zinc-400">
+                Target Allocation
+              </h2>
+              {hasDistributionData(distribution) ? (
+                <div className="flex flex-col gap-3">
+                  {distribution.map((row) => (
+                    <DistributionBar key={row.assetClassId} row={row} homeCurrency={homeCurrency} />
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-zinc-500 dark:text-zinc-400">
+                  Record a Valuation to see your distribution.
+                </p>
+              )}
+            </section>
+          </div>
 
-      <section className="flex flex-col gap-3 rounded-lg border border-hairline p-6">
-        <h2 className="text-sm font-medium text-zinc-500 dark:text-zinc-400">Needs an update</h2>
-        <StalenessList items={staleItems} />
-        <CheckInLauncher staleCount={staleItems.length} onStartCheckIn={onStartCheckIn} />
-      </section>
+          <section className="flex flex-col gap-3 rounded-lg border border-hairline p-6">
+            <h2 className="text-sm font-medium text-zinc-500 dark:text-zinc-400">Needs an update</h2>
+            <StalenessList items={staleItems} />
+            <CheckInLauncher staleCount={staleItems.length} onStartCheckIn={onStartCheckIn} />
+          </section>
+        </>
+      ) : (
+        <section className="flex flex-col items-center gap-2 rounded-lg border border-hairline p-12 text-center">
+          <h1 className="text-lg font-semibold tracking-tight">Nothing recorded yet</h1>
+          <p className="max-w-sm text-sm text-zinc-600 dark:text-zinc-400">
+            Add a Holding under an Asset Class and record its Valuation to start tracking your Net
+            Worth.
+          </p>
+        </section>
+      )}
 
       <section className="flex flex-col gap-6 rounded-lg border border-hairline p-6">
         <div>

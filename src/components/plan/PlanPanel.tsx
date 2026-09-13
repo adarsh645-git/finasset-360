@@ -14,6 +14,7 @@ export function PlanPanel({
   onSaveTargets,
   today,
   homeCurrency,
+  hasHoldings,
   holdingsTotal,
   liabilities,
   liabilityNames,
@@ -27,6 +28,11 @@ export function PlanPanel({
   ) => Promise<string | null>;
   today: string;
   homeCurrency: string;
+  // User story 118: growth has nothing to compound without at least one
+  // Holding — ProjectionSection explains that instead of charting a
+  // meaningless flat line, unless a Liability alone still gives it a real
+  // payoff trajectory to project (see ProjectionSection's own comment).
+  hasHoldings: boolean;
   holdingsTotal: number;
   liabilities: ProjectionLiabilityInput[];
   liabilityNames: Map<string, string>;
@@ -53,6 +59,7 @@ export function PlanPanel({
         <ProjectionSection
           today={today}
           homeCurrency={homeCurrency}
+          hasHoldings={hasHoldings}
           holdingsTotal={holdingsTotal}
           liabilities={liabilities}
           liabilityNames={liabilityNames}

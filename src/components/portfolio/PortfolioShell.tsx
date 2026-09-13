@@ -113,6 +113,14 @@ export function PortfolioShell({
     [liabilities],
   );
 
+  // Ticket 16's gate for the Plan page's "needs Holdings" explanation (user
+  // story 118) — growth has nothing to compound without at least one
+  // Holding, regardless of whether any Liability exists. The dashboard's own
+  // empty-Portfolio starting point (user story 116) uses a different signal
+  // (`netWorth.asOfDate === null`, in DashboardPanel/NarrowShell) since a
+  // Liability-only Portfolio still has a real Net Worth to show.
+  const hasHoldings = activeHoldings.length > 0;
+
   // Re-derived from the live `activeHoldings` each render (so a rename mid-
   // pass shows up) but membership and order stay pinned to the snapshot IDs
   // taken when the pass started; a Holding archived mid-pass simply drops
@@ -775,6 +783,7 @@ export function PortfolioShell({
                   onSaveTargets={saveTargetAllocations}
                   today={today}
                   homeCurrency={homeCurrency}
+                  hasHoldings={hasHoldings}
                   holdingsTotal={netWorth.holdingsTotal}
                   liabilities={liabilitiesForProjection}
                   liabilityNames={liabilityNames}

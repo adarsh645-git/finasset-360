@@ -9,7 +9,7 @@ import { formatMoney } from "@/lib/currency/format";
 import type { NetWorthSummary } from "@/lib/net-worth/compute";
 import type { NetWorthTimelinePoint } from "@/lib/net-worth/timeline";
 import type { PayoffMarker, ProjectedNetWorthPoint } from "@/lib/projection/engine";
-import type { AssetClassDistributionRow } from "@/lib/target-allocation/distribution";
+import { hasDistributionData, type AssetClassDistributionRow } from "@/lib/target-allocation/distribution";
 import { daysAgoLabel, isStale } from "@/lib/valuations/staleness";
 import { CheckInLauncher } from "./CheckInLauncher";
 import { NetWorthHero } from "./NetWorthHero";
@@ -252,29 +252,37 @@ export function NarrowShell({
         </AccordionBranch>
       </section>
 
-      <section className="flex flex-col gap-4 rounded-lg border border-hairline p-4">
-        <div className="flex flex-col gap-3">
-          <h2 className="text-sm font-medium text-zinc-500 dark:text-zinc-400">Target Allocation</h2>
-          {distribution.length === 0 ? (
-            <p className="text-sm text-zinc-500 dark:text-zinc-400">
-              Add a Holding to see your distribution.
-            </p>
-          ) : (
-            <div className="flex flex-col gap-3">
-              {distribution.map((row) => (
-                <DistributionBar key={row.assetClassId} row={row} homeCurrency={homeCurrency} />
-              ))}
-            </div>
-          )}
-        </div>
+      {/* Ticket 16, user story 116: gated the same way DashboardPanel is —
+         `asOfDate === null` means nothing has ever been recorded for any
+         active Holding or Liability, so there's no distribution, nothing
+         that can be stale, and nothing to check in on. A Liability recorded
+         with no Holding yet still has real staleness/Net Worth to show, so
+         this deliberately isn't gated on Holdings alone. */}
+      {netWorth.asOfDate !== null && (
+        <section className="flex flex-col gap-4 rounded-lg border border-hairline p-4">
+          <div className="flex flex-col gap-3">
+            <h2 className="text-sm font-medium text-zinc-500 dark:text-zinc-400">Target Allocation</h2>
+            {hasDistributionData(distribution) ? (
+              <div className="flex flex-col gap-3">
+                {distribution.map((row) => (
+                  <DistributionBar key={row.assetClassId} row={row} homeCurrency={homeCurrency} />
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-zinc-500 dark:text-zinc-400">
+                Record a Valuation to see your distribution.
+              </p>
+            )}
+          </div>
 
-        <div className="flex flex-col gap-2">
-          <h2 className="text-sm font-medium text-zinc-500 dark:text-zinc-400">Needs an update</h2>
-          <StalenessList items={staleItems} />
-        </div>
+          <div className="flex flex-col gap-2">
+            <h2 className="text-sm font-medium text-zinc-500 dark:text-zinc-400">Needs an update</h2>
+            <StalenessList items={staleItems} />
+          </div>
 
-        <CheckInLauncher staleCount={staleItems.length} onStartCheckIn={onStartCheckIn} />
-      </section>
+          <CheckInLauncher staleCount={staleItems.length} onStartCheckIn={onStartCheckIn} />
+        </section>
+      )}
     </div>
   );
 }
