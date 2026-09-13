@@ -24,6 +24,7 @@ import { AddLiabilityClassRow } from "./AddLiabilityClassRow";
 import { AddLiabilityRow } from "./AddLiabilityRow";
 import { AssetClassDetailPanel } from "./AssetClassDetailPanel";
 import { Breadcrumb } from "./Breadcrumb";
+import { CheckInFlow } from "./CheckInFlow";
 import { DashboardPanel } from "./DashboardPanel";
 import { HoldingDetailPanel } from "./HoldingDetailPanel";
 import { LiabilitiesRootPanel } from "./LiabilitiesRootPanel";
@@ -31,6 +32,7 @@ import { LiabilityClassDetailPanel } from "./LiabilityClassDetailPanel";
 import { LiabilityDetailPanel } from "./LiabilityDetailPanel";
 import { MillerColumn, type MillerRow } from "./MillerColumn";
 import { NetWorthStrip } from "./NetWorthStrip";
+import { buildCheckInQueue, type CheckInScope } from "@/lib/check-in/queue";
 import { PlanPanel } from "@/components/plan/PlanPanel";
 import type { StaleItem } from "./StalenessList";
 import type {
@@ -94,6 +96,12 @@ export function PortfolioShell({
   const [selectedHoldingId, setSelectedHoldingId] = useState<string | null>(null);
   const [selectedLiabilityClassId, setSelectedLiabilityClassId] = useState<string | null>(null);
   const [selectedLiabilityId, setSelectedLiabilityId] = useState<string | null>(null);
+  // Check-in mode (ticket 08) suspends column browsing entirely while
+  // active — `checkInQueueIds` is a snapshot taken once at start, so a
+  // Valuation recorded partway through the pass can't reshuffle or drop a
+  // later step out from under the User.
+  const [checkInScope, setCheckInScope] = useState<CheckInScope | null>(null);
+  const [checkInQueueIds, setCheckInQueueIds] = useState<string[]>([]);
 
   const isLiabilitiesRoot = selectedClassId === LIABILITIES_ROOT_ID;
 
@@ -102,6 +110,18 @@ export function PortfolioShell({
     () => liabilities.filter((l) => l.archived_at === null),
     [liabilities],
   );
+
+  // Re-derived from the live `activeHoldings` each render (so a rename mid-
+  // pass shows up) but membership and order stay pinned to the snapshot IDs
+  // taken when the pass started; a Holding archived mid-pass simply drops
+  // out rather than crashing the step it would have been.
+  const checkInQueue = useMemo(() => {
+    const byId = new Map(activeHoldings.map((h) => [h.id, h]));
+    return checkInQueueIds.flatMap((id) => {
+      const holding = byId.get(id);
+      return holding ? [holding] : [];
+    });
+  }, [checkInQueueIds, activeHoldings]);
 
   const selectedClass = !isLiabilitiesRoot
     ? (assetClasses.find((c) => c.id === selectedClassId) ?? null)
@@ -345,6 +365,16 @@ export function PortfolioShell({
 
   function activatePlanRoot() {
     setActiveRoot("plan");
+  }
+
+  function startCheckIn(scope: CheckInScope) {
+    setCheckInQueueIds(buildCheckInQueue(activeHoldings, latestByHolding, scope).map((h) => h.id));
+    setCheckInScope(scope);
+  }
+
+  function exitCheckIn() {
+    setCheckInScope(null);
+    setCheckInQueueIds([]);
   }
 
   async function saveTargetAllocations(
@@ -644,8 +674,22 @@ export function PortfolioShell({
   return (
     <div className="flex flex-1 flex-col">
       <NetWorthStrip homeCurrency={homeCurrency} netWorth={netWorth} userName={userName} />
-      <Breadcrumb roots={breadcrumbRoots} segments={breadcrumbSegments} />
-      {activeRoot === "plan" ? (
+      {/* Hidden, not just inert, while Check-in is active — a clickable
+          breadcrumb that silently no-ops until the pass ends would read as
+          column browsing wasn't actually suspended (ticket 08). */}
+      {!checkInScope && <Breadcrumb roots={breadcrumbRoots} segments={breadcrumbSegments} />}
+      {checkInScope ? (
+        <div className="flex flex-1 overflow-hidden border-t border-hairline">
+          <CheckInFlow
+            queue={checkInQueue}
+            latestByHolding={latestByHolding}
+            priceCacheBySymbol={priceCacheBySymbol}
+            homeCurrency={homeCurrency}
+            onRecordValuation={recordValuation}
+            onExit={exitCheckIn}
+          />
+        </div>
+      ) : activeRoot === "plan" ? (
         <div className="flex flex-1 overflow-hidden border-t border-hairline">
           <PlanPanel
             rows={distribution}
@@ -778,6 +822,7 @@ export function PortfolioShell({
               distribution={distribution}
               targetAmount={projectionAssumptions?.target_amount ?? null}
               targetDate={projectionAssumptions?.target_date ?? null}
+              onStartCheckIn={startCheckIn}
             />
           )}
         </div>
