@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { isVisibleAssetClass } from "@/lib/asset-classes/visibility";
 import { isValidCurrencyCode } from "@/lib/currency/iso4217";
 import { HOLDING_COLUMNS } from "@/lib/holdings/columns";
+import { readHeldAtPatch } from "@/lib/holdings/held-at";
 import { readPriceLookupPatch } from "@/lib/holdings/price-lookup";
 import { readSectorPatch } from "@/lib/holdings/sector";
 import { readTrimmedString } from "@/lib/http/body";
@@ -32,10 +33,11 @@ export async function GET(request: NextRequest) {
 
 // POST /api/holdings — add a Holding under an Asset Class (user stories 12,
 // 13), optionally with a market symbol and quantity to give it a Live
-// Estimate (ticket 07; user stories 32-38), plus an optional Sector (ticket
-// 18). Body: { name, asset_class_id, currency, price_lookup_symbol?,
-// quantity?, sector? } — price_lookup_symbol/quantity must be present
-// together or not at all; sector is independent of that pair.
+// Estimate (ticket 07; user stories 32-38), plus optional Sector (ticket 18)
+// and Held at (ticket 19). Body: { name, asset_class_id, currency,
+// price_lookup_symbol?, quantity?, sector?, held_at? } —
+// price_lookup_symbol/quantity must be present together or not at all;
+// sector and held_at are each independent of that pair and of each other.
 export async function POST(request: NextRequest) {
   const { supabase, responseCookies } = createRouteClient(request);
 
@@ -76,6 +78,11 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: sector.error }, { status: 400 });
   }
 
+  const heldAt = readHeldAtPatch(body);
+  if (!heldAt.ok) {
+    return NextResponse.json({ error: heldAt.error }, { status: 400 });
+  }
+
   if (!(await isVisibleAssetClass(supabase, assetClassId))) {
     return NextResponse.json({ error: "Asset Class not found." }, { status: 400 });
   }
@@ -89,6 +96,7 @@ export async function POST(request: NextRequest) {
       currency,
       ...priceLookup,
       ...(sector.value !== undefined ? { sector: sector.value } : {}),
+      ...(heldAt.value !== undefined ? { held_at: heldAt.value } : {}),
     })
     .select(HOLDING_COLUMNS)
     .single();

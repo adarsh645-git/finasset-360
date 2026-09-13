@@ -23,11 +23,14 @@ import type {
 // The rightmost detail panel for a selected Holding — record a Valuation
 // (user stories 22–26), see its full Valuation History (user story 27), see
 // its Live Estimate against that history (user stories 32-35, ticket 07),
-// edit its market symbol/quantity, name, Asset Class, and currency (user
-// story 17), archive it (user story 18, the primary removal path), or fall
-// back to a true delete for correcting a mistaken entry (user story 21).
-// Market symbol/Quantity lead the edit form, ahead of Name (ticket 18):
-// picking a suggestion from the stock-picker autofills Name and Sector.
+// edit its market symbol/quantity, name, Held at, Asset Class, and currency
+// (user story 17), archive it (user story 18, the primary removal path), or
+// fall back to a true delete for correcting a mistaken entry (user story
+// 21). Market symbol/Quantity lead the edit form, ahead of Name (ticket
+// 18): picking a suggestion from the stock-picker autofills Name and
+// Sector. Held at (ticket 19) sits beside Name — both are "how do I label
+// this Holding" — and is unrelated to the symbol/quantity pair, so it
+// applies regardless of Asset Class.
 export function HoldingDetailPanel({
   holding,
   assetClasses,
@@ -68,6 +71,7 @@ export function HoldingDetailPanel({
   const [symbol, setSymbol] = useState(holding.price_lookup_symbol ?? "");
   const [quantity, setQuantity] = useState(holding.quantity !== null ? String(holding.quantity) : "");
   const [sector, setSector] = useState(holding.sector);
+  const [heldAt, setHeldAt] = useState(holding.held_at ?? "");
   const [isSaving, setIsSaving] = useState(false);
   const [isArchiving, setIsArchiving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -97,7 +101,8 @@ export function HoldingDetailPanel({
     currency !== holding.currency ||
     symbol !== (holding.price_lookup_symbol ?? "") ||
     quantity !== (holding.quantity !== null ? String(holding.quantity) : "") ||
-    sector !== holding.sector;
+    sector !== holding.sector ||
+    heldAt !== (holding.held_at ?? "");
 
   async function handleSave(event: React.FormEvent) {
     event.preventDefault();
@@ -111,6 +116,7 @@ export function HoldingDetailPanel({
       price_lookup_symbol: priceLookup.value?.price_lookup_symbol ?? null,
       quantity: priceLookup.value?.quantity ?? null,
       sector: priceLookup.value ? sector : null,
+      held_at: heldAt.trim() || null,
     });
     setIsSaving(false);
     if (failure) setError(failure);
@@ -223,6 +229,16 @@ export function HoldingDetailPanel({
           <input
             value={name}
             onChange={(e) => setName(e.target.value)}
+            className="rounded-md border border-hairline bg-transparent px-2 py-1.5 text-sm"
+          />
+        </label>
+
+        <label className="flex flex-col gap-1 text-sm">
+          Held at
+          <input
+            value={heldAt}
+            onChange={(e) => setHeldAt(e.target.value)}
+            placeholder="e.g. Fidelity 401k (optional)"
             className="rounded-md border border-hairline bg-transparent px-2 py-1.5 text-sm"
           />
         </label>

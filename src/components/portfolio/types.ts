@@ -19,18 +19,22 @@ export type Holding = {
   // picked from the stock-picker (ticket 18) — display-only, `null` for a
   // manually-entered Holding.
   sector: string | null;
+  // A freeform "where is this held" label (ticket 19) — a brokerage, a
+  // bank, an exchange, "at home" — independent of price_lookup_symbol, so
+  // it applies to every Asset Class, not just market-symbol Holdings.
+  held_at: string | null;
   archived_at: string | null;
   created_at: string;
 };
 
 /** The editable fields of a Holding — name, Asset Class, currency, and its
  * optional market symbol/quantity pair (user story 17; ticket 07), plus
- * Sector (ticket 18) — as one type, since HoldingDetailPanel's edit form,
- * PortfolioShell's save handler, and the PATCH body it sends all pass this
- * same set around together. */
+ * Sector (ticket 18) and Held at (ticket 19) — as one type, since
+ * HoldingDetailPanel's edit form, PortfolioShell's save handler, and the
+ * PATCH body it sends all pass this same set around together. */
 export type HoldingPatch = Pick<
   Holding,
-  "name" | "asset_class_id" | "currency" | "price_lookup_symbol" | "quantity" | "sector"
+  "name" | "asset_class_id" | "currency" | "price_lookup_symbol" | "quantity" | "sector" | "held_at"
 >;
 
 export type HoldingValuation = {

@@ -16,6 +16,7 @@ A deployed, working FinAsset 360 v1, built from [`docs/SPEC.md`](../../docs/SPEC
 
 - [01 · Sign in, get a Portfolio](issues/01-sign-in-get-a-portfolio.md) — no blockers. Also stands up both test harnesses.
 - [18 · Stock-picker autocomplete with sector](issues/18-stock-picker-autocomplete.md) — no blockers; reuses the price-cache/cron pattern from 07 and touches the same components as 03, both already built. Not spec-derived — filed ad hoc from a user request, grilled via `/wayfinder` (2026-09-13). India (NSE/BSE) confirmed as a real future interest but out of scope here — Finnhub's free tier gates it behind a paid add-on; flagged for a future ticket, not this one.
+- [19 · "Held at" field on a Holding](issues/19-held-at-field.md) — no blockers; reuses ticket 18's `sector` pattern exactly. Not spec-derived — filed ad hoc while reviewing ticket 18's edit form, grilled via `/grill-me` (2026-09-13).
 
 ## Dependency order
 
@@ -50,6 +51,7 @@ A deployed, working FinAsset 360 v1, built from [`docs/SPEC.md`](../../docs/SPEC
 | 16 | [Empty and first-run states](issues/16-empty-and-first-run-states.md) | 09, 10 |
 | 17 | [Google display name](issues/17-google-display-name.md) | — |
 | 18 | [Stock-picker autocomplete with sector](issues/18-stock-picker-autocomplete.md) | — |
+| 19 | ["Held at" field on a Holding](issues/19-held-at-field.md) | — |
 
 ## In progress
 

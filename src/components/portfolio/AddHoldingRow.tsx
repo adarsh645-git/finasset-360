@@ -13,7 +13,10 @@ import { StockSymbolPicker } from "./StockSymbolPicker";
 // suggestion autofills Name and Sector, so by the time a User reaches Name
 // it's often already filled in. A freeform symbol with no match still
 // works — Name stays required, since a manually-entered Holding (Real
-// Estate, Cash) has no symbol to autofill it from.
+// Estate, Cash) has no symbol to autofill it from. Held at (ticket 19) is a
+// separate, freeform "where is this held" label — independent of the
+// symbol/quantity pair, so it applies to every Asset Class, not just
+// market-symbol Holdings.
 export function AddHoldingRow({
   onAdd,
 }: {
@@ -22,6 +25,7 @@ export function AddHoldingRow({
     currency: string,
     priceLookup: { price_lookup_symbol: string; quantity: number } | null,
     sector: string | null,
+    heldAt: string | null,
   ) => Promise<string | null>;
 }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -30,6 +34,7 @@ export function AddHoldingRow({
   const [symbol, setSymbol] = useState("");
   const [quantity, setQuantity] = useState("");
   const [sector, setSector] = useState<string | null>(null);
+  const [heldAt, setHeldAt] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -44,7 +49,7 @@ export function AddHoldingRow({
     if (!name.trim() || priceLookup.isMismatched || priceLookup.isInvalid) return;
     setIsSaving(true);
     setError(null);
-    const failure = await onAdd(name.trim(), currency, priceLookup.value, sector);
+    const failure = await onAdd(name.trim(), currency, priceLookup.value, sector, heldAt.trim() || null);
     setIsSaving(false);
     if (failure) {
       setError(failure);
@@ -54,6 +59,7 @@ export function AddHoldingRow({
     setSymbol("");
     setQuantity("");
     setSector(null);
+    setHeldAt("");
     setIsOpen(false);
   }
 
@@ -111,6 +117,13 @@ export function AddHoldingRow({
         value={name}
         onChange={(e) => setName(e.target.value)}
         placeholder="Holding name"
+        disabled={isSaving}
+        className="rounded-md border border-hairline bg-transparent px-2 py-1.5 text-sm"
+      />
+      <input
+        value={heldAt}
+        onChange={(e) => setHeldAt(e.target.value)}
+        placeholder="Held at (optional)"
         disabled={isSaving}
         className="rounded-md border border-hairline bg-transparent px-2 py-1.5 text-sm"
       />

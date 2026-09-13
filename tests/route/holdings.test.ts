@@ -114,6 +114,25 @@ describe("GET/POST /api/holdings, PATCH/DELETE /api/holdings/[id]", () => {
     expect(response.status).toBe(400);
   });
 
+  // Ticket 19: Held at is independent of Sector and of the symbol/quantity
+  // pair — it applies to every Asset Class, not just market-symbol
+  // Holdings.
+  it("creates a Holding with Held at", async () => {
+    const response = await createHolding(userA, { held_at: " Fidelity 401k " });
+    expect(response.status).toBe(201);
+    expect(await response.json()).toMatchObject({ held_at: "Fidelity 401k" });
+  });
+
+  it("a Holding created with no Held at has none", async () => {
+    const response = await createHolding(userA);
+    expect(await response.json()).toMatchObject({ held_at: null });
+  });
+
+  it("rejects a blank Held at", async () => {
+    const response = await createHolding(userA, { held_at: "   " });
+    expect(response.status).toBe(400);
+  });
+
   it("rejects an asset_class_id that doesn't exist or isn't visible to the caller", async () => {
     const response = await createHolding(userA, {
       asset_class_id: "00000000-0000-0000-0000-000000000000",
@@ -217,6 +236,25 @@ describe("GET/POST /api/holdings, PATCH/DELETE /api/holdings/[id]", () => {
     );
     expect(cleared.status).toBe(200);
     expect(await cleared.json()).toMatchObject({ sector: null });
+  });
+
+  it("sets and clears a Holding's Held at via PATCH", async () => {
+    const created = await createHolding(userA);
+    const { id } = await created.json();
+
+    const withHeldAt = await PATCH(
+      requestAs(userA, `${HOLDINGS_URL}/${id}`, { method: "PATCH", ...jsonBody({ held_at: "Robinhood" }) }),
+      { params: Promise.resolve({ id }) },
+    );
+    expect(withHeldAt.status).toBe(200);
+    expect(await withHeldAt.json()).toMatchObject({ held_at: "Robinhood" });
+
+    const cleared = await PATCH(
+      requestAs(userA, `${HOLDINGS_URL}/${id}`, { method: "PATCH", ...jsonBody({ held_at: null }) }),
+      { params: Promise.resolve({ id }) },
+    );
+    expect(cleared.status).toBe(200);
+    expect(await cleared.json()).toMatchObject({ held_at: null });
   });
 
   it("deletes a Holding", async () => {

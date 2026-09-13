@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { isVisibleAssetClass } from "@/lib/asset-classes/visibility";
 import { isValidCurrencyCode } from "@/lib/currency/iso4217";
 import { HOLDING_COLUMNS } from "@/lib/holdings/columns";
+import { readHeldAtPatch } from "@/lib/holdings/held-at";
 import { readPriceLookupPatch } from "@/lib/holdings/price-lookup";
 import { readSectorPatch } from "@/lib/holdings/sector";
 import { hasKey, readTrimmedString } from "@/lib/http/body";
@@ -9,8 +10,9 @@ import { createRouteClient, jsonWithCookies, requireUser } from "@/lib/supabase/
 
 // PATCH /api/holdings/[id] — edit a Holding's name, Asset Class, currency,
 // and/or its market symbol and quantity (user story 17; ticket 07 adds the
-// last two), plus its Sector (ticket 18). Every field is optional; whatever
-// is present is validated the same way POST /api/holdings validates it.
+// last two), plus its Sector (ticket 18) and Held at (ticket 19). Every
+// field is optional; whatever is present is validated the same way
+// POST /api/holdings validates it.
 export async function PATCH(request: NextRequest, context: RouteContext<"/api/holdings/[id]">) {
   const { supabase, responseCookies } = createRouteClient(request);
 
@@ -39,6 +41,12 @@ export async function PATCH(request: NextRequest, context: RouteContext<"/api/ho
     return NextResponse.json({ error: sector.error }, { status: 400 });
   }
   if (sector.value !== undefined) update.sector = sector.value;
+
+  const heldAt = readHeldAtPatch(body);
+  if (!heldAt.ok) {
+    return NextResponse.json({ error: heldAt.error }, { status: 400 });
+  }
+  if (heldAt.value !== undefined) update.held_at = heldAt.value;
 
   if (hasKey(body, "name")) {
     const name = readTrimmedString(body, "name");

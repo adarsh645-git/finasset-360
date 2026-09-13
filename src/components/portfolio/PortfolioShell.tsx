@@ -477,6 +477,7 @@ export function PortfolioShell({
     currency: string,
     priceLookup: { price_lookup_symbol: string; quantity: number } | null,
     sector: string | null,
+    heldAt: string | null,
   ): Promise<string | null> {
     if (!selectedClassId || isLiabilitiesRoot) return "Select an Asset Class first.";
     const failure = await submitJson("/api/holdings", {
@@ -488,6 +489,7 @@ export function PortfolioShell({
         asset_class_id: selectedClassId,
         ...priceLookup,
         sector,
+        held_at: heldAt,
       }),
     });
     if (failure) return failure;
