@@ -218,7 +218,7 @@ Home-currency value is always computed on read as `amount * fx_rate_to_home` and
 
 - Every tenant table: `USING (user_id = auth.uid())` for all operations.
 - `asset_class` / `liability_class`: `SELECT` where `owner_id IS NULL OR owner_id = auth.uid()`; `INSERT`/`UPDATE`/`DELETE` where `owner_id = auth.uid()` only. Global defaults are therefore readable by everyone and editable by nobody at the row level.
-- `price_cache`: RLS **enabled**, not disabled — `FOR SELECT TO authenticated USING (true)` and no write policy for any client role. Only the service-role key, used server-side by the refresh route, can write. Leaving RLS off would work but would leave an accidental client-side write reachable.
+- `price_cache`: RLS **enabled**, not disabled — `FOR SELECT TO authenticated USING (true)` and no write policy for any client role. Only the service-role key, used server-side by the refresh route and by fetch-on-add (below), can write. Leaving RLS off would work but would leave an accidental client-side write reachable.
 
 ### Deletion and archival
 
@@ -235,7 +235,7 @@ Home-currency value is always computed on read as `amount * fx_rate_to_home` and
 - Precious metals: **Metals.Dev** primary with **MetalpriceAPI** as fallback, roughly 100 free requests/month each. Metals-API.com, which this effort originally assumed, no longer has a free tier at all.
 - Real estate and anything else without a symbol: manual entry only. There is no automated home-value lookup.
 - **One shared server-side cached fetch serves all tenants.** This is a hard requirement, not an optimisation: none of these free tiers survive N tenants polling independently.
-- Mechanism: a Vercel Cron Job in `vercel.json` invoking a Next.js API route, protected by Vercel's auto-sent `CRON_SECRET` bearer token; the route fetches from the providers and `UPSERT`s into `price_cache` using the service-role key. The hobby tier caps cron at once per day with ±59 minutes of timing slack — adequate for a net-worth tracker, and a reason the UI should show cached-price age rather than implying real-time.
+- Mechanism: a Vercel Cron Job in `vercel.json` invoking a Next.js API route, protected by Vercel's auto-sent `CRON_SECRET` bearer token; the route fetches from the providers and `UPSERT`s into `price_cache` using the service-role key. A newly added or edited Holding whose symbol has no `price_cache` row triggers the same per-symbol fetch at request time (best-effort: a failure never fails the save), so its Live Estimate doesn't wait for the next daily run. The hobby tier caps cron at once per day with ±59 minutes of timing slack — adequate for a net-worth tracker, and a reason the UI should show cached-price age rather than implying real-time.
 - Two items to check by hand before shipping to real users: Finnhub's free-tier "personal, non-commercial" wording, and the provider figures flagged as lower-confidence in the research file (their pricing pages are JS-rendered and were not fully readable by the research tooling).
 
 ### Projection engine

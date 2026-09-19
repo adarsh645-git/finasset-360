@@ -6,6 +6,7 @@ import { readHeldAtPatch } from "@/lib/holdings/held-at";
 import { readPriceLookupPatch } from "@/lib/holdings/price-lookup";
 import { readSectorPatch } from "@/lib/holdings/sector";
 import { readTrimmedString } from "@/lib/http/body";
+import { ensurePriceCached } from "@/lib/market-data/refresh-price";
 import { createRouteClient, jsonWithCookies, requireUser } from "@/lib/supabase/route";
 
 // GET /api/holdings — every active (non-archived) Holding the signed-in
@@ -38,6 +39,7 @@ export async function GET(request: NextRequest) {
 // price_lookup_symbol?, quantity?, sector?, held_at? } —
 // price_lookup_symbol/quantity must be present together or not at all;
 // sector and held_at are each independent of that pair and of each other.
+// A symbol with no cached price yet is priced immediately (ticket 21).
 export async function POST(request: NextRequest) {
   const { supabase, responseCookies } = createRouteClient(request);
 
@@ -104,6 +106,11 @@ export async function POST(request: NextRequest) {
   if (error) {
     return jsonWithCookies({ error: error.message }, { status: 500 }, responseCookies);
   }
+
+  // Ticket 21: a brand-new symbol has no `price_cache` row until tomorrow's
+  // cron run, so fetch it now — awaited so the client's follow-up read
+  // already sees it. A failure never fails the add (the Holding is saved).
+  await ensurePriceCached(priceLookup?.price_lookup_symbol);
 
   return jsonWithCookies(data, { status: 201 }, responseCookies);
 }

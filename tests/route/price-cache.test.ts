@@ -1,8 +1,9 @@
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { NextRequest } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { GET as GET_REFRESH_PRICES } from "@/app/api/cron/refresh-prices/route";
 import { POST as POST_HOLDING } from "@/app/api/holdings/route";
+import { PATCH as PATCH_HOLDING } from "@/app/api/holdings/[id]/route";
 import { DEFAULT_ASSET_CLASS_ID } from "@/lib/asset-classes/defaults";
 import { createTestUser, deleteTestUser, type TestUser } from "../fixtures/users";
 import { jsonBody, requestAs } from "../fixtures/http";
@@ -166,5 +167,147 @@ describe("GET /api/cron/refresh-prices", () => {
       expect(new Date(data!.fetched_at).getTime()).toBe(new Date(goodFetchedAt).getTime());
       expect(data?.last_error).not.toBeNull();
     });
+  });
+});
+
+// Ticket 21: a symbol added after today's cron run has no cache row until
+// tomorrow's — POST/PATCH /api/holdings fill that hole immediately.
+describe("fetch-on-add for a newly tracked symbol", () => {
+  let user: TestUser;
+  let originalFetch: typeof fetch;
+  let finnhubCalls: string[];
+  let finnhubBehaviour: "price" | "outage" | "unknown-symbol";
+  const symbols: string[] = [];
+
+  function newSymbol(label: string) {
+    const symbol = `TEST-${label}-${Date.now()}`;
+    symbols.push(symbol);
+    return symbol;
+  }
+
+  function addHolding(symbol: string) {
+    return POST_HOLDING(
+      requestAs(user, HOLDINGS_URL, {
+        method: "POST",
+        ...jsonBody({
+          name: "Fetch on add",
+          asset_class_id: DEFAULT_ASSET_CLASS_ID.equity,
+          currency: "USD",
+          price_lookup_symbol: symbol,
+          quantity: 3,
+        }),
+      }),
+    );
+  }
+
+  beforeAll(async () => {
+    user = await createTestUser("price-cache-fetch-on-add");
+    originalFetch = global.fetch;
+    // Only the Finnhub call is stubbed — the Supabase client uses `fetch`
+    // too (same pattern as the cron failure test above).
+    global.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = typeof input === "string" ? input : input.toString();
+      if (url.includes("finnhub.io")) {
+        finnhubCalls.push(url);
+        if (finnhubBehaviour === "outage") throw new Error("simulated provider outage");
+        // Finnhub answers an unrecognised symbol with `c: 0`, not an error.
+        const c = finnhubBehaviour === "unknown-symbol" ? 0 : 42.5;
+        return new Response(JSON.stringify({ c }), { status: 200 });
+      }
+      return originalFetch(input, init);
+    }) as typeof fetch;
+  });
+
+  beforeEach(() => {
+    finnhubCalls = [];
+    finnhubBehaviour = "price";
+  });
+
+  afterAll(async () => {
+    global.fetch = originalFetch;
+    await adminClient().from("price_cache").delete().in("symbol", symbols);
+    await deleteTestUser(user.id);
+  });
+
+  it("populates price_cache for an uncached symbol when a Holding is added", async () => {
+    const symbol = newSymbol("ADD");
+
+    const response = await addHolding(symbol);
+    expect(response.status).toBe(201);
+
+    const { data } = await adminClient()
+      .from("price_cache")
+      .select("price, price_currency, last_error")
+      .eq("symbol", symbol)
+      .single();
+    expect(data?.price).toBe(42.5);
+    expect(data?.price_currency).toBe("USD");
+    expect(data?.last_error).toBeNull();
+  });
+
+  it("does not re-fetch a symbol that already has a cache row", async () => {
+    const symbol = newSymbol("CACHED");
+    const fetchedAt = new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString();
+    await adminClient()
+      .from("price_cache")
+      .insert({ symbol, price: 7, price_currency: "USD", source: "finnhub", fetched_at: fetchedAt });
+
+    const response = await addHolding(symbol);
+    expect(response.status).toBe(201);
+
+    expect(finnhubCalls).toHaveLength(0);
+    const { data } = await adminClient().from("price_cache").select("price").eq("symbol", symbol).single();
+    expect(data?.price).toBe(7);
+  });
+
+  it("still saves the Holding when the provider fails, leaving the cache empty", async () => {
+    const symbol = newSymbol("FAIL");
+    finnhubBehaviour = "outage";
+
+    const response = await addHolding(symbol);
+    expect(response.status).toBe(201);
+    const holding = await response.json();
+    expect(holding.price_lookup_symbol).toBe(symbol);
+
+    const { data } = await adminClient().from("price_cache").select("symbol").eq("symbol", symbol);
+    expect(data).toEqual([]);
+  });
+
+  it("still saves the Holding when the provider doesn't recognise the symbol", async () => {
+    const symbol = newSymbol("UNKNOWN");
+    finnhubBehaviour = "unknown-symbol";
+
+    const response = await addHolding(symbol);
+    expect(response.status).toBe(201);
+
+    const { data } = await adminClient().from("price_cache").select("symbol").eq("symbol", symbol);
+    expect(data).toEqual([]);
+  });
+
+  it("prices an uncached symbol set through an edit too", async () => {
+    const created = await POST_HOLDING(
+      requestAs(user, HOLDINGS_URL, {
+        method: "POST",
+        ...jsonBody({
+          name: "Edit into a symbol",
+          asset_class_id: DEFAULT_ASSET_CLASS_ID.equity,
+          currency: "USD",
+        }),
+      }),
+    );
+    const { id } = await created.json();
+    const symbol = newSymbol("EDIT");
+
+    const response = await PATCH_HOLDING(
+      requestAs(user, `${HOLDINGS_URL}/${id}`, {
+        method: "PATCH",
+        ...jsonBody({ price_lookup_symbol: symbol, quantity: 2 }),
+      }),
+      { params: Promise.resolve({ id }) },
+    );
+    expect(response.status).toBe(200);
+
+    const { data } = await adminClient().from("price_cache").select("price").eq("symbol", symbol).single();
+    expect(data?.price).toBe(42.5);
   });
 });
