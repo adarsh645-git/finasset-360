@@ -270,12 +270,13 @@ async function main() {
   const { data: link, error: linkError } = await admin.auth.admin.generateLink({
     type: "magiclink",
     email: DEV_EMAIL,
-    // Must match supabase/config.toml's site_url/additional_redirect_urls
-    // exactly (127.0.0.1, not localhost) — GoTrue silently drops a
-    // redirect_to that isn't allow-listed and falls back to the bare
-    // site_url with no path, which skips /auth/callback's code exchange
-    // entirely and leaves the browser sessionless.
-    options: { redirectTo: "http://127.0.0.1:3000/auth/callback" },
+    // 127.0.0.1, not localhost — must match supabase/config.toml's
+    // site_url/additional_redirect_urls exactly, or GoTrue silently drops
+    // this redirect_to and falls back to the bare site_url instead.
+    // /auth/dev-signin, not /auth/callback: a magiclink hands off tokens
+    // via the URL *fragment* (no code_verifier to pair a PKCE `?code=`
+    // with), which only client-side JS can read — see that page's comment.
+    options: { redirectTo: "http://127.0.0.1:3000/auth/dev-signin" },
   });
   if (linkError) throw new Error(`Failed generating sign-in link: ${linkError.message}`);
 
