@@ -2,7 +2,9 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { supabaseAnonKey, supabaseUrl } from "./env";
 
-const PUBLIC_PATHS = ["/login", "/auth/callback"];
+// /auth/dev-signin is scripts/seed-local.mjs's local-only landing page —
+// see its own comment for why it exists alongside /auth/callback.
+const PUBLIC_PATHS = ["/login", "/auth/callback", "/auth/dev-signin"];
 
 // Refreshes the auth session cookie on every request (Supabase access tokens
 // are short-lived) and redirects a signed-out visitor away from anything but
