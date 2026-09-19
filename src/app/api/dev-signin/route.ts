@@ -12,6 +12,14 @@ import { createRouteClient } from "@/lib/supabase/route";
 // relies on, sidestepping whatever timing the browser client's own cookie
 // side effects depend on.
 export async function POST(request: NextRequest) {
+  // Refuses outside local dev: an unauthenticated endpoint that mints a
+  // session from any token pair handed to it must never be reachable on a
+  // real deployment — ADR 0001's Google-sign-in-only guarantee depends on
+  // there being no other way in.
+  if (process.env.NODE_ENV === "production") {
+    return NextResponse.json({ error: "Not available." }, { status: 404 });
+  }
+
   const { access_token, refresh_token } = await request.json();
   if (typeof access_token !== "string" || typeof refresh_token !== "string") {
     return NextResponse.json({ error: "Missing access_token or refresh_token." }, { status: 400 });
