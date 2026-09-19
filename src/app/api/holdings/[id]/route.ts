@@ -1,19 +1,31 @@
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { NextResponse, type NextRequest } from "next/server";
+import { isCashAssetClass } from "@/lib/asset-classes/defaults";
 import { isVisibleAssetClass } from "@/lib/asset-classes/visibility";
 import { isValidCurrencyCode } from "@/lib/currency/iso4217";
 import { HOLDING_COLUMNS } from "@/lib/holdings/columns";
 import { readHeldAtPatch } from "@/lib/holdings/held-at";
-import { readPriceLookupPatch } from "@/lib/holdings/price-lookup";
+import {
+  CASH_PRICE_LOOKUP_ERROR,
+  readPriceLookupPatch,
+  setsPriceLookup,
+} from "@/lib/holdings/price-lookup";
 import { readSectorPatch } from "@/lib/holdings/sector";
 import { hasKey, readTrimmedString } from "@/lib/http/body";
 import { ensurePriceCached } from "@/lib/market-data/refresh-price";
 import { createRouteClient, jsonWithCookies, requireUser } from "@/lib/supabase/route";
 
+async function readStoredAssetClassId(supabase: SupabaseClient, holdingId: string): Promise<string | null> {
+  const { data } = await supabase.from("holding").select("asset_class_id").eq("id", holdingId).maybeSingle();
+  return data?.asset_class_id ?? null;
+}
+
 // PATCH /api/holdings/[id] — edit a Holding's name, Asset Class, currency,
 // and/or its market symbol and quantity (user story 17; ticket 07 adds the
 // last two), plus its Sector (ticket 18) and Held at (ticket 19). Every
 // field is optional; whatever is present is validated the same way
-// POST /api/holdings validates it.
+// POST /api/holdings validates it — including refusing a market symbol on a
+// Cash Holding (ticket 22).
 export async function PATCH(request: NextRequest, context: RouteContext<"/api/holdings/[id]">) {
   const { supabase, responseCookies } = createRouteClient(request);
 
@@ -74,6 +86,19 @@ export async function PATCH(request: NextRequest, context: RouteContext<"/api/ho
       );
     }
     update.currency = currency;
+  }
+
+  // Ticket 22: a Cash Holding can't carry a market symbol. The class it
+  // will have after this write is the body's, else the stored one — only
+  // fetched when the patch actually sets a symbol, the one case that needs it.
+  if (setsPriceLookup(priceLookup)) {
+    const resultingClassId =
+      typeof update.asset_class_id === "string"
+        ? update.asset_class_id
+        : await readStoredAssetClassId(supabase, id);
+    if (resultingClassId !== null && isCashAssetClass(resultingClassId)) {
+      return NextResponse.json({ error: CASH_PRICE_LOOKUP_ERROR }, { status: 400 });
+    }
   }
 
   if (Object.keys(update).length === 0) {

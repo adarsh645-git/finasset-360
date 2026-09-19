@@ -3,6 +3,7 @@ import { NextRequest } from "next/server";
 import { DELETE, PATCH } from "@/app/api/holdings/[id]/route";
 import { GET, POST } from "@/app/api/holdings/route";
 import { POST as POST_ASSET_CLASS } from "@/app/api/asset-classes/route";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { DEFAULT_ASSET_CLASS_ID } from "@/lib/asset-classes/defaults";
 import { createTestUser, deleteTestUser, type TestUser } from "../fixtures/users";
 import { jsonBody, requestAs } from "../fixtures/http";
@@ -257,6 +258,112 @@ describe("GET/POST /api/holdings, PATCH/DELETE /api/holdings/[id]", () => {
     );
     expect(cleared.status).toBe(200);
     expect(await cleared.json()).toMatchObject({ held_at: null });
+  });
+
+  // Ticket 22: Cash has no market symbol or quantity. The Cash form never
+  // sends them, and the route refuses them rather than trusting the client.
+  describe("Cash Holdings (ticket 22)", () => {
+    async function patchHolding(user: TestUser, id: string, body: Record<string, unknown>) {
+      return PATCH(requestAs(user, `${HOLDINGS_URL}/${id}`, { method: "PATCH", ...jsonBody(body) }), {
+        params: Promise.resolve({ id }),
+      });
+    }
+
+    it("creates a Cash Holding with no market symbol or quantity", async () => {
+      const response = await createHolding(userA, {
+        name: "Chase Checking",
+        asset_class_id: DEFAULT_ASSET_CLASS_ID.cash,
+        held_at: "Chase",
+      });
+      expect(response.status).toBe(201);
+      expect(await response.json()).toMatchObject({ price_lookup_symbol: null, quantity: null });
+    });
+
+    it("accepts an explicit null symbol/quantity pair on Cash", async () => {
+      const response = await createHolding(userA, {
+        asset_class_id: DEFAULT_ASSET_CLASS_ID.cash,
+        price_lookup_symbol: null,
+        quantity: null,
+      });
+      expect(response.status).toBe(201);
+    });
+
+    it("refuses a market symbol and quantity on a new Cash Holding", async () => {
+      const response = await createHolding(userA, {
+        asset_class_id: DEFAULT_ASSET_CLASS_ID.cash,
+        price_lookup_symbol: "AAPL",
+        quantity: 10,
+      });
+      expect(response.status).toBe(400);
+    });
+
+    it("refuses setting a market symbol on an existing Cash Holding", async () => {
+      const { id } = await (
+        await createHolding(userA, { asset_class_id: DEFAULT_ASSET_CLASS_ID.cash })
+      ).json();
+      const response = await patchHolding(userA, id, { price_lookup_symbol: "AAPL", quantity: 1 });
+      expect(response.status).toBe(400);
+    });
+
+    it("refuses moving a Holding into Cash while setting a market symbol", async () => {
+      const { id } = await (await createHolding(userA)).json();
+      const response = await patchHolding(userA, id, {
+        asset_class_id: DEFAULT_ASSET_CLASS_ID.cash,
+        price_lookup_symbol: "AAPL",
+        quantity: 1,
+      });
+      expect(response.status).toBe(400);
+    });
+
+    it("moving a live-priced Holding into Cash works when the pair is cleared with it", async () => {
+      const { id } = await (
+        await createHolding(userA, { price_lookup_symbol: "AAPL", quantity: 10 })
+      ).json();
+      const response = await patchHolding(userA, id, {
+        asset_class_id: DEFAULT_ASSET_CLASS_ID.cash,
+        price_lookup_symbol: null,
+        quantity: null,
+      });
+      expect(response.status).toBe(200);
+      expect(await response.json()).toMatchObject({
+        asset_class_id: DEFAULT_ASSET_CLASS_ID.cash,
+        price_lookup_symbol: null,
+        quantity: null,
+      });
+    });
+
+    it("leaves a legacy Cash Holding's stored symbol/quantity intact when only its name is edited", async () => {
+      // Reachable only for rows that predate ticket 22 (or via a direct
+      // write), so seed one with the service-role client, past the route.
+      const { data: legacy } = await createAdminClient()
+        .from("holding")
+        .insert({
+          user_id: userA.id,
+          asset_class_id: DEFAULT_ASSET_CLASS_ID.cash,
+          name: "Legacy cash",
+          currency: "USD",
+          price_lookup_symbol: "AAPL",
+          quantity: 3,
+        })
+        .select("id")
+        .single();
+
+      // The edit form's real Save payload for a Cash Holding: every visible
+      // field, including the (unchanged) class, but no symbol/quantity.
+      const response = await patchHolding(userA, legacy!.id, {
+        name: "Renamed legacy cash",
+        asset_class_id: DEFAULT_ASSET_CLASS_ID.cash,
+        currency: "USD",
+        held_at: "Chase",
+      });
+      expect(response.status).toBe(200);
+      expect(await response.json()).toMatchObject({
+        name: "Renamed legacy cash",
+        held_at: "Chase",
+        price_lookup_symbol: "AAPL",
+        quantity: 3,
+      });
+    });
   });
 
   it("deletes a Holding", async () => {
