@@ -97,9 +97,7 @@ export async function PATCH(request: NextRequest, context: RouteContext<"/api/ho
 
   // Ticket 21: same fill-the-hole fetch as POST when the edit points the
   // Holding at a symbol nothing has priced yet.
-  if (priceLookup?.price_lookup_symbol) {
-    await ensurePriceCached(priceLookup.price_lookup_symbol);
-  }
+  await ensurePriceCached(priceLookup?.price_lookup_symbol);
 
   return jsonWithCookies(data, { status: 200 }, responseCookies);
 }

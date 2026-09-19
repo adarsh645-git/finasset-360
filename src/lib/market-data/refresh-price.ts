@@ -51,7 +51,9 @@ export async function refreshPrice(
  * runs, so any failure here (provider down, unknown symbol, missing
  * service-role key) is swallowed — the Live Estimate just shows its "no
  * price yet" state until the cron succeeds. */
-export async function ensurePriceCached(symbol: string): Promise<void> {
+export async function ensurePriceCached(symbol: string | null | undefined): Promise<void> {
+  if (!symbol) return;
+
   try {
     const admin = createAdminClient();
     const { data, error } = await admin
@@ -61,8 +63,11 @@ export async function ensurePriceCached(symbol: string): Promise<void> {
       .maybeSingle();
     if (error || data) return;
 
-    await refreshPrice(admin, symbol);
-  } catch {
-    // Deliberately ignored — see the doc comment above.
+    const outcome = await refreshPrice(admin, symbol);
+    if (!outcome.ok) console.error(`Fetch-on-add for ${symbol} failed: ${outcome.error}`);
+  } catch (error) {
+    // Never fails the add — but logged, so a misconfigured deploy (e.g. a
+    // missing service-role key) doesn't fail invisibly.
+    console.error(`Fetch-on-add for ${symbol} threw:`, error);
   }
 }

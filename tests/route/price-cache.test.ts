@@ -176,7 +176,7 @@ describe("fetch-on-add for a newly tracked symbol", () => {
   let user: TestUser;
   let originalFetch: typeof fetch;
   let finnhubCalls: string[];
-  let finnhubBehaviour: "price" | "outage";
+  let finnhubBehaviour: "price" | "outage" | "unknown-symbol";
   const symbols: string[] = [];
 
   function newSymbol(label: string) {
@@ -210,7 +210,9 @@ describe("fetch-on-add for a newly tracked symbol", () => {
       if (url.includes("finnhub.io")) {
         finnhubCalls.push(url);
         if (finnhubBehaviour === "outage") throw new Error("simulated provider outage");
-        return new Response(JSON.stringify({ c: 42.5 }), { status: 200 });
+        // Finnhub answers an unrecognised symbol with `c: 0`, not an error.
+        const c = finnhubBehaviour === "unknown-symbol" ? 0 : 42.5;
+        return new Response(JSON.stringify({ c }), { status: 200 });
       }
       return originalFetch(input, init);
     }) as typeof fetch;
@@ -266,6 +268,17 @@ describe("fetch-on-add for a newly tracked symbol", () => {
     expect(response.status).toBe(201);
     const holding = await response.json();
     expect(holding.price_lookup_symbol).toBe(symbol);
+
+    const { data } = await adminClient().from("price_cache").select("symbol").eq("symbol", symbol);
+    expect(data).toEqual([]);
+  });
+
+  it("still saves the Holding when the provider doesn't recognise the symbol", async () => {
+    const symbol = newSymbol("UNKNOWN");
+    finnhubBehaviour = "unknown-symbol";
+
+    const response = await addHolding(symbol);
+    expect(response.status).toBe(201);
 
     const { data } = await adminClient().from("price_cache").select("symbol").eq("symbol", symbol);
     expect(data).toEqual([]);

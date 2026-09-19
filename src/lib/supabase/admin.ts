@@ -6,8 +6,9 @@ import { supabaseUrl } from "./env";
 // caller controls. Its two users: the cron refresh route
 // (src/app/api/cron/refresh-prices/route.ts), gated on CRON_SECRET, and
 // `ensurePriceCached` (src/lib/market-data/refresh-price.ts), which only
-// ever fills a missing `price_cache` row from the provider — nothing the
-// caller sends is written to the cache.
+// ever fills a missing `price_cache` row from what the provider returns —
+// the caller's symbol only chooses which provider quote is fetched, and no
+// row exists unless the provider recognises it.
 export function createAdminClient(): SupabaseClient {
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!key) {
