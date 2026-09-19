@@ -226,205 +226,203 @@ export function LiabilityDetailPanel({
   }
 
   return (
-    <form
-      onSubmit={handleSave}
-      className="flex flex-1 flex-col gap-6 overflow-y-auto px-8 py-8"
-      key={liability.id}
-    >
-      <h1 className="text-lg font-semibold tracking-tight">{liability.name}</h1>
+    <form onSubmit={handleSave} className="flex flex-1 flex-col" key={liability.id}>
+      <div className="flex flex-1 flex-col gap-6 overflow-y-auto px-8 py-8">
+        <h1 className="text-lg font-semibold tracking-tight">{liability.name}</h1>
 
-      <ValuationEditor
-        currency={liability.currency}
-        latestValuation={latestValuation}
-        onRecord={onRecordValuation}
-      />
+        <ValuationEditor
+          currency={liability.currency}
+          latestValuation={latestValuation}
+          onRecord={onRecordValuation}
+        />
 
-      {payoffCurve && payoffCurve.some((p) => p.amount > 0) && (
-        <div className="flex flex-col gap-2">
-          <h2 className="text-sm font-medium text-zinc-500 dark:text-zinc-400">Payoff curve</h2>
-          <Sparkline values={payoffCurve.map((p) => p.amount)} />
-          <p className="text-xs text-zinc-500 dark:text-zinc-400">
-            {formatMoney(payoffCurve[0].amount, liability.currency)} today ·{" "}
-            {formatMoney(payoffCurve[payoffCurve.length - 1].amount, liability.currency)} in{" "}
-            {payoffCurve.length - 1} years
+        {payoffCurve && payoffCurve.some((p) => p.amount > 0) && (
+          <div className="flex flex-col gap-2">
+            <h2 className="text-sm font-medium text-zinc-500 dark:text-zinc-400">Payoff curve</h2>
+            <Sparkline values={payoffCurve.map((p) => p.amount)} />
+            <p className="text-xs text-zinc-500 dark:text-zinc-400">
+              {formatMoney(payoffCurve[0].amount, liability.currency)} today ·{" "}
+              {formatMoney(payoffCurve[payoffCurve.length - 1].amount, liability.currency)} in{" "}
+              {payoffCurve.length - 1} years
+            </p>
+          </div>
+        )}
+
+        {netPosition !== null && linkedHolding && projectionAssumptions && (
+          <p className="text-sm text-zinc-600 dark:text-zinc-400">
+            {formatNetPositionLabel(
+              linkedHolding.name,
+              projectionAssumptions.horizon_years,
+              netPosition,
+              liability.currency,
+            )}
           </p>
+        )}
+
+        <div className="flex flex-col gap-2">
+          <h2 className="text-sm font-medium text-zinc-500 dark:text-zinc-400">Valuation History</h2>
+          <ValuationHistoryTable currency={liability.currency} history={history} />
         </div>
-      )}
 
-      {netPosition !== null && linkedHolding && projectionAssumptions && (
-        <p className="text-sm text-zinc-600 dark:text-zinc-400">
-          {formatNetPositionLabel(
-            linkedHolding.name,
-            projectionAssumptions.horizon_years,
-            netPosition,
-            liability.currency,
-          )}
-        </p>
-      )}
-
-      <div className="flex flex-col gap-2">
-        <h2 className="text-sm font-medium text-zinc-500 dark:text-zinc-400">Valuation History</h2>
-        <ValuationHistoryTable currency={liability.currency} history={history} />
-      </div>
-
-      <div className="flex flex-col gap-4">
-        <label className="flex flex-col gap-1 text-sm">
-          Name
-          <input
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            className="rounded-md border border-hairline bg-transparent px-2 py-1.5 text-sm"
-          />
-        </label>
-
-        <label className="flex flex-col gap-1 text-sm">
-          Liability Class
-          <select
-            value={liabilityClassId}
-            onChange={(e) => setLiabilityClassId(e.target.value)}
-            className="rounded-md border border-hairline bg-transparent px-2 py-1.5 text-sm"
-          >
-            {liabilityClasses.map((liabilityClass) => (
-              <option key={liabilityClass.id} value={liabilityClass.id}>
-                {liabilityClass.name}
-              </option>
-            ))}
-          </select>
-        </label>
-
-        <label className="flex flex-col gap-1 text-sm">
-          Currency
-          <CurrencySelect value={currency} onChange={setCurrency} />
-        </label>
-      </div>
-
-      <div className="flex flex-col gap-4 border-t border-hairline pt-4">
-        <h2 className="text-sm font-medium text-zinc-500 dark:text-zinc-400">
-          Amortization Assumptions
-        </h2>
-        <p className="text-xs text-zinc-500 dark:text-zinc-400">
-          Optional — any Liability can carry these, not only a Mortgage. Leave a field blank to hold this
-          Liability flat instead of projecting a payoff.
-        </p>
-
-        <div className="grid grid-cols-2 gap-4">
+        <div className="flex flex-col gap-4">
           <label className="flex flex-col gap-1 text-sm">
-            Interest rate
-            <div className="flex items-center gap-1">
-              <input
-                type="number"
-                inputMode="decimal"
-                step="any"
-                value={amortizationDrafts.interestRatePercent}
-                onChange={(e) => updateAmortizationDraft("interestRatePercent", e.target.value)}
-                className="w-full rounded-md border border-hairline bg-transparent px-2 py-1.5 text-sm"
-              />
-              %
-            </div>
-          </label>
-
-          <label className="flex flex-col gap-1 text-sm">
-            Term (months)
+            Name
             <input
-              type="number"
-              inputMode="numeric"
-              step={1}
-              min={1}
-              value={amortizationDrafts.termMonths}
-              onChange={(e) => updateAmortizationDraft("termMonths", e.target.value)}
+              value={name}
+              onChange={(e) => setName(e.target.value)}
               className="rounded-md border border-hairline bg-transparent px-2 py-1.5 text-sm"
             />
           </label>
 
           <label className="flex flex-col gap-1 text-sm">
-            Original loan amount
-            <input
-              type="number"
-              inputMode="decimal"
-              step="any"
-              value={amortizationDrafts.originalLoanAmount}
-              onChange={(e) => updateAmortizationDraft("originalLoanAmount", e.target.value)}
-              className="rounded-md border border-hairline bg-transparent px-2 py-1.5 text-sm"
-            />
-          </label>
-
-          <label className="flex flex-col gap-1 text-sm">
-            Custom monthly payment
-            <input
-              type="number"
-              inputMode="decimal"
-              step="any"
-              value={amortizationDrafts.customMonthlyPayment}
-              onChange={(e) => updateAmortizationDraft("customMonthlyPayment", e.target.value)}
-              placeholder="Derived from amount, rate, term"
-              className="rounded-md border border-hairline bg-transparent px-2 py-1.5 text-sm"
-            />
-          </label>
-
-          <label className="flex flex-col gap-1 text-sm">
-            Extra monthly payment
-            <input
-              type="number"
-              inputMode="decimal"
-              step="any"
-              value={amortizationDrafts.extraMonthlyPayment}
-              onChange={(e) => updateAmortizationDraft("extraMonthlyPayment", e.target.value)}
-              className="rounded-md border border-hairline bg-transparent px-2 py-1.5 text-sm"
-            />
-          </label>
-
-          <label className="flex flex-col gap-1 text-sm">
-            Escrow portion
-            <input
-              type="number"
-              inputMode="decimal"
-              step="any"
-              value={amortizationDrafts.escrowPortion}
-              onChange={(e) => updateAmortizationDraft("escrowPortion", e.target.value)}
-              className="rounded-md border border-hairline bg-transparent px-2 py-1.5 text-sm"
-            />
-            <span className="text-xs text-zinc-500 dark:text-zinc-400">
-              Property tax/insurance baked into the payment — excluded when the freed payment redirects.
-            </span>
-          </label>
-
-          <label className="flex flex-col gap-1 text-sm">
-            Start date
-            <input
-              type="date"
-              value={amortizationDrafts.startDate}
-              onChange={(e) => updateAmortizationDraft("startDate", e.target.value)}
-              className="rounded-md border border-hairline bg-transparent px-2 py-1.5 text-sm"
-            />
-            <span className="text-xs text-zinc-500 dark:text-zinc-400">Display only.</span>
-          </label>
-
-          <label className="flex flex-col gap-1 text-sm">
-            Linked Holding
+            Liability Class
             <select
-              value={amortizationDrafts.linkedHoldingId}
-              onChange={(e) => updateAmortizationDraft("linkedHoldingId", e.target.value)}
+              value={liabilityClassId}
+              onChange={(e) => setLiabilityClassId(e.target.value)}
               className="rounded-md border border-hairline bg-transparent px-2 py-1.5 text-sm"
             >
-              <option value="">None</option>
-              {linkableHoldings.map((holding) => (
-                <option key={holding.id} value={holding.id}>
-                  {holding.name}
+              {liabilityClasses.map((liabilityClass) => (
+                <option key={liabilityClass.id} value={liabilityClass.id}>
+                  {liabilityClass.name}
                 </option>
               ))}
             </select>
           </label>
+
+          <label className="flex flex-col gap-1 text-sm">
+            Currency
+            <CurrencySelect value={currency} onChange={setCurrency} />
+          </label>
         </div>
 
-        {!isAmortizationValid && (
-          <p className="text-xs font-medium">Amortization fields must be valid numbers.</p>
-        )}
-        {entryTimeWarning && <p className="text-xs font-medium">{entryTimeWarning}</p>}
+        <div className="flex flex-col gap-4 border-t border-hairline pt-4">
+          <h2 className="text-sm font-medium text-zinc-500 dark:text-zinc-400">
+            Amortization Assumptions
+          </h2>
+          <p className="text-xs text-zinc-500 dark:text-zinc-400">
+            Optional — any Liability can carry these, not only a Mortgage. Leave a field blank to hold this
+            Liability flat instead of projecting a payoff.
+          </p>
+
+          <div className="grid grid-cols-2 gap-4">
+            <label className="flex flex-col gap-1 text-sm">
+              Interest rate
+              <div className="flex items-center gap-1">
+                <input
+                  type="number"
+                  inputMode="decimal"
+                  step="any"
+                  value={amortizationDrafts.interestRatePercent}
+                  onChange={(e) => updateAmortizationDraft("interestRatePercent", e.target.value)}
+                  className="w-full rounded-md border border-hairline bg-transparent px-2 py-1.5 text-sm"
+                />
+                %
+              </div>
+            </label>
+
+            <label className="flex flex-col gap-1 text-sm">
+              Term (months)
+              <input
+                type="number"
+                inputMode="numeric"
+                step={1}
+                min={1}
+                value={amortizationDrafts.termMonths}
+                onChange={(e) => updateAmortizationDraft("termMonths", e.target.value)}
+                className="rounded-md border border-hairline bg-transparent px-2 py-1.5 text-sm"
+              />
+            </label>
+
+            <label className="flex flex-col gap-1 text-sm">
+              Original loan amount
+              <input
+                type="number"
+                inputMode="decimal"
+                step="any"
+                value={amortizationDrafts.originalLoanAmount}
+                onChange={(e) => updateAmortizationDraft("originalLoanAmount", e.target.value)}
+                className="rounded-md border border-hairline bg-transparent px-2 py-1.5 text-sm"
+              />
+            </label>
+
+            <label className="flex flex-col gap-1 text-sm">
+              Custom monthly payment
+              <input
+                type="number"
+                inputMode="decimal"
+                step="any"
+                value={amortizationDrafts.customMonthlyPayment}
+                onChange={(e) => updateAmortizationDraft("customMonthlyPayment", e.target.value)}
+                placeholder="Derived from amount, rate, term"
+                className="rounded-md border border-hairline bg-transparent px-2 py-1.5 text-sm"
+              />
+            </label>
+
+            <label className="flex flex-col gap-1 text-sm">
+              Extra monthly payment
+              <input
+                type="number"
+                inputMode="decimal"
+                step="any"
+                value={amortizationDrafts.extraMonthlyPayment}
+                onChange={(e) => updateAmortizationDraft("extraMonthlyPayment", e.target.value)}
+                className="rounded-md border border-hairline bg-transparent px-2 py-1.5 text-sm"
+              />
+            </label>
+
+            <label className="flex flex-col gap-1 text-sm">
+              Escrow portion
+              <input
+                type="number"
+                inputMode="decimal"
+                step="any"
+                value={amortizationDrafts.escrowPortion}
+                onChange={(e) => updateAmortizationDraft("escrowPortion", e.target.value)}
+                className="rounded-md border border-hairline bg-transparent px-2 py-1.5 text-sm"
+              />
+              <span className="text-xs text-zinc-500 dark:text-zinc-400">
+                Property tax/insurance baked into the payment — excluded when the freed payment redirects.
+              </span>
+            </label>
+
+            <label className="flex flex-col gap-1 text-sm">
+              Start date
+              <input
+                type="date"
+                value={amortizationDrafts.startDate}
+                onChange={(e) => updateAmortizationDraft("startDate", e.target.value)}
+                className="rounded-md border border-hairline bg-transparent px-2 py-1.5 text-sm"
+              />
+              <span className="text-xs text-zinc-500 dark:text-zinc-400">Display only.</span>
+            </label>
+
+            <label className="flex flex-col gap-1 text-sm">
+              Linked Holding
+              <select
+                value={amortizationDrafts.linkedHoldingId}
+                onChange={(e) => updateAmortizationDraft("linkedHoldingId", e.target.value)}
+                className="rounded-md border border-hairline bg-transparent px-2 py-1.5 text-sm"
+              >
+                <option value="">None</option>
+                {linkableHoldings.map((holding) => (
+                  <option key={holding.id} value={holding.id}>
+                    {holding.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
+
+          {!isAmortizationValid && (
+            <p className="text-xs font-medium">Amortization fields must be valid numbers.</p>
+          )}
+          {entryTimeWarning && <p className="text-xs font-medium">{entryTimeWarning}</p>}
+        </div>
+
+        {error && <p className="text-sm font-medium">{error}</p>}
       </div>
 
-      {error && <p className="text-sm font-medium">{error}</p>}
-
-      <div className="flex gap-2">
+      <div className="flex shrink-0 gap-2 border-t border-hairline px-8 py-4">
         <button
           type="submit"
           disabled={isSaving || !isDirty || !name.trim() || !isAmortizationValid}

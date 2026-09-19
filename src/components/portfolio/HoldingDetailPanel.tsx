@@ -143,130 +143,130 @@ export function HoldingDetailPanel({
   }
 
   return (
-    <form
-      onSubmit={handleSave}
-      className="flex flex-1 flex-col gap-6 overflow-y-auto px-8 py-8"
-      key={holding.id}
-    >
-      <h1 className="text-lg font-semibold tracking-tight">{holding.name}</h1>
+    <form onSubmit={handleSave} className="flex flex-1 flex-col" key={holding.id}>
+      <div className="flex flex-1 flex-col gap-6 overflow-y-auto px-8 py-8">
+        <h1 className="text-lg font-semibold tracking-tight">{holding.name}</h1>
 
-      <ValuationEditor
-        currency={holding.currency}
-        latestValuation={latestValuation}
-        onRecord={onRecordValuation}
-      />
-
-      {holding.price_lookup_symbol && holding.quantity !== null && (
-        <LiveEstimate
-          quantity={holding.quantity}
-          priceCache={priceCache}
-          lastValuation={latestValuation}
-          holdingCurrency={holding.currency}
-          onUse={onRecordValuation}
+        <ValuationEditor
+          currency={holding.currency}
+          latestValuation={latestValuation}
+          onRecord={onRecordValuation}
         />
-      )}
 
-      {projectedValue !== null && projectionAssumptions && (
-        <p className="text-sm text-zinc-600 dark:text-zinc-400">
-          Projected in {projectionAssumptions.horizon_years} years:{" "}
-          {formatMoney(projectedValue, holding.currency)}
-        </p>
-      )}
-
-      {netPosition !== null && linkedLiabilities.length > 0 && projectionAssumptions && (
-        <p className="text-sm text-zinc-600 dark:text-zinc-400">
-          {formatNetPositionLabel(
-            linkedLiabilities.map((l) => l.name).join(", "),
-            projectionAssumptions.horizon_years,
-            netPosition,
-            holding.currency,
-          )}
-        </p>
-      )}
-
-      <div className="flex flex-col gap-2">
-        <h2 className="text-sm font-medium text-zinc-500 dark:text-zinc-400">Valuation History</h2>
-        <ValuationHistoryTable currency={holding.currency} history={history} />
-      </div>
-
-      <div className="flex flex-col gap-4">
-        <label className="flex flex-col gap-1 text-sm">
-          Market symbol
-          <StockSymbolPicker
-            value={symbol}
-            onChangeText={(text) => {
-              setSymbol(text);
-              setSector(null);
-            }}
-            onSelect={(match) => {
-              setSymbol(match.symbol);
-              setSector(match.sector);
-              setName(match.name);
-            }}
-            placeholder="e.g. AAPL, XAU (optional)"
-            className="rounded-md border border-hairline bg-transparent px-2 py-1.5 text-sm"
+        {holding.price_lookup_symbol && holding.quantity !== null && (
+          <LiveEstimate
+            quantity={holding.quantity}
+            priceCache={priceCache}
+            lastValuation={latestValuation}
+            holdingCurrency={holding.currency}
+            onUse={onRecordValuation}
           />
-          {sector && <span className="text-xs text-zinc-500 dark:text-zinc-400">Sector: {sector}</span>}
-        </label>
-
-        <label className="flex flex-col gap-1 text-sm">
-          Quantity
-          <input
-            type="text"
-            inputMode="decimal"
-            value={quantity}
-            onChange={(e) => setQuantity(e.target.value)}
-            className="rounded-md border border-hairline bg-transparent px-2 py-1.5 text-sm"
-          />
-        </label>
-        {priceLookup.isMismatched && (
-          <p className="text-xs font-medium">Market symbol and quantity must be set together.</p>
         )}
-        {priceLookup.isInvalid && <p className="text-xs font-medium">Quantity must be a positive number.</p>}
 
-        <label className="flex flex-col gap-1 text-sm">
-          Name
-          <input
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            className="rounded-md border border-hairline bg-transparent px-2 py-1.5 text-sm"
-          />
-        </label>
+        {projectedValue !== null && projectionAssumptions && (
+          <p className="text-sm text-zinc-600 dark:text-zinc-400">
+            Projected in {projectionAssumptions.horizon_years} years:{" "}
+            {formatMoney(projectedValue, holding.currency)}
+          </p>
+        )}
 
-        <label className="flex flex-col gap-1 text-sm">
-          Held at
-          <input
-            value={heldAt}
-            onChange={(e) => setHeldAt(e.target.value)}
-            placeholder="e.g. Fidelity 401k (optional)"
-            className="rounded-md border border-hairline bg-transparent px-2 py-1.5 text-sm"
-          />
-        </label>
+        {netPosition !== null && linkedLiabilities.length > 0 && projectionAssumptions && (
+          <p className="text-sm text-zinc-600 dark:text-zinc-400">
+            {formatNetPositionLabel(
+              linkedLiabilities.map((l) => l.name).join(", "),
+              projectionAssumptions.horizon_years,
+              netPosition,
+              holding.currency,
+            )}
+          </p>
+        )}
 
-        <label className="flex flex-col gap-1 text-sm">
-          Asset Class
-          <select
-            value={assetClassId}
-            onChange={(e) => setAssetClassId(e.target.value)}
-            className="rounded-md border border-hairline bg-transparent px-2 py-1.5 text-sm"
-          >
-            {assetClasses.map((assetClass) => (
-              <option key={assetClass.id} value={assetClass.id}>
-                {assetClass.name}
-              </option>
-            ))}
-          </select>
-        </label>
+        <div className="flex flex-col gap-2">
+          <h2 className="text-sm font-medium text-zinc-500 dark:text-zinc-400">Valuation History</h2>
+          <ValuationHistoryTable currency={holding.currency} history={history} />
+        </div>
 
-        <label className="flex flex-col gap-1 text-sm">
-          Currency
-          <CurrencySelect value={currency} onChange={setCurrency} />
-        </label>
+        <div className="flex flex-col gap-4">
+          <label className="flex flex-col gap-1 text-sm">
+            Market symbol
+            <StockSymbolPicker
+              value={symbol}
+              onChangeText={(text) => {
+                setSymbol(text);
+                setSector(null);
+              }}
+              onSelect={(match) => {
+                setSymbol(match.symbol);
+                setSector(match.sector);
+                setName(match.name);
+              }}
+              placeholder="e.g. AAPL, XAU (optional)"
+              className="rounded-md border border-hairline bg-transparent px-2 py-1.5 text-sm"
+            />
+            {sector && <span className="text-xs text-zinc-500 dark:text-zinc-400">Sector: {sector}</span>}
+          </label>
+
+          <label className="flex flex-col gap-1 text-sm">
+            Quantity
+            <input
+              type="text"
+              inputMode="decimal"
+              value={quantity}
+              onChange={(e) => setQuantity(e.target.value)}
+              className="rounded-md border border-hairline bg-transparent px-2 py-1.5 text-sm"
+            />
+          </label>
+          {priceLookup.isMismatched && (
+            <p className="text-xs font-medium">Market symbol and quantity must be set together.</p>
+          )}
+          {priceLookup.isInvalid && (
+            <p className="text-xs font-medium">Quantity must be a positive number.</p>
+          )}
+
+          <label className="flex flex-col gap-1 text-sm">
+            Name
+            <input
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className="rounded-md border border-hairline bg-transparent px-2 py-1.5 text-sm"
+            />
+          </label>
+
+          <label className="flex flex-col gap-1 text-sm">
+            Held at
+            <input
+              value={heldAt}
+              onChange={(e) => setHeldAt(e.target.value)}
+              placeholder="e.g. Fidelity 401k (optional)"
+              className="rounded-md border border-hairline bg-transparent px-2 py-1.5 text-sm"
+            />
+          </label>
+
+          <label className="flex flex-col gap-1 text-sm">
+            Asset Class
+            <select
+              value={assetClassId}
+              onChange={(e) => setAssetClassId(e.target.value)}
+              className="rounded-md border border-hairline bg-transparent px-2 py-1.5 text-sm"
+            >
+              {assetClasses.map((assetClass) => (
+                <option key={assetClass.id} value={assetClass.id}>
+                  {assetClass.name}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <label className="flex flex-col gap-1 text-sm">
+            Currency
+            <CurrencySelect value={currency} onChange={setCurrency} />
+          </label>
+        </div>
+
+        {error && <p className="text-sm font-medium">{error}</p>}
       </div>
 
-      {error && <p className="text-sm font-medium">{error}</p>}
-
-      <div className="flex gap-2">
+      <div className="flex shrink-0 gap-2 border-t border-hairline px-8 py-4">
         <button
           type="submit"
           disabled={

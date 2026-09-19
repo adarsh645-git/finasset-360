@@ -79,7 +79,11 @@ export function BottomSheet({
             Close
           </button>
         </div>
-        <div className="flex-1 overflow-y-auto overscroll-contain">{children}</div>
+        {/* `flex` (not just `flex-1`) so the detail panel inside stretches
+           to this box's own height via cross-axis stretch, rather than
+           rendering at its natural content height — needed for its own
+           pinned action-button footer to work here too. */}
+        <div className="flex flex-1 overflow-y-auto overscroll-contain">{children}</div>
       </div>
     </div>
   );
