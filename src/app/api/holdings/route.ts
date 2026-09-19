@@ -6,6 +6,7 @@ import { readHeldAtPatch } from "@/lib/holdings/held-at";
 import { readPriceLookupPatch } from "@/lib/holdings/price-lookup";
 import { readSectorPatch } from "@/lib/holdings/sector";
 import { readTrimmedString } from "@/lib/http/body";
+import { ensurePriceCached } from "@/lib/market-data/refresh-price";
 import { createRouteClient, jsonWithCookies, requireUser } from "@/lib/supabase/route";
 
 // GET /api/holdings — every active (non-archived) Holding the signed-in
@@ -34,7 +35,8 @@ export async function GET(request: NextRequest) {
 // POST /api/holdings — add a Holding under an Asset Class (user stories 12,
 // 13), optionally with a market symbol and quantity to give it a Live
 // Estimate (ticket 07; user stories 32-38), plus optional Sector (ticket 18)
-// and Held at (ticket 19). Body: { name, asset_class_id, currency,
+// and Held at (ticket 19). A new symbol is priced immediately (ticket 21).
+// Body: { name, asset_class_id, currency,
 // price_lookup_symbol?, quantity?, sector?, held_at? } —
 // price_lookup_symbol/quantity must be present together or not at all;
 // sector and held_at are each independent of that pair and of each other.
@@ -103,6 +105,13 @@ export async function POST(request: NextRequest) {
 
   if (error) {
     return jsonWithCookies({ error: error.message }, { status: 500 }, responseCookies);
+  }
+
+  // Ticket 21: a brand-new symbol has no `price_cache` row until tomorrow's
+  // cron run, so fetch it now — awaited so the client's follow-up read
+  // already sees it. A failure never fails the add (the Holding is saved).
+  if (priceLookup?.price_lookup_symbol) {
+    await ensurePriceCached(priceLookup.price_lookup_symbol);
   }
 
   return jsonWithCookies(data, { status: 201 }, responseCookies);
