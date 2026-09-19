@@ -765,7 +765,7 @@ export function PortfolioShell({
   }
 
   return (
-    <div className="flex flex-1 flex-col overflow-x-hidden">
+    <div className="flex flex-1 flex-col overflow-x-hidden min-[900px]:h-dvh">
       <NetWorthStrip homeCurrency={homeCurrency} netWorth={netWorth} userName={userName} />
       {checkInScope ? (
         <div className="flex flex-1 overflow-hidden border-t border-hairline">
@@ -782,8 +782,12 @@ export function PortfolioShell({
         <>
           {/* Desktop/tablet Miller-column shell, ≥900px (ticket 15's single
               breakpoint) — untouched by this ticket beyond being hidden
-              below it. */}
-          <div className="hidden min-[900px]:flex min-[900px]:flex-1 min-[900px]:flex-col">
+              below it. `min-h-0` overrides the flex default of
+              `min-height: auto`, which would otherwise size this to its
+              content instead of the shell's now-bounded height, defeating
+              every `overflow-y-auto` region beneath it (columns, detail
+              panel) in favor of the whole page scrolling instead. */}
+          <div className="hidden min-[900px]:flex min-[900px]:min-h-0 min-[900px]:flex-1 min-[900px]:flex-col">
             <Breadcrumb roots={breadcrumbRoots} segments={breadcrumbSegments} />
             {activeRoot === "plan" ? (
               <div className="flex flex-1 overflow-hidden border-t border-hairline">

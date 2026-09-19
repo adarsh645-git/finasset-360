@@ -30,6 +30,27 @@ restart `supabase start` so it picks them up.
 npm run dev
 ```
 
+### Sample data + skipping `/login`
+
+The app only signs in via Google OAuth, so a fresh local Supabase stack has
+no `auth.users` row and always lands on `/login`.
+
+```bash
+npm run seed
+```
+
+is the one command for that: it creates (or reuses) one fixed local dev
+user, wipes and reseeds their Holdings, Liabilities, Target Allocation, and
+Projection with a generous sample Portfolio, and prints a one-time sign-in
+link. Open that link once and you land on the dashboard directly — no
+Google button, no `/login` — and the session cookie it sets makes every
+later `localhost:3000` visit skip `/login` on its own, until it's cleared or
+the local Supabase volume is wiped (rerun `npm run seed` in either case).
+Refuses to run against anything but a `localhost`/`127.0.0.1`
+`NEXT_PUBLIC_SUPABASE_URL`. See
+[`.scratch/local-dev-tooling/01-seed-and-auto-signin.md`](.scratch/local-dev-tooling/01-seed-and-auto-signin.md)
+for the full rationale.
+
 ### Tests
 
 ```bash
