@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { createClient } from "@/lib/supabase/client";
 
 const TIMEOUT_MS = 8_000;
 
@@ -11,16 +10,17 @@ const TIMEOUT_MS = 8_000;
 // generateLink (magiclink) has no code_verifier to pair a PKCE code with,
 // so it hands off tokens via the URL *fragment* instead
 // (#access_token=...&refresh_token=...) — fragments never reach the
-// server, so only client-side JS can read them. This page does exactly
-// that: parse the fragment, call setSession (which writes the session
-// cookie through the browser Supabase client), then hard-navigate to "/"
-// so the server picks up the new cookie on its next request.
+// server, so only client-side JS can read them. This page parses the
+// fragment and POSTs the pair to /api/dev-signin, which sets the session
+// cookie server-side (the same mechanism every other authenticated route
+// in this app already uses) rather than relying on the browser client's
+// own setSession side effects — which, in practice, left the cookie not
+// yet visible to the very next request often enough to be the actual bug
+// here twice already.
 export default function DevSignInPage() {
   const [error, setError] = useState<string | null>(null);
-  // React Strict Mode double-invokes effects in dev, which would fire
-  // setSession twice with the same one-time-use refresh token — the
-  // second call then hangs waiting on the client's internal auth lock the
-  // first is still holding. This ref makes the actual work run once.
+  // React Strict Mode double-invokes effects in dev — this ref makes the
+  // actual work run once instead of firing the POST twice.
   const hasRun = useRef(false);
 
   useEffect(() => {
@@ -44,15 +44,20 @@ export default function DevSignInPage() {
           );
           return;
         }
-        const { error } = await createClient().auth.setSession({ access_token, refresh_token });
-        if (error) {
-          setError(error.message);
-        } else {
-          // A hard navigation, not router.push — the server (page.tsx)
-          // must see the cookie setSession just wrote on its next request.
-          // eslint-disable-next-line @next/next/no-location-assign-relative-destination
-          window.location.href = "/";
+        const response = await fetch("/api/dev-signin", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ access_token, refresh_token }),
+        });
+        if (!response.ok) {
+          const body = await response.json().catch(() => ({}));
+          setError(body.error ?? `Sign-in failed (HTTP ${response.status}).`);
+          return;
         }
+        // A hard navigation, not router.push — the server (page.tsx) must
+        // see the cookie /api/dev-signin just set on its next request.
+        // eslint-disable-next-line @next/next/no-location-assign-relative-destination
+        window.location.href = "/";
       } catch (caught) {
         setError(caught instanceof Error ? caught.message : "Sign-in failed for an unknown reason.");
       } finally {
