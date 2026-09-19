@@ -14,8 +14,16 @@ Not spec-derived — filed ad hoc from a user bug report: "When I start creating
 
 **Blocked by:** none. *(Pairs with 24, same rows; and if Cancel is pressed the deselection should not be undone unless the user wants the prior Holding restored, which is part of the same decision.)*
 
-- [ ] Opening the add-Holding form deselects the current Holding and the detail pane no longer shows it
-- [ ] Cancel: behavior settled (stay deselected vs. restore the previous selection) and consistent
-- [ ] A successful add still selects the new Holding (ticket 20 unchanged)
-- [ ] Same treatment for the add-Liability form, or an explicit note that it's out of this ticket
+- [x] Opening the add-Holding form deselects the current Holding and the detail pane no longer shows it
+- [x] Cancel: behavior settled (stay deselected vs. restore the previous selection) and consistent
+- [x] A successful add still selects the new Holding (ticket 20 unchanged)
+- [x] Same treatment for the add-Liability form, or an explicit note that it's out of this ticket
 - [ ] UI verified by hand, naming the viewport width per the map's Notes
+
+## Resolution
+
+Built, **not yet resolved** — hand verification at the user's viewport is still open. `AddHoldingRow` / `AddLiabilityRow` take an `onStartAdd` callback fired when "+ New …" is clicked; `PortfolioShell` passes `setSelectedHoldingId(null)` / `setSelectedLiabilityId(null)`, so the pane falls back to the class's detail panel (the ticket's default).
+
+- **Cancel** leaves the selection cleared (stay deselected); nothing restores the previous Holding.
+- **Successful add** is untouched: it still selects the new Holding (ticket 20).
+- **Interaction with 24:** the footer keys are now the class id only. Keying on the selected Holding as well (24's first cut) would remount and close the form the moment opening it deselects the Holding. Consequence: clicking a Holding row while the form is open leaves the form and its draft in place; only switching Asset Class / Liability Class discards it.

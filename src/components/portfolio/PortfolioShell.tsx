@@ -839,10 +839,13 @@ export function PortfolioShell({
                     selectedId={selectedLiabilityId}
                     onSelect={setSelectedLiabilityId}
                     footer={
-                      // Keyed on the selection so switching Liability Class or
-                      // Liability discards a half-typed draft (ticket 24).
+                      // Keyed on the class so switching Liability Class
+                      // discards a half-typed draft (ticket 24). Not on the
+                      // Liability: opening the form deselects it (ticket 25),
+                      // which would remount the form and close it.
                       <AddLiabilityRow
-                        key={`${selectedLiabilityClass.id}:${selectedLiabilityId ?? ""}`}
+                        key={selectedLiabilityClass.id}
+                        onStartAdd={() => setSelectedLiabilityId(null)}
                         onAdd={addLiability}
                       />
                     }
@@ -856,11 +859,14 @@ export function PortfolioShell({
                     selectedId={selectedHoldingId}
                     onSelect={setSelectedHoldingId}
                     footer={
-                      // Keyed on the selection so switching Asset Class or
-                      // Holding discards a half-typed draft (ticket 24).
+                      // Keyed on the class so switching Asset Class discards
+                      // a half-typed draft (ticket 24). Not on the Holding:
+                      // opening the form deselects it (ticket 25), which
+                      // would remount the form and close it.
                       <AddHoldingRow
-                        key={`${selectedClass.id}:${selectedHoldingId ?? ""}`}
+                        key={selectedClass.id}
                         isCash={isCashAssetClass(selectedClass.id)}
+                        onStartAdd={() => setSelectedHoldingId(null)}
                         onAdd={addHolding}
                       />
                     }

@@ -6,8 +6,12 @@ import { CurrencySelect } from "@/components/CurrencySelect";
 // Add a Liability under the Liability Class the User is currently browsing
 // (user story 16) — mirrors AddHoldingRow.tsx.
 export function AddLiabilityRow({
+  onStartAdd,
   onAdd,
 }: {
+  // Fired when the User opens the form, so the shell can deselect the
+  // Liability whose detail pane would otherwise sit beside a "new" one.
+  onStartAdd: () => void;
   onAdd: (name: string, currency: string) => Promise<string | null>;
 }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -35,7 +39,10 @@ export function AddLiabilityRow({
     return (
       <button
         type="button"
-        onClick={() => setIsOpen(true)}
+        onClick={() => {
+          setIsOpen(true);
+          onStartAdd();
+        }}
         className="border-t border-hairline px-3 py-2.5 text-left text-sm text-zinc-500 hover:text-foreground dark:text-zinc-400"
       >
         + New Liability

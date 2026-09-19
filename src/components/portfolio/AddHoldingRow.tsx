@@ -21,9 +21,13 @@ import { StockSymbolPicker } from "./StockSymbolPicker";
 // just Name, Held at and currency.
 export function AddHoldingRow({
   isCash,
+  onStartAdd,
   onAdd,
 }: {
   isCash: boolean;
+  // Fired when the User opens the form, so the shell can deselect the
+  // Holding whose detail pane would otherwise sit beside a "new" one.
+  onStartAdd: () => void;
   onAdd: (
     name: string,
     currency: string,
@@ -80,7 +84,10 @@ export function AddHoldingRow({
     return (
       <button
         type="button"
-        onClick={() => setIsOpen(true)}
+        onClick={() => {
+          setIsOpen(true);
+          onStartAdd();
+        }}
         className="border-t border-hairline px-3 py-2.5 text-left text-sm text-zinc-500 hover:text-foreground dark:text-zinc-400"
       >
         + New Holding
