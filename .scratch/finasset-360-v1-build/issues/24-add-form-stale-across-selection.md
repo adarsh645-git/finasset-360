@@ -14,8 +14,16 @@ Not spec-derived — filed ad hoc from a user bug report: "When I switch between
 
 **Blocked by:** none. *(Touches the same rows as 25; take together or in order 24 → 25.)*
 
-- [ ] Switching Asset Class closes the add-Holding form and clears its draft
-- [ ] Switching Holding in the middle column also leaves no stale add-form state (or an explicit note that it should persist, and why)
-- [ ] Same for the add-Liability form when switching Liability Class / Liability
-- [ ] No effect on the add form when nothing is switched (typing, error state, in-flight save unchanged)
+- [x] Switching Asset Class closes the add-Holding form and clears its draft
+- [x] Switching Holding in the middle column also leaves no stale add-form state (or an explicit note that it should persist, and why)
+- [x] Same for the add-Liability form when switching Liability Class / Liability
+- [x] No effect on the add form when nothing is switched (typing, error state, in-flight save unchanged)
 - [ ] UI verified by hand, naming the viewport width per the map's Notes
+
+## Resolution
+
+Built, **not yet resolved** — the last box (hand verification at the user's viewport) is the user's to tick. In `PortfolioShell.tsx` the two `MillerColumn` footers are now keyed on the selection: `AddHoldingRow` on `selectedClass.id` + `selectedHoldingId`, `AddLiabilityRow` on `selectedLiabilityClass.id` + `selectedLiabilityId`. Any selection change remounts the row, closing it and discarding its draft (the ticket's default decision).
+
+- **Consequence to know about:** clicking a Holding (or Liability) row in the same column while a draft is open now discards that draft. A successful add selects the new Holding, which also remounts the row, but the form has already reset by then. `router.refresh()` and a failed save don't change the selection, so typing, error state and in-flight saves are untouched.
+- No automated test: the suite runs in `node` with no jsdom/testing-library, so remounting isn't observable. Typecheck and lint clean.
+- Full suite: 8 failures, all in `.claude/worktrees/ticket-09-target-allocation/tests/unit/empty-portfolio-render.test.tsx` (a stale worktree copy); identical with this change stashed.

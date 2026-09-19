@@ -838,7 +838,14 @@ export function PortfolioShell({
                     rows={liabilityRows}
                     selectedId={selectedLiabilityId}
                     onSelect={setSelectedLiabilityId}
-                    footer={<AddLiabilityRow onAdd={addLiability} />}
+                    footer={
+                      // Keyed on the selection so switching Liability Class or
+                      // Liability discards a half-typed draft (ticket 24).
+                      <AddLiabilityRow
+                        key={`${selectedLiabilityClass.id}:${selectedLiabilityId ?? ""}`}
+                        onAdd={addLiability}
+                      />
+                    }
                   />
                 )}
 
@@ -848,7 +855,15 @@ export function PortfolioShell({
                     rows={holdingRows}
                     selectedId={selectedHoldingId}
                     onSelect={setSelectedHoldingId}
-                    footer={<AddHoldingRow isCash={isCashAssetClass(selectedClass.id)} onAdd={addHolding} />}
+                    footer={
+                      // Keyed on the selection so switching Asset Class or
+                      // Holding discards a half-typed draft (ticket 24).
+                      <AddHoldingRow
+                        key={`${selectedClass.id}:${selectedHoldingId ?? ""}`}
+                        isCash={isCashAssetClass(selectedClass.id)}
+                        onAdd={addHolding}
+                      />
+                    }
                   />
                 )}
 
