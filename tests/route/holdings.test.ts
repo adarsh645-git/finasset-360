@@ -53,6 +53,8 @@ describe("GET/POST /api/holdings, PATCH/DELETE /api/holdings/[id]", () => {
       name: "10 shares of AAPL",
       currency: "USD",
     });
+    // The client selects the new Holding by this id (ticket 20).
+    expect(created.id).toEqual(expect.any(String));
   });
 
   it("accepts any ISO currency code, not a hardcoded list", async () => {
