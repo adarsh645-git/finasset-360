@@ -15,7 +15,10 @@ A deployed, working FinAsset 360 v1, built from [`docs/SPEC.md`](../../docs/SPEC
 
 ## Frontier (takeable now)
 
-_(none — 01–22 all resolved; 20–22 need a by-hand UI check, and 21's production cron/`price_cache` check is outstanding. A rate-limit follow-up for fetch-on-add is noted in 21's resolution, not yet filed.)_
+- [24 · Switching selection leaves the add-Holding form's draft behind](issues/24-add-form-stale-across-selection.md) — `AddHoldingRow` has no key, so its draft survives a class switch.
+- [25 · Starting to add a Holding should clear the detail pane](issues/25-clear-detail-pane-when-adding.md) — opening the add form never deselects the old Holding.
+
+_(01–23 resolved; 20–22 need a by-hand UI check, and 21's production cron/`price_cache` check is outstanding. A rate-limit follow-up for fetch-on-add is noted in 21's resolution, not yet filed.)_
 
 ## Dependency order
 
@@ -54,6 +57,9 @@ _(none — 01–22 all resolved; 20–22 need a by-hand UI check, and 21's produ
 | 20 | [Select the new Holding after adding it](issues/20-select-new-holding-after-add.md) | — |
 | 21 | [A newly added market-symbol Holding shows a price immediately](issues/21-price-for-newly-added-holding.md) | — *(pairs with 20)* |
 | 22 | [Cash-shaped add/edit form](issues/22-cash-shaped-holding-form.md) | — |
+| 23 | [Column footers still need page scroll to reach](issues/23-column-footers-need-page-scroll.md) | — |
+| 24 | [Switching selection leaves the add-Holding form's draft behind](issues/24-add-form-stale-across-selection.md) | — *(pairs with 25)* |
+| 25 | [Starting to add a Holding should clear the detail pane](issues/25-clear-detail-pane-when-adding.md) | — *(pairs with 24)* |
 
 ## In progress
 
@@ -83,3 +89,4 @@ _(nothing claimed)_
 - [20 · Select the new Holding after adding it](issues/20-select-new-holding-after-add.md) — adding a Holding selects it in the detail pane. By-hand UI check pending.
 - [21 · A newly added market-symbol Holding shows a price immediately](issues/21-price-for-newly-added-holding.md) — fetch-on-add (option A) via shared `refreshPrice`. Prod cron check and rate-limit follow-up outstanding.
 - [22 · Cash-shaped add/edit form](issues/22-cash-shaped-holding-form.md) — Cash hides Market symbol and Quantity; identified by fixed default class id. By-hand UI check pending.
+- [23 · Column footers still need page scroll to reach](issues/23-column-footers-need-page-scroll.md) — shell root's `flex-1` defeated `h-dvh`; `flex-none` at ≥900px bounds it to the viewport. Verified by hand.
