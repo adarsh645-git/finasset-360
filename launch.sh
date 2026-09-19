@@ -22,7 +22,10 @@ npm run seed
 
 echo
 echo "==> Starting the dev server on :$PORT (Ctrl+C to stop)"
-lsof -ti:"$PORT" -sTCP:LISTEN | xargs -r kill
+# `|| true`: nothing listening is the common case, and lsof's non-zero exit
+# then would otherwise trip `set -e`/`pipefail` and kill this whole script
+# silently, right here, before ever reaching `exec npm run dev` below.
+lsof -ti:"$PORT" -sTCP:LISTEN 2>/dev/null | xargs -r kill || true
 # Give a killed process a moment to actually release the port before a
 # fresh `next dev` tries to bind it.
 for _ in $(seq 1 20); do
