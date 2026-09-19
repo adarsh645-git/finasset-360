@@ -14,9 +14,7 @@ A deployed, working FinAsset 360 v1, built from [`docs/SPEC.md`](../../docs/SPEC
 
 ## Frontier (takeable now)
 
-- [01 · Sign in, get a Portfolio](issues/01-sign-in-get-a-portfolio.md) — no blockers. Also stands up both test harnesses.
-- [18 · Stock-picker autocomplete with sector](issues/18-stock-picker-autocomplete.md) — no blockers; reuses the price-cache/cron pattern from 07 and touches the same components as 03, both already built. Not spec-derived — filed ad hoc from a user request, grilled via `/wayfinder` (2026-09-13). India (NSE/BSE) confirmed as a real future interest but out of scope here — Finnhub's free tier gates it behind a paid add-on; flagged for a future ticket, not this one.
-- [19 · "Held at" field on a Holding](issues/19-held-at-field.md) — no blockers; reuses ticket 18's `sector` pattern exactly. Not spec-derived — filed ad hoc while reviewing ticket 18's edit form, grilled via `/grill-me` (2026-09-13).
+_(none — all 19 tickets resolved; V1 build is complete)_
 
 ## Dependency order
 
@@ -59,4 +57,22 @@ _(nothing claimed)_
 
 ## Done
 
-_(nothing yet)_
+- [01 · Sign in, get a Portfolio](issues/01-sign-in-get-a-portfolio.md) — Google sign-in, auto-created Portfolio, home currency; stands up the RLS + two-user test harness.
+- [02 · Deploy the skeleton to Vercel](issues/02-deploy-the-skeleton.md) — first production deploy, against the real Supabase project.
+- [03 · Asset Classes and Holdings in the Miller shell](issues/03-asset-classes-and-holdings.md) — default Asset Classes, Holdings, Miller-column navigation shell.
+- [04 · Record a Valuation, see Net Worth](issues/04-record-a-valuation.md) — one-interaction Valuation entry, FX rate captured at record time, Net Worth headline.
+- [05 · Liabilities, and Net Worth nets them](issues/05-liabilities.md) — Liability Classes and Liabilities mirror the asset side; Net Worth = Holdings − Liabilities.
+- [06 · History, staleness, and archival](issues/06-history-staleness-archival.md) — Valuation History with sparkline, staleness dimming, archive-not-delete for sold Holdings.
+- [07 · Live Estimates from a shared price cache](issues/07-live-estimates.md) — market-symbol Holdings show a Live Estimate, clearly distinct from a recorded Valuation.
+- [08 · Check-in mode](issues/08-check-in-mode.md) — guided monthly pass over stale Holdings, ends with Net Worth delta.
+- [09 · Target Allocation and the Plan page](issues/09-target-allocation-and-plan.md) — per-Asset-Class target percent, dashboard distribution bars with target tick, Plan breadcrumb root.
+- [10 · Projection: growth, contribution, escalation](issues/10-projection-engine.md) — forward-looking projected Net Worth line; pure-function engine is test seam 1.
+- [11 · Amortization Assumptions and payoff](issues/11-amortization-and-payoff.md) — optional loan amortization to payoff, capability-based on any Liability.
+- [12 · Inflation — nominal and real, both charted](issues/12-inflation-nominal-and-real.md) — nominal and inflation-adjusted projection lines, forking at today.
+- [13 · Target Net Worth and the gap](issues/13-target-net-worth.md) — named amount+date target drawn on the projection chart, gap reported date-first.
+- [14 · Required Contribution solver](issues/14-required-contribution-solver.md) — required monthly contribution to hit the Target on its date, solved linearly.
+- [15 · Narrow viewport](issues/15-narrow-viewport.md) — accordion outline with bottom-sheet detail below 900px, replacing Miller columns.
+- [16 · Empty and first-run states](issues/16-empty-and-first-run-states.md) — first-run guidance for Portfolio, Net Worth, and Plan with nothing recorded yet.
+- [17 · Google display name in the top strip](issues/17-google-display-name.md) — top strip shows the signed-in User's Google display name; dropped the dashboard's own branding line.
+- [18 · Stock-picker autocomplete with sector](issues/18-stock-picker-autocomplete.md) — type-ahead symbol picker with ticker/name/Sector, Finnhub-backed. Ad hoc, not spec-derived.
+- [19 · "Held at" field on a Holding](issues/19-held-at-field.md) — optional freeform `held_at` label so duplicate Holdings across brokerages don't overload `Name`. Ad hoc, not spec-derived.
