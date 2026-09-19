@@ -49,7 +49,7 @@ import type {
   ProjectionAssumptions,
   TargetAllocation,
 } from "./types";
-import { submitJson } from "@/lib/http/client";
+import { submitJson, submitJsonForResult } from "@/lib/http/client";
 import { computeDistribution, sumHoldingsByAssetClass } from "@/lib/target-allocation/distribution";
 
 // Column 1's sentinel row id for the "Liabilities" top-level branch (user
@@ -480,7 +480,7 @@ export function PortfolioShell({
     heldAt: string | null,
   ): Promise<string | null> {
     if (!selectedClassId || isLiabilitiesRoot) return "Select an Asset Class first.";
-    const failure = await submitJson("/api/holdings", {
+    const result = await submitJsonForResult<Holding>("/api/holdings", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -492,7 +492,11 @@ export function PortfolioShell({
         held_at: heldAt,
       }),
     });
-    if (failure) return failure;
+    if (!result.ok) return result.error;
+    // Select the new Holding so the detail pane (and, below 900px, the
+    // bottom sheet) shows it rather than the previous selection. It renders
+    // once the refresh below delivers the row in `holdings`.
+    if (result.data?.id) setSelectedHoldingId(result.data.id);
     router.refresh();
     return null;
   }
