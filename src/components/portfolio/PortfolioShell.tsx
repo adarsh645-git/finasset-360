@@ -765,7 +765,14 @@ export function PortfolioShell({
   }
 
   return (
-    <div className="flex flex-1 flex-col overflow-x-hidden min-[900px]:h-dvh">
+    // At ≥900px the shell must be exactly one viewport tall so only the
+    // columns and detail pane scroll, never the page. `flex-1` alone would
+    // defeat `h-dvh`: it sets `flex-basis: 0%`, which against <body>'s
+    // indefinite height resolves to `content`, so the shell would grow to
+    // its tallest column and the page would scroll (ticket 23). `flex-none`
+    // makes `h-dvh` the basis; below 900px `flex-1` still lets the page
+    // scroll as a whole.
+    <div className="flex flex-1 flex-col overflow-x-hidden min-[900px]:h-dvh min-[900px]:flex-none">
       <NetWorthStrip homeCurrency={homeCurrency} netWorth={netWorth} userName={userName} />
       {checkInScope ? (
         <div className="flex flex-1 overflow-hidden border-t border-hairline">
