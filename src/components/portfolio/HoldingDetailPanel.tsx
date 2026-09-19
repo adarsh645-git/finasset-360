@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { CurrencySelect } from "@/components/CurrencySelect";
+import { isCashAssetClass } from "@/lib/asset-classes/defaults";
 import { formatMoney } from "@/lib/currency/format";
 import { validatePriceLookupInput } from "@/lib/holdings/price-lookup-input";
 import type { PriceCacheRow } from "@/lib/market-data/live-estimate";
@@ -30,7 +31,9 @@ import type {
 // 18): picking a suggestion from the stock-picker autofills Name and
 // Sector. Held at (ticket 19) sits beside Name — both are "how do I label
 // this Holding" — and is unrelated to the symbol/quantity pair, so it
-// applies regardless of Asset Class.
+// applies regardless of Asset Class. For a Cash Holding (ticket 22) Market
+// symbol and Quantity are hidden — the form follows the Asset Class
+// currently selected in the form, so switching to or from Cash swaps them.
 export function HoldingDetailPanel({
   holding,
   assetClasses,
@@ -80,6 +83,28 @@ export function HoldingDetailPanel({
 
   const priceLookup = validatePriceLookupInput(symbol, quantity);
 
+  const isCash = isCashAssetClass(assetClassId);
+  // Hidden fields must neither block Save nor count as edits.
+  const isPriceLookupBlocked = !isCash && (priceLookup.isMismatched || priceLookup.isInvalid);
+
+  // What Save sends for the symbol/quantity/sector trio. A Holding already
+  // in Cash is saved without them, leaving any legacy symbol/quantity it
+  // still carries stored and untouched (no data loss; its Live Estimate keeps
+  // working). One being moved into Cash has them cleared, since the route
+  // refuses a symbol on Cash.
+  function priceLookupPatch(): Pick<HoldingPatch, "price_lookup_symbol" | "quantity" | "sector"> {
+    if (isCash) {
+      return isCashAssetClass(holding.asset_class_id)
+        ? {}
+        : { price_lookup_symbol: null, quantity: null, sector: null };
+    }
+    return {
+      price_lookup_symbol: priceLookup.value?.price_lookup_symbol ?? null,
+      quantity: priceLookup.value?.quantity ?? null,
+      sector: priceLookup.value ? sector : null,
+    };
+  }
+
   // Ad-hoc projection of this one Holding (user story 78) — no contribution
   // allocated to it, since contributions are portfolio-level; growth alone,
   // at the Portfolio's own assumption. `null` until both a Valuation and a
@@ -99,23 +124,22 @@ export function HoldingDetailPanel({
     name !== holding.name ||
     assetClassId !== holding.asset_class_id ||
     currency !== holding.currency ||
-    symbol !== (holding.price_lookup_symbol ?? "") ||
-    quantity !== (holding.quantity !== null ? String(holding.quantity) : "") ||
-    sector !== holding.sector ||
+    (!isCash &&
+      (symbol !== (holding.price_lookup_symbol ?? "") ||
+        quantity !== (holding.quantity !== null ? String(holding.quantity) : "") ||
+        sector !== holding.sector)) ||
     heldAt !== (holding.held_at ?? "");
 
   async function handleSave(event: React.FormEvent) {
     event.preventDefault();
-    if (!name.trim() || priceLookup.isMismatched || priceLookup.isInvalid) return;
+    if (!name.trim() || isPriceLookupBlocked) return;
     setIsSaving(true);
     setError(null);
     const failure = await onSave({
       name: name.trim(),
       asset_class_id: assetClassId,
       currency,
-      price_lookup_symbol: priceLookup.value?.price_lookup_symbol ?? null,
-      quantity: priceLookup.value?.quantity ?? null,
-      sector: priceLookup.value ? sector : null,
+      ...priceLookupPatch(),
       held_at: heldAt.trim() || null,
     });
     setIsSaving(false);
@@ -190,39 +214,45 @@ export function HoldingDetailPanel({
       </div>
 
       <div className="flex flex-col gap-4">
-        <label className="flex flex-col gap-1 text-sm">
-          Market symbol
-          <StockSymbolPicker
-            value={symbol}
-            onChangeText={(text) => {
-              setSymbol(text);
-              setSector(null);
-            }}
-            onSelect={(match) => {
-              setSymbol(match.symbol);
-              setSector(match.sector);
-              setName(match.name);
-            }}
-            placeholder="e.g. AAPL, XAU (optional)"
-            className="rounded-md border border-hairline bg-transparent px-2 py-1.5 text-sm"
-          />
-          {sector && <span className="text-xs text-zinc-500 dark:text-zinc-400">Sector: {sector}</span>}
-        </label>
+        {!isCash && (
+          <>
+            <label className="flex flex-col gap-1 text-sm">
+              Market symbol
+              <StockSymbolPicker
+                value={symbol}
+                onChangeText={(text) => {
+                  setSymbol(text);
+                  setSector(null);
+                }}
+                onSelect={(match) => {
+                  setSymbol(match.symbol);
+                  setSector(match.sector);
+                  setName(match.name);
+                }}
+                placeholder="e.g. AAPL, XAU (optional)"
+                className="rounded-md border border-hairline bg-transparent px-2 py-1.5 text-sm"
+              />
+              {sector && <span className="text-xs text-zinc-500 dark:text-zinc-400">Sector: {sector}</span>}
+            </label>
 
-        <label className="flex flex-col gap-1 text-sm">
-          Quantity
-          <input
-            type="text"
-            inputMode="decimal"
-            value={quantity}
-            onChange={(e) => setQuantity(e.target.value)}
-            className="rounded-md border border-hairline bg-transparent px-2 py-1.5 text-sm"
-          />
-        </label>
-        {priceLookup.isMismatched && (
-          <p className="text-xs font-medium">Market symbol and quantity must be set together.</p>
+            <label className="flex flex-col gap-1 text-sm">
+              Quantity
+              <input
+                type="text"
+                inputMode="decimal"
+                value={quantity}
+                onChange={(e) => setQuantity(e.target.value)}
+                className="rounded-md border border-hairline bg-transparent px-2 py-1.5 text-sm"
+              />
+            </label>
+            {priceLookup.isMismatched && (
+              <p className="text-xs font-medium">Market symbol and quantity must be set together.</p>
+            )}
+            {priceLookup.isInvalid && (
+              <p className="text-xs font-medium">Quantity must be a positive number.</p>
+            )}
+          </>
         )}
-        {priceLookup.isInvalid && <p className="text-xs font-medium">Quantity must be a positive number.</p>}
 
         <label className="flex flex-col gap-1 text-sm">
           Name
@@ -269,9 +299,7 @@ export function HoldingDetailPanel({
       <div className="flex gap-2">
         <button
           type="submit"
-          disabled={
-            isSaving || !isDirty || !name.trim() || priceLookup.isMismatched || priceLookup.isInvalid
-          }
+          disabled={isSaving || !isDirty || !name.trim() || isPriceLookupBlocked}
           className="rounded-md border border-hairline px-3 py-1.5 text-sm disabled:opacity-60"
         >
           {isSaving ? "Saving…" : "Save"}

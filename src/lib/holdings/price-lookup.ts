@@ -39,3 +39,11 @@ export function readPriceLookupPatch(body: unknown): PriceLookupPatch | string |
 
   return { price_lookup_symbol: rawSymbol.trim().toUpperCase(), quantity: rawQuantity };
 }
+
+export const CASH_PRICE_LOOKUP_ERROR = "A Cash Holding can't have a market symbol or quantity.";
+
+/** True when a parsed patch would put a market symbol on the Holding —
+ * clearing the pair (both `null`) never does, so it stays allowed on Cash. */
+export function setsPriceLookup(patch: PriceLookupPatch | undefined): boolean {
+  return patch?.price_lookup_symbol != null;
+}

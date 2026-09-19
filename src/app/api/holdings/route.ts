@@ -1,9 +1,14 @@
 import { NextResponse, type NextRequest } from "next/server";
+import { isCashAssetClass } from "@/lib/asset-classes/defaults";
 import { isVisibleAssetClass } from "@/lib/asset-classes/visibility";
 import { isValidCurrencyCode } from "@/lib/currency/iso4217";
 import { HOLDING_COLUMNS } from "@/lib/holdings/columns";
 import { readHeldAtPatch } from "@/lib/holdings/held-at";
-import { readPriceLookupPatch } from "@/lib/holdings/price-lookup";
+import {
+  CASH_PRICE_LOOKUP_ERROR,
+  readPriceLookupPatch,
+  setsPriceLookup,
+} from "@/lib/holdings/price-lookup";
 import { readSectorPatch } from "@/lib/holdings/sector";
 import { readTrimmedString } from "@/lib/http/body";
 import { createRouteClient, jsonWithCookies, requireUser } from "@/lib/supabase/route";
@@ -38,6 +43,7 @@ export async function GET(request: NextRequest) {
 // price_lookup_symbol?, quantity?, sector?, held_at? } —
 // price_lookup_symbol/quantity must be present together or not at all;
 // sector and held_at are each independent of that pair and of each other.
+// A Cash Holding (ticket 22) refuses a non-null symbol/quantity pair.
 export async function POST(request: NextRequest) {
   const { supabase, responseCookies } = createRouteClient(request);
 
@@ -81,6 +87,12 @@ export async function POST(request: NextRequest) {
   const heldAt = readHeldAtPatch(body);
   if (!heldAt.ok) {
     return NextResponse.json({ error: heldAt.error }, { status: 400 });
+  }
+
+  // Refused rather than silently dropped (ticket 22): the Cash form never
+  // sends these, so a request that does is a client bug worth surfacing.
+  if (isCashAssetClass(assetClassId) && setsPriceLookup(priceLookup)) {
+    return NextResponse.json({ error: CASH_PRICE_LOOKUP_ERROR }, { status: 400 });
   }
 
   if (!(await isVisibleAssetClass(supabase, assetClassId))) {

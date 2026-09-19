@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AssetClassIcon } from "@/components/icons/AssetClassIcon";
 import { LiabilitiesRootIcon, LiabilityClassIcon } from "@/components/icons/LiabilityClassIcon";
+import { isCashAssetClass } from "@/lib/asset-classes/defaults";
 import { formatMoney } from "@/lib/currency/format";
 import type { PriceCacheRow } from "@/lib/market-data/live-estimate";
 import { computeNetWorth } from "@/lib/net-worth/compute";
@@ -832,7 +833,7 @@ export function PortfolioShell({
                     rows={holdingRows}
                     selectedId={selectedHoldingId}
                     onSelect={setSelectedHoldingId}
-                    footer={<AddHoldingRow onAdd={addHolding} />}
+                    footer={<AddHoldingRow isCash={isCashAssetClass(selectedClass.id)} onAdd={addHolding} />}
                   />
                 )}
 

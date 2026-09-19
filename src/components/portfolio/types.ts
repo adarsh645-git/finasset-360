@@ -32,10 +32,10 @@ export type Holding = {
  * Sector (ticket 18) and Held at (ticket 19) — as one type, since
  * HoldingDetailPanel's edit form, PortfolioShell's save handler, and the
  * PATCH body it sends all pass this same set around together. */
-export type HoldingPatch = Pick<
-  Holding,
-  "name" | "asset_class_id" | "currency" | "price_lookup_symbol" | "quantity" | "sector" | "held_at"
->;
+export type HoldingPatch = Pick<Holding, "name" | "asset_class_id" | "currency" | "held_at"> &
+  // Omitted (left as stored) when saving a Holding that is already Cash —
+  // ticket 22's form hides these for Cash but must not wipe a legacy value.
+  Partial<Pick<Holding, "price_lookup_symbol" | "quantity" | "sector">>;
 
 export type HoldingValuation = {
   id: string;

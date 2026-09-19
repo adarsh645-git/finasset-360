@@ -16,10 +16,14 @@ import { StockSymbolPicker } from "./StockSymbolPicker";
 // Estate, Cash) has no symbol to autofill it from. Held at (ticket 19) is a
 // separate, freeform "where is this held" label — independent of the
 // symbol/quantity pair, so it applies to every Asset Class, not just
-// market-symbol Holdings.
+// market-symbol Holdings. In the Cash Asset Class (ticket 22) neither Market
+// symbol nor Quantity means anything, so both are hidden and the form is
+// just Name, Held at and currency.
 export function AddHoldingRow({
+  isCash,
   onAdd,
 }: {
+  isCash: boolean;
   onAdd: (
     name: string,
     currency: string,
@@ -43,13 +47,22 @@ export function AddHoldingRow({
   // "live-priced" and would 400 at the route boundary anyway, so this
   // catches it before the round trip.
   const priceLookup = validatePriceLookupInput(symbol, quantity);
+  // Field values a User typed before switching to Cash are hidden, not
+  // cleared, so they must neither block the submit nor be sent.
+  const isPriceLookupBlocked = !isCash && (priceLookup.isMismatched || priceLookup.isInvalid);
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
-    if (!name.trim() || priceLookup.isMismatched || priceLookup.isInvalid) return;
+    if (!name.trim() || isPriceLookupBlocked) return;
     setIsSaving(true);
     setError(null);
-    const failure = await onAdd(name.trim(), currency, priceLookup.value, sector, heldAt.trim() || null);
+    const failure = await onAdd(
+      name.trim(),
+      currency,
+      isCash ? null : priceLookup.value,
+      isCash ? null : sector,
+      heldAt.trim() || null,
+    );
     setIsSaving(false);
     if (failure) {
       setError(failure);
@@ -83,37 +96,44 @@ export function AddHoldingRow({
       }}
       className="flex flex-col gap-1.5 border-t border-hairline p-2.5"
     >
-      <StockSymbolPicker
-        autoFocus
-        value={symbol}
-        onChangeText={(text) => {
-          setSymbol(text);
-          setSector(null);
-        }}
-        onSelect={(match) => {
-          setSymbol(match.symbol);
-          setSector(match.sector);
-          setName(match.name);
-        }}
-        disabled={isSaving}
-        placeholder="Market symbol (optional)"
-        className="w-full rounded-md border border-hairline bg-transparent px-2 py-1.5 text-sm"
-      />
-      {sector && <p className="text-xs text-zinc-500 dark:text-zinc-400">Sector: {sector}</p>}
-      <input
-        type="text"
-        inputMode="decimal"
-        value={quantity}
-        onChange={(e) => setQuantity(e.target.value)}
-        placeholder="Quantity"
-        disabled={isSaving}
-        className="rounded-md border border-hairline bg-transparent px-2 py-1.5 text-sm"
-      />
-      {priceLookup.isMismatched && (
-        <p className="text-xs font-medium">Market symbol and quantity must be set together.</p>
+      {!isCash && (
+        <>
+          <StockSymbolPicker
+            autoFocus
+            value={symbol}
+            onChangeText={(text) => {
+              setSymbol(text);
+              setSector(null);
+            }}
+            onSelect={(match) => {
+              setSymbol(match.symbol);
+              setSector(match.sector);
+              setName(match.name);
+            }}
+            disabled={isSaving}
+            placeholder="Market symbol (optional)"
+            className="w-full rounded-md border border-hairline bg-transparent px-2 py-1.5 text-sm"
+          />
+          {sector && <p className="text-xs text-zinc-500 dark:text-zinc-400">Sector: {sector}</p>}
+          <input
+            type="text"
+            inputMode="decimal"
+            value={quantity}
+            onChange={(e) => setQuantity(e.target.value)}
+            placeholder="Quantity"
+            disabled={isSaving}
+            className="rounded-md border border-hairline bg-transparent px-2 py-1.5 text-sm"
+          />
+          {priceLookup.isMismatched && (
+            <p className="text-xs font-medium">Market symbol and quantity must be set together.</p>
+          )}
+          {priceLookup.isInvalid && (
+            <p className="text-xs font-medium">Quantity must be a positive number.</p>
+          )}
+        </>
       )}
-      {priceLookup.isInvalid && <p className="text-xs font-medium">Quantity must be a positive number.</p>}
       <input
+        autoFocus={isCash}
         value={name}
         onChange={(e) => setName(e.target.value)}
         placeholder="Holding name"
@@ -132,7 +152,7 @@ export function AddHoldingRow({
       <div className="flex gap-1.5">
         <button
           type="submit"
-          disabled={isSaving || !name.trim() || priceLookup.isMismatched || priceLookup.isInvalid}
+          disabled={isSaving || !name.trim() || isPriceLookupBlocked}
           className="rounded-md border border-hairline px-2.5 py-1 text-xs font-medium disabled:opacity-60"
         >
           {isSaving ? "Adding…" : "Add"}
