@@ -1,0 +1,17 @@
+name: Spec coverage
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  spec-coverage:
+    name: Every scenario in an active skills-driven change has a test naming its ID
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm run spec:coverage && npm run test:scripts
