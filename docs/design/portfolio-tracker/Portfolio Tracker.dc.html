@@ -1,0 +1,1477 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500;600&display=swap">
+<style>
+:root{--bg:#f6f5f1;--panel:#ffffff;--ink:#1b1b19;--ink2:#5c5b56;--ink3:#76756f;--line:rgba(27,27,25,.08);--line2:rgba(27,27,25,.16);--hover:rgba(27,27,25,.045);--sel:rgba(27,27,25,.07);--pos:oklch(0.55 0.13 150);--neg:oklch(0.56 0.16 28);--shadow:0 1px 2px rgba(0,0,0,.05)}
+:root[data-theme="dark"]{--bg:#121211;--panel:#1a1a18;--ink:#edece7;--ink2:#acaba5;--ink3:#8d8c86;--line:rgba(237,236,231,.08);--line2:rgba(237,236,231,.16);--hover:rgba(237,236,231,.05);--sel:rgba(237,236,231,.09);--pos:oklch(0.74 0.14 150);--neg:oklch(0.71 0.15 28);--shadow:none}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:'Geist',system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+a{color:var(--ink);text-underline-offset:2px}a:hover{color:var(--ink2)}
+input,select,button{font:inherit;color:inherit}
+@media (pointer:coarse),(max-width:639px){button:not([data-tile]),select{min-height:40px}}
+@media (max-width:639px){input,select{font-size:16px!important}}
+</style>
+</helmet>
+<div style="display:flex;min-height:100vh;background:var(--bg);color:var(--ink)">
+<sc-if value="{{ sidebar }}" hint-placeholder-val="{{ true }}">
+<aside style="width:240px;flex:none;border-right:1px solid var(--line);padding:22px 14px 18px;display:flex;flex-direction:column;gap:22px;position:sticky;top:0;height:100vh;overflow:auto">
+<div style="display:flex;align-items:center;gap:10px;padding:0 8px">
+<div style="width:20px;height:20px;border-radius:6px;background:var(--ink);display:flex;align-items:flex-end;justify-content:center;padding:4px;gap:2px"><div style="width:3px;height:5px;background:var(--bg);border-radius:1px"></div><div style="width:3px;height:9px;background:var(--bg);border-radius:1px"></div></div>
+<span style="font-weight:600;font-size:15px;letter-spacing:-0.01em">Holdings</span>
+</div>
+<div style="display:flex;flex-direction:column;gap:4px;padding:0 8px">
+<span style="font:500 10.5px/1.2 'Geist Mono',monospace;letter-spacing:.06em;text-transform:uppercase;color:var(--ink3)">Net worth</span>
+<span style="font-size:22px;font-weight:500;letter-spacing:-0.02em;font-variant-numeric:tabular-nums">{{ sideNw }}</span>
+<span style="font-size:12px;color:{{ sideColor }};font-variant-numeric:tabular-nums">{{ sideDelta }}</span>
+</div>
+<nav style="display:flex;flex-direction:column;gap:2px">
+<sc-for list="{{ nav }}" as="n" hint-placeholder-count="5">
+<button onClick="{{ n.onClick }}" style="display:flex;align-items:center;justify-content:space-between;gap:8px;height:34px;padding:0 10px;border:none;border-radius:8px;background:{{ n.bg }};color:var(--ink);font-size:13.5px;font-weight:{{ n.fw }};cursor:pointer;text-align:left;width:100%" style-hover="background:var(--sel)">
+<span>{{ n.label }}</span><span style="font-size:12px;color:var(--ink3);font-variant-numeric:tabular-nums;font-weight:400">{{ n.value }}</span>
+</button>
+</sc-for>
+</nav>
+<div style="display:flex;flex-direction:column;gap:2px">
+<span style="font:500 10.5px/1.2 'Geist Mono',monospace;letter-spacing:.06em;text-transform:uppercase;color:var(--ink3);padding:0 10px 6px">Asset classes</span>
+<sc-for list="{{ clsNav }}" as="c" hint-placeholder-count="6">
+<button onClick="{{ c.onClick }}" style="display:flex;align-items:center;gap:10px;height:30px;padding:0 10px;border:none;border-radius:8px;background:{{ c.bg }};color:var(--ink2);font-size:13px;cursor:pointer;text-align:left;width:100%" style-hover="background:var(--sel);color:var(--ink)">
+<span style="width:8px;height:8px;border-radius:2px;background:{{ c.color }};flex:none"></span><span style="flex:1">{{ c.name }}</span><span style="font-size:12px;color:var(--ink3);font-variant-numeric:tabular-nums">{{ c.value }}</span>
+</button>
+</sc-for>
+</div>
+<div style="flex:1"></div>
+<div style="display:flex;flex-direction:column;gap:8px">
+<button onClick="{{ openAdd }}" style="height:36px;border-radius:9px;border:none;background:var(--ink);color:var(--bg);font-size:13px;font-weight:500;cursor:pointer" style-hover="opacity:.88">+ Add account or asset</button>
+<button onClick="{{ toggleTheme }}" style="height:34px;border-radius:9px;border:1px solid var(--line2);background:transparent;color:var(--ink2);font-size:12.5px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px" style-hover="background:var(--hover);color:var(--ink)"><span style="width:11px;height:11px;border-radius:50%;border:1.5px solid currentColor;background:linear-gradient(90deg,currentColor 50%,transparent 50%)"></span>{{ themeLabel }}</button>
+</div>
+</aside>
+</sc-if>
+<div style="flex:1;min-width:0;display:flex;flex-direction:column">
+<sc-if value="{{ topbar }}" hint-placeholder-val="{{ false }}">
+<header style="position:sticky;top:0;z-index:20;background:var(--bg);border-bottom:1px solid var(--line);display:flex;flex-direction:column;gap:10px;padding:12px 16px 10px">
+<div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
+<span style="display:flex;align-items:center;gap:10px"><span style="width:20px;height:20px;border-radius:6px;background:var(--ink);display:flex;align-items:flex-end;justify-content:center;padding:4px;gap:2px"><span style="width:3px;height:5px;background:var(--bg);border-radius:1px"></span><span style="width:3px;height:9px;background:var(--bg);border-radius:1px"></span></span><span style="font-weight:600;font-size:15px">Holdings</span></span>
+<div style="display:flex;gap:8px">
+<button onClick="{{ toggleTheme }}" style="height:34px;padding:0 12px;border-radius:9px;border:1px solid var(--line2);background:transparent;font-size:12.5px;cursor:pointer">{{ themeShort }}</button>
+<button onClick="{{ openAdd }}" style="height:34px;padding:0 12px;border-radius:9px;border:none;background:var(--ink);color:var(--bg);font-size:12.5px;font-weight:500;cursor:pointer">+ Add</button>
+</div>
+</div>
+<sc-if value="{{ tabletNav }}">
+<nav style="display:flex;gap:4px;overflow-x:auto">
+<sc-for list="{{ nav }}" as="n" hint-placeholder-count="5">
+<button onClick="{{ n.onClick }}" style="flex:none;height:32px;padding:0 12px;border:none;border-radius:8px;background:{{ n.bg }};font-size:13px;font-weight:{{ n.fw }};cursor:pointer">{{ n.label }}</button>
+</sc-for>
+</nav>
+</sc-if>
+</header>
+</sc-if>
+<main style="width:100%;max-width:1200px;margin:0 auto;padding:clamp(18px,3.2vw,40px) clamp(16px,3.2vw,44px) 64px">
+
+<sc-if value="{{ isOverview }}" hint-placeholder-val="{{ true }}">
+<div style="display:flex;flex-direction:column;gap:16px">
+<div style="display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:4px">
+<div style="display:flex;flex-direction:column;gap:10px">
+<span style="font:500 11px/1.2 'Geist Mono',monospace;letter-spacing:.06em;text-transform:uppercase;color:var(--ink3)">Net worth · rolled up to USD</span>
+<span style="font-size:clamp(40px,6vw,56px);line-height:1;font-weight:500;letter-spacing:-0.035em;font-variant-numeric:tabular-nums">{{ ov.nw }}</span>
+<div style="display:flex;flex-wrap:wrap;gap:8px;align-items:baseline;font-size:14px"><span style="color:{{ ov.dColor }};font-weight:500;font-variant-numeric:tabular-nums">{{ ov.delta }}</span><span style="color:var(--ink3)">{{ ov.since }}</span></div>
+</div>
+<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+<div style="display:flex;gap:2px;padding:3px;border-radius:10px;background:var(--hover)">
+<sc-for list="{{ ranges }}" as="o" hint-placeholder-count="4"><button onClick="{{ o.onClick }}" style="height:28px;padding:0 11px;border-radius:7px;border:none;font-size:12.5px;cursor:pointer;background:{{ o.bg }};color:{{ o.fg }};box-shadow:{{ o.sh }}">{{ o.label }}</button></sc-for>
+</div>
+<button onClick="{{ projOpt.onClick }}" style="height:34px;padding:0 12px;border-radius:10px;border:1px solid var(--line2);background:{{ projOpt.bg }};color:var(--ink);font-size:12.5px;cursor:pointer;display:flex;align-items:center;gap:8px"><span style="width:16px;border-top:2px dashed currentColor"></span>{{ projOpt.label }}</button>
+</div>
+</div>
+<div style="background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:20px 20px 12px;box-shadow:var(--shadow)">{{ ov.chart }}</div>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px">
+<sc-for list="{{ ov.stats }}" as="st" hint-placeholder-count="3">
+<button onClick="{{ st.onClick }}" style="background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px 20px;box-shadow:var(--shadow);text-align:left;display:flex;flex-direction:column;gap:8px;cursor:pointer;color:var(--ink)" style-hover="border-color:var(--line2)">
+<span style="font:500 11px/1.2 'Geist Mono',monospace;letter-spacing:.06em;text-transform:uppercase;color:var(--ink3)">{{ st.label }}</span>
+<span style="font-size:26px;font-weight:500;letter-spacing:-0.02em;font-variant-numeric:tabular-nums;color:{{ st.color }}">{{ st.value }}</span>
+<span style="font-size:12.5px;color:var(--ink2)">{{ st.sub }}</span>
+</button>
+</sc-for>
+</div>
+<div style="display:grid;grid-template-columns:{{ twoCol }};gap:12px;align-items:start">
+<div style="display:flex;flex-direction:column;gap:12px;min-width:0">
+<div style="background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:20px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:16px">
+<div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap"><span style="font-size:15px;font-weight:600">Allocation</span><span style="font-size:12.5px;color:var(--ink3)">Change over 12 months</span></div>
+<div style="display:flex;height:10px;border-radius:5px;overflow:hidden;gap:2px">
+<sc-for list="{{ ov.alloc }}" as="a" hint-placeholder-count="6"><div style="flex:{{ a.flex }};background:{{ a.color }}"></div></sc-for>
+</div>
+<div style="display:flex;flex-direction:column">
+<sc-for list="{{ ov.alloc }}" as="a" hint-placeholder-count="6">
+<button onClick="{{ a.onClick }}" style="display:grid;grid-template-columns:{{ allocCols }};gap:12px;align-items:center;padding:11px 8px;border:none;border-top:1px solid var(--line);background:transparent;color:var(--ink);font-size:13.5px;cursor:pointer;text-align:left" style-hover="background:var(--hover)">
+<span style="display:flex;align-items:center;gap:10px;min-width:0"><span style="width:8px;height:8px;border-radius:2px;background:{{ a.color }};flex:none"></span><span>{{ a.name }}</span><span style="color:var(--ink3);font-size:12px">{{ a.count }}</span></span>
+<span style="font-variant-numeric:tabular-nums;font-weight:500">{{ a.value }}</span>
+<span style="color:var(--ink2);font-variant-numeric:tabular-nums;text-align:right;font-size:12.5px">{{ a.share }}</span>
+<sc-if value="{{ wide }}"><span style="color:{{ a.dColor }};font-variant-numeric:tabular-nums;text-align:right;font-size:12.5px">{{ a.delta }}</span></sc-if>
+</button>
+</sc-for>
+</div>
+</div>
+<div style="background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:20px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:12px">
+<div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap"><span style="font-size:15px;font-weight:600">Equity in financed assets</span><span style="font-size:12.5px;color:var(--ink3)">Value minus linked loan</span></div>
+<sc-for list="{{ ov.equity }}" as="e" hint-placeholder-count="2">
+<button onClick="{{ e.onClick }}" style="display:flex;flex-direction:column;gap:10px;padding:14px;border:1px solid var(--line);border-radius:10px;background:transparent;color:var(--ink);cursor:pointer;text-align:left" style-hover="background:var(--hover)">
+<div style="display:flex;justify-content:space-between;gap:12px;align-items:baseline;width:100%"><span style="font-weight:500;font-size:14px">{{ e.name }}</span><span style="font-size:18px;font-weight:500;font-variant-numeric:tabular-nums">{{ e.equity }}</span></div>
+<div style="height:8px;width:100%;border-radius:4px;background:color-mix(in oklab,var(--neg) 24%,transparent);overflow:hidden"><div style="height:100%;width:{{ e.ownedPct }};background:{{ e.color }}"></div></div>
+<div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;font-size:12px;color:var(--ink2);width:100%"><span>{{ e.owned }} owned · <span style="color:{{ e.gColor }}">{{ e.gain }}</span> in 12 mo</span><span style="font-variant-numeric:tabular-nums">{{ e.value }} value − {{ e.loan }} loan</span></div>
+</button>
+</sc-for>
+</div>
+</div>
+<div style="display:flex;flex-direction:column;gap:12px;min-width:0">
+<div style="background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:20px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:16px">
+<span style="font-size:15px;font-weight:600">Where it’s held</span>
+<sc-for list="{{ ov.ctry }}" as="c" hint-placeholder-count="2">
+<div style="display:flex;flex-direction:column;gap:8px">
+<div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px"><span style="display:flex;gap:8px;align-items:center"><span style="font:600 10px/1 'Geist Mono',monospace;padding:3px 5px;border-radius:4px;border:1px solid var(--line2);color:var(--ink2)">{{ c.code }}</span><span style="font-weight:500;font-size:14px">{{ c.name }}</span></span><span style="font-weight:500;font-variant-numeric:tabular-nums">{{ c.net }} <span style="color:var(--ink3);font-weight:400;font-size:12px">net</span></span></div>
+<div style="height:6px;background:var(--hover);border-radius:3px;overflow:hidden"><div style="height:100%;width:{{ c.sharePct }};background:var(--ink2);border-radius:3px"></div></div>
+<div style="display:flex;justify-content:space-between;gap:8px;font-size:12px;color:var(--ink2);font-variant-numeric:tabular-nums"><span>{{ c.assets }} assets · {{ c.liab }} debt</span><span>{{ c.share }} of assets</span></div>
+</div>
+</sc-for>
+<div style="border-top:1px solid var(--line);padding-top:14px;display:flex;flex-direction:column;gap:4px">
+<div style="display:flex;justify-content:space-between;gap:8px;align-items:baseline"><span style="font-size:13px;color:var(--ink2)">Currency effect, 12 mo</span><span style="color:{{ ov.fxColor }};font-weight:500;font-variant-numeric:tabular-nums">{{ ov.fx }}</span></div>
+<span style="font-size:12px;color:var(--ink3);text-wrap:pretty">{{ ov.fxNote }}</span>
+</div>
+</div>
+<div style="background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:20px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:14px">
+<div style="display:flex;justify-content:space-between;align-items:baseline"><span style="font-size:15px;font-weight:600">Goals</span><button onClick="{{ goGoals }}" style="border:none;background:none;color:var(--ink2);font-size:12.5px;cursor:pointer;padding:0" style-hover="color:var(--ink)">All goals →</button></div>
+<sc-for list="{{ gl.rows }}" as="g" hint-placeholder-count="3">
+<div style="display:flex;flex-direction:column;gap:6px">
+<div style="display:flex;justify-content:space-between;gap:8px;font-size:13px"><span style="font-weight:500">{{ g.name }}</span><span style="color:{{ g.sColor }};font-size:12px">{{ g.status }}</span></div>
+<div style="height:6px;background:var(--hover);border-radius:3px;overflow:hidden"><div style="height:100%;width:{{ g.progPct }};background:{{ g.barColor }};border-radius:3px"></div></div>
+</div>
+</sc-for>
+</div>
+</div>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isAssets }}" hint-placeholder-val="{{ false }}">
+<div style="display:flex;flex-direction:column;gap:16px">
+<div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:16px">
+<div style="display:flex;flex-direction:column;gap:8px"><span style="font:500 11px/1.2 'Geist Mono',monospace;letter-spacing:.06em;text-transform:uppercase;color:var(--ink3)">Assets</span><span style="font-size:clamp(32px,5vw,44px);line-height:1;font-weight:500;letter-spacing:-0.03em;font-variant-numeric:tabular-nums">{{ as.total }}</span><span style="font-size:13.5px;color:var(--ink2)">{{ as.sub }}</span></div>
+<button onClick="{{ openAdd }}" style="height:36px;padding:0 14px;border-radius:9px;border:none;background:var(--ink);color:var(--bg);font-size:13px;font-weight:500;cursor:pointer">+ Add asset</button>
+</div>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px">
+<sc-for list="{{ as.tiles }}" as="t" hint-placeholder-count="7">
+<button onClick="{{ t.onClick }}" style="display:flex;flex-direction:column;gap:6px;padding:12px 14px;border-radius:12px;border:1px solid {{ t.bd }};background:{{ t.bg }};color:var(--ink);cursor:pointer;text-align:left" style-hover="border-color:var(--ink3)">
+<span style="display:flex;align-items:center;gap:7px;font-size:12.5px;color:var(--ink2)"><span style="width:8px;height:8px;border-radius:2px;background:{{ t.color }};flex:none"></span>{{ t.name }}</span>
+<span style="font-size:17px;font-weight:500;font-variant-numeric:tabular-nums;letter-spacing:-0.01em">{{ t.total }}</span>
+<span style="font-size:11.5px;color:var(--ink3)">{{ t.meta }}</span>
+</button>
+</sc-for>
+</div>
+<div style="background:var(--panel);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);overflow:hidden">
+<div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--line)">
+<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+<span style="font-size:12.5px;color:var(--ink3)">Group by</span>
+<div style="display:flex;gap:2px;padding:3px;border-radius:9px;background:var(--hover)">
+<sc-for list="{{ as.groupOpts }}" as="o" hint-placeholder-count="3"><button onClick="{{ o.onClick }}" style="height:26px;padding:0 10px;border-radius:6px;border:none;font-size:12.5px;cursor:pointer;background:{{ o.bg }};color:{{ o.fg }};box-shadow:{{ o.sh }}">{{ o.label }}</button></sc-for>
+</div>
+<button onClick="{{ as.toggleAll }}" style="height:28px;padding:0 10px;border-radius:7px;border:1px solid var(--line2);background:transparent;color:var(--ink2);font-size:12.5px;cursor:pointer" style-hover="color:var(--ink);background:var(--hover)">{{ as.toggleLabel }}</button>
+</div>
+<input value="{{ as.q }}" onChange="{{ as.onQ }}" placeholder="Search accounts, assets, tickers" style="flex:0 1 220px;min-width:140px;height:32px;padding:0 12px;border-radius:8px;border:1px solid var(--line2);background:var(--bg);font-size:13px;outline:none" style-focus="border-color:var(--ink2)">
+</div>
+<sc-for list="{{ as.groups }}" as="g" hint-placeholder-count="6">
+<div style="border-top:1px solid var(--line)">
+<button onClick="{{ g.onToggle }}" style="width:100%;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 16px;border:none;background:var(--hover);color:var(--ink);cursor:pointer;text-align:left" style-hover="background:var(--sel)">
+<span style="display:flex;align-items:center;gap:10px;min-width:0"><span style="width:12px;font-size:10px;color:var(--ink3);transform:rotate({{ g.rot }});display:inline-block">▶</span><span style="width:8px;height:8px;border-radius:2px;background:{{ g.color }};flex:none"></span><span style="font-size:13.5px;font-weight:600">{{ g.name }}</span><span style="font-size:12px;color:var(--ink3)">{{ g.count }}</span></span>
+<span style="display:flex;align-items:baseline;gap:12px"><span style="font-size:12px;color:var(--ink3)">{{ g.share }}</span><span style="font-size:13.5px;font-weight:600;font-variant-numeric:tabular-nums">{{ g.total }}</span></span>
+</button>
+<sc-if value="{{ g.open }}">
+<sc-for list="{{ g.rows }}" as="r" hint-placeholder-count="2">
+<button onClick="{{ r.onClick }}" style="width:100%;display:grid;grid-template-columns:{{ assetCols }};gap:14px;align-items:center;padding:8px 16px 8px 50px;border:none;border-top:1px solid var(--line);background:transparent;color:var(--ink);font-size:13px;cursor:pointer;text-align:left" style-hover="background:var(--hover)">
+<span style="display:flex;align-items:baseline;gap:8px;min-width:0;white-space:nowrap;overflow:hidden"><span style="font-weight:500;flex:none;max-width:100%;overflow:hidden;text-overflow:ellipsis">{{ r.name }}</span><sc-if value="{{ wide }}"><span style="font-size:12px;color:var(--ink3);overflow:hidden;text-overflow:ellipsis">{{ r.sub }}</span></sc-if></span>
+<sc-if value="{{ wide }}"><span style="font:600 10px/1 'Geist Mono',monospace;padding:3px 5px;border-radius:4px;border:1px solid var(--line2);color:var(--ink2);justify-self:start">{{ r.tag }}</span></sc-if>
+<sc-if value="{{ wide }}"><span style="color:var(--ink2);font-variant-numeric:tabular-nums;text-align:right;font-size:12.5px">{{ r.native }}</span></sc-if>
+<span style="font-variant-numeric:tabular-nums;font-weight:500;text-align:right">{{ r.usd }}</span>
+<sc-if value="{{ wide }}"><span style="font-variant-numeric:tabular-nums;text-align:right;font-size:12.5px;color:{{ r.gColor }}">{{ r.gain }}</span></sc-if>
+</button>
+</sc-for>
+</sc-if>
+</div>
+</sc-for>
+<sc-if value="{{ as.empty }}"><div style="padding:28px 16px;text-align:center;font-size:13px;color:var(--ink3)">No holdings match.</div></sc-if>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isClass }}" hint-placeholder-val="{{ false }}">
+<div style="display:flex;flex-direction:column;gap:16px">
+<div style="display:flex;gap:6px;font-size:13px;color:var(--ink3)"><button onClick="{{ goAssets }}" style="border:none;background:none;padding:0;color:var(--ink2);cursor:pointer;font-size:13px" style-hover="color:var(--ink)">Assets</button><span>/</span><span>{{ cl.name }}</span></div>
+<div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:16px">
+<div style="display:flex;flex-direction:column;gap:8px">
+<span style="display:flex;align-items:center;gap:10px"><span style="width:12px;height:12px;border-radius:3px;background:{{ cl.color }}"></span><span style="font-size:20px;font-weight:600;letter-spacing:-0.01em">{{ cl.name }}</span></span>
+<span style="font-size:clamp(32px,5vw,44px);line-height:1;font-weight:500;letter-spacing:-0.03em;font-variant-numeric:tabular-nums">{{ cl.total }}</span>
+<span style="font-size:13.5px;color:var(--ink2)"><span style="color:{{ cl.dColor }}">{{ cl.delta }}</span> in 12 mo · {{ cl.share }} of assets · {{ cl.rate }}</span>
+</div>
+<div style="display:flex;gap:8px"><button onClick="{{ projOpt.onClick }}" style="height:36px;padding:0 12px;border-radius:9px;border:1px solid var(--line2);background:{{ projOpt.bg }};font-size:12.5px;cursor:pointer;display:flex;align-items:center;gap:8px"><span style="width:16px;border-top:2px dashed currentColor"></span>{{ projOpt.label }}</button><button onClick="{{ cl.onAdd }}" style="height:36px;padding:0 14px;border-radius:9px;border:none;background:var(--ink);color:var(--bg);font-size:13px;font-weight:500;cursor:pointer">+ Add to {{ cl.name }}</button></div>
+</div>
+<div style="background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px 20px 12px;box-shadow:var(--shadow)">{{ cl.chart }}</div>
+<sc-if value="{{ cl.isB }}">
+<div style="background:var(--panel);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);overflow:hidden">
+<div style="display:flex;flex-direction:column;gap:12px;padding:14px 20px">
+<div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between">
+<sc-if value="{{ cl.hasViewToggle }}"><div style="display:flex;gap:2px;padding:3px;border-radius:9px;background:var(--hover)"><sc-for list="{{ cl.viewOpts }}" as="o" hint-placeholder-count="2"><button onClick="{{ o.onClick }}" style="height:26px;padding:0 11px;border-radius:6px;border:none;font-size:12.5px;cursor:pointer;background:{{ o.bg }};color:{{ o.fg }};box-shadow:{{ o.sh }}">{{ o.label }}</button></sc-for></div></sc-if>
+<span style="font-size:12.5px;color:var(--ink3)">{{ cl.tableNote }}</span>
+</div>
+<div style="display:flex;flex-wrap:wrap;gap:6px">
+<sc-for list="{{ cl.chips }}" as="c" hint-placeholder-count="6"><button onClick="{{ c.onClick }}" style="display:flex;align-items:center;gap:7px;height:30px;padding:0 11px;border-radius:999px;border:1px solid {{ c.bd }};background:{{ c.bg }};color:var(--ink);font-size:12.5px;cursor:pointer" style-hover="border-color:var(--ink3)"><span style="width:8px;height:8px;border-radius:2px;background:{{ c.color }};flex:none"></span>{{ c.label }}<span style="font-weight:600;font-variant-numeric:tabular-nums">{{ c.share }}</span></button></sc-for>
+</div>
+</div>
+<sc-if value="{{ cl.showPosTable }}"><div style="display:grid;grid-template-columns:{{ posCols }};gap:12px;padding:10px 20px;font:500 10px/1.2 'Geist Mono',monospace;letter-spacing:.06em;text-transform:uppercase;color:var(--ink3);border-top:1px solid var(--line)"><span>Ticker</span><sc-if value="{{ wide }}"><span>Sector</span></sc-if><sc-if value="{{ wide }}"><span style="text-align:right">Shares</span></sc-if><span style="text-align:right">Price</span><span style="text-align:right">Value</span><sc-if value="{{ wide }}"><span style="text-align:right">Gain</span></sc-if><sc-if value="{{ wide }}"><span style="text-align:right">Wt</span></sc-if></div>
+<sc-for list="{{ cl.positions }}" as="p" hint-placeholder-count="6">
+<button onClick="{{ p.onClick }}" style="width:100%;display:grid;grid-template-columns:{{ posCols }};gap:12px;align-items:center;padding:9px 20px;border:none;border-top:1px solid var(--line);background:transparent;color:var(--ink);font-size:13px;cursor:pointer;text-align:left" style-hover="background:var(--hover)">
+<span style="display:flex;flex-direction:column;gap:2px;min-width:0"><span style="display:flex;align-items:baseline;gap:6px"><span style="font:600 12.5px/1.2 'Geist Mono',monospace">{{ p.disp }}</span><span style="font:500 9.5px/1 'Geist Mono',monospace;color:var(--ink3)">{{ p.ex }}</span></span><span style="font-size:12px;color:var(--ink3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ p.name }}</span></span>
+<sc-if value="{{ wide }}"><span style="display:flex;align-items:center;gap:7px;font-size:12.5px;color:var(--ink2);min-width:0"><span style="width:7px;height:7px;border-radius:2px;background:{{ p.sColor }};flex:none"></span><span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ p.sector }}</span></span></sc-if>
+<sc-if value="{{ wide }}"><span style="text-align:right;font-variant-numeric:tabular-nums;color:var(--ink2)">{{ p.shares }}</span></sc-if>
+<span style="text-align:right;font-variant-numeric:tabular-nums;color:var(--ink2)">{{ p.price }}</span>
+<span style="text-align:right;font-variant-numeric:tabular-nums;font-weight:500">{{ p.value }}</span>
+<sc-if value="{{ wide }}"><span style="text-align:right;font-variant-numeric:tabular-nums;font-size:12.5px;color:{{ p.gColor }}">{{ p.gain }}</span></sc-if>
+<sc-if value="{{ wide }}"><span style="text-align:right;font-variant-numeric:tabular-nums;font-size:12.5px;color:var(--ink2)">{{ p.weight }}</span></sc-if>
+</button>
+</sc-for></sc-if>
+<sc-if value="{{ cl.showAcctTable }}"><div style="display:grid;grid-template-columns:{{ assetCols }};gap:14px;padding:10px 20px;font:500 10.5px/1.2 'Geist Mono',monospace;letter-spacing:.06em;text-transform:uppercase;color:var(--ink3);border-top:1px solid var(--line)"><span>{{ cl.entity }}</span><sc-if value="{{ wide }}"><span>Where</span></sc-if><sc-if value="{{ wide }}"><span style="text-align:right">Native</span></sc-if><span style="text-align:right">USD</span><sc-if value="{{ wide }}"><span style="text-align:right">Gain</span></sc-if></div>
+<sc-for list="{{ cl.acctRows }}" as="r" hint-placeholder-count="3">
+<button onClick="{{ r.onClick }}" style="width:100%;display:grid;grid-template-columns:{{ assetCols }};gap:14px;align-items:center;padding:11px 20px;border:none;border-top:1px solid var(--line);background:transparent;color:var(--ink);font-size:13.5px;cursor:pointer;text-align:left" style-hover="background:var(--hover)">
+<span style="display:flex;flex-direction:column;gap:2px;min-width:0"><span style="font-weight:500">{{ r.name }}</span><span style="font-size:12px;color:var(--ink3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.sub }}</span></span>
+<sc-if value="{{ wide }}"><span style="font:600 10px/1 'Geist Mono',monospace;padding:3px 5px;border-radius:4px;border:1px solid var(--line2);color:var(--ink2);justify-self:start">{{ r.country }}</span></sc-if>
+<sc-if value="{{ wide }}"><span style="color:var(--ink2);font-variant-numeric:tabular-nums;text-align:right;font-size:12.5px">{{ r.native }}</span></sc-if>
+<span style="font-variant-numeric:tabular-nums;font-weight:500;text-align:right">{{ r.usd }}</span>
+<sc-if value="{{ wide }}"><span style="font-variant-numeric:tabular-nums;text-align:right;font-size:12.5px;color:{{ r.gColor }}">{{ r.gain }}</span></sc-if>
+</button>
+</sc-for></sc-if>
+</div>
+</sc-if>
+<sc-if value="{{ cl.isC }}">
+<div style="background:var(--panel);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);overflow:hidden">
+<div style="display:flex;flex-wrap:wrap;gap:12px;align-items:flex-start;justify-content:space-between;padding:14px 16px">
+<div style="display:flex;flex-wrap:wrap;gap:6px">
+<sc-for list="{{ cl.chips }}" as="c" hint-placeholder-count="6"><button onClick="{{ c.onClick }}" style="display:flex;align-items:center;gap:7px;height:30px;padding:0 11px;border-radius:999px;border:1px solid {{ c.bd }};background:{{ c.bg }};color:var(--ink);font-size:12.5px;cursor:pointer" style-hover="border-color:var(--ink3)"><span style="width:8px;height:8px;border-radius:2px;background:{{ c.color }};flex:none"></span>{{ c.label }}<span style="font-weight:600;font-variant-numeric:tabular-nums">{{ c.share }}</span></button></sc-for>
+</div>
+<div style="display:flex;gap:2px;padding:3px;border-radius:9px;background:var(--hover)"><sc-for list="{{ cl.modeOpts }}" as="o" hint-placeholder-count="2"><button onClick="{{ o.onClick }}" style="height:26px;padding:0 11px;border-radius:6px;border:none;font-size:12.5px;cursor:pointer;background:{{ o.bg }};color:{{ o.fg }};box-shadow:{{ o.sh }}">{{ o.label }}</button></sc-for></div>
+</div>
+<sc-if value="{{ cl.showMap }}">
+<div style="padding:0 16px 16px">
+<div style="position:relative;width:100%;height:{{ cl.mapH }}px;border-radius:10px;overflow:hidden;background:var(--hover)">
+<sc-for list="{{ cl.tiles }}" as="t" hint-placeholder-count="8">
+<button data-tile="1" onClick="{{ t.onClick }}" title="{{ t.title }}" style="position:absolute;left:{{ t.l }};top:{{ t.t }};width:{{ t.w }};height:{{ t.h }};border:2px solid var(--panel);border-radius:8px;background:{{ t.color }};opacity:{{ t.op }};color:#141413;padding:8px 10px;text-align:left;display:flex;flex-direction:column;justify-content:space-between;align-items:flex-start;gap:4px;cursor:pointer;overflow:hidden;transition:opacity .2s" style-hover="filter:brightness(1.07)">
+<span style="display:flex;flex-direction:column;gap:2px;min-width:0;max-width:100%"><span style="font-family:{{ t.ff }};font-weight:600;font-size:{{ t.fs }}px;line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ t.label }}</span><span style="font-size:11.5px;opacity:.72;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ t.sub }}</span></span>
+<span style="font-size:12px;font-weight:500;font-variant-numeric:tabular-nums;white-space:nowrap">{{ t.val }}</span>
+</button>
+</sc-for>
+</div>
+</div>
+</sc-if>
+<sc-if value="{{ cl.listPos }}"><div style="display:grid;grid-template-columns:{{ posCols }};gap:12px;padding:10px 20px;font:500 10px/1.2 'Geist Mono',monospace;letter-spacing:.06em;text-transform:uppercase;color:var(--ink3);border-top:1px solid var(--line)"><span>Ticker</span><sc-if value="{{ wide }}"><span>Sector</span></sc-if><sc-if value="{{ wide }}"><span style="text-align:right">Shares</span></sc-if><span style="text-align:right">Price</span><span style="text-align:right">Value</span><sc-if value="{{ wide }}"><span style="text-align:right">Gain</span></sc-if><sc-if value="{{ wide }}"><span style="text-align:right">Wt</span></sc-if></div>
+<sc-for list="{{ cl.positions }}" as="p" hint-placeholder-count="6">
+<button onClick="{{ p.onClick }}" style="width:100%;display:grid;grid-template-columns:{{ posCols }};gap:12px;align-items:center;padding:9px 20px;border:none;border-top:1px solid var(--line);background:transparent;color:var(--ink);font-size:13px;cursor:pointer;text-align:left" style-hover="background:var(--hover)">
+<span style="display:flex;flex-direction:column;gap:2px;min-width:0"><span style="display:flex;align-items:baseline;gap:6px"><span style="font:600 12.5px/1.2 'Geist Mono',monospace">{{ p.disp }}</span><span style="font:500 9.5px/1 'Geist Mono',monospace;color:var(--ink3)">{{ p.ex }}</span></span><span style="font-size:12px;color:var(--ink3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ p.name }}</span></span>
+<sc-if value="{{ wide }}"><span style="display:flex;align-items:center;gap:7px;font-size:12.5px;color:var(--ink2);min-width:0"><span style="width:7px;height:7px;border-radius:2px;background:{{ p.sColor }};flex:none"></span><span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ p.sector }}</span></span></sc-if>
+<sc-if value="{{ wide }}"><span style="text-align:right;font-variant-numeric:tabular-nums;color:var(--ink2)">{{ p.shares }}</span></sc-if>
+<span style="text-align:right;font-variant-numeric:tabular-nums;color:var(--ink2)">{{ p.price }}</span>
+<span style="text-align:right;font-variant-numeric:tabular-nums;font-weight:500">{{ p.value }}</span>
+<sc-if value="{{ wide }}"><span style="text-align:right;font-variant-numeric:tabular-nums;font-size:12.5px;color:{{ p.gColor }}">{{ p.gain }}</span></sc-if>
+<sc-if value="{{ wide }}"><span style="text-align:right;font-variant-numeric:tabular-nums;font-size:12.5px;color:var(--ink2)">{{ p.weight }}</span></sc-if>
+</button>
+</sc-for></sc-if>
+<sc-if value="{{ cl.listAcct }}"><div style="display:grid;grid-template-columns:{{ assetCols }};gap:14px;padding:10px 20px;font:500 10.5px/1.2 'Geist Mono',monospace;letter-spacing:.06em;text-transform:uppercase;color:var(--ink3);border-top:1px solid var(--line)"><span>{{ cl.entity }}</span><sc-if value="{{ wide }}"><span>Where</span></sc-if><sc-if value="{{ wide }}"><span style="text-align:right">Native</span></sc-if><span style="text-align:right">USD</span><sc-if value="{{ wide }}"><span style="text-align:right">Gain</span></sc-if></div>
+<sc-for list="{{ cl.acctRows }}" as="r" hint-placeholder-count="3">
+<button onClick="{{ r.onClick }}" style="width:100%;display:grid;grid-template-columns:{{ assetCols }};gap:14px;align-items:center;padding:11px 20px;border:none;border-top:1px solid var(--line);background:transparent;color:var(--ink);font-size:13.5px;cursor:pointer;text-align:left" style-hover="background:var(--hover)">
+<span style="display:flex;flex-direction:column;gap:2px;min-width:0"><span style="font-weight:500">{{ r.name }}</span><span style="font-size:12px;color:var(--ink3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.sub }}</span></span>
+<sc-if value="{{ wide }}"><span style="font:600 10px/1 'Geist Mono',monospace;padding:3px 5px;border-radius:4px;border:1px solid var(--line2);color:var(--ink2);justify-self:start">{{ r.country }}</span></sc-if>
+<sc-if value="{{ wide }}"><span style="color:var(--ink2);font-variant-numeric:tabular-nums;text-align:right;font-size:12.5px">{{ r.native }}</span></sc-if>
+<span style="font-variant-numeric:tabular-nums;font-weight:500;text-align:right">{{ r.usd }}</span>
+<sc-if value="{{ wide }}"><span style="font-variant-numeric:tabular-nums;text-align:right;font-size:12.5px;color:{{ r.gColor }}">{{ r.gain }}</span></sc-if>
+</button>
+</sc-for></sc-if>
+<sc-if value="{{ cl.hasAccts }}">
+<div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:12px 16px;border-top:1px solid var(--line)">
+<span style="font-size:12.5px;color:var(--ink3);margin-right:4px">Accounts</span>
+<sc-for list="{{ cl.accts }}" as="a" hint-placeholder-count="3"><button onClick="{{ a.onClick }}" style="display:flex;align-items:baseline;gap:8px;height:30px;padding:0 12px;border-radius:8px;border:1px solid var(--line2);background:transparent;color:var(--ink);font-size:12.5px;cursor:pointer" style-hover="background:var(--hover)">{{ a.name }}<span style="font-variant-numeric:tabular-nums;color:var(--ink2)">{{ a.value }}</span><span style="color:var(--ink3)">→</span></button></sc-for>
+</div>
+</sc-if>
+</div>
+</sc-if>
+<sc-if value="{{ cl.isO }}">
+<sc-if value="{{ cl.isStk }}">
+<div style="background:var(--panel);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);overflow:hidden">
+<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;padding:16px 20px 12px">
+<div style="display:flex;flex-direction:column;gap:3px"><span style="font-size:15px;font-weight:600">Positions</span><span style="font-size:12.5px;color:var(--ink3)">{{ cl.distSub }} · select a stock for details</span></div>
+<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+<sc-if value="{{ cl.showSecView }}"><button onClick="{{ cl.toggleSecs }}" style="height:30px;padding:0 10px;border-radius:7px;border:1px solid var(--line2);background:transparent;color:var(--ink2);font-size:12.5px;cursor:pointer" style-hover="color:var(--ink);background:var(--hover)">{{ cl.toggleSecsLabel }}</button></sc-if>
+<div style="display:flex;gap:2px;padding:3px;border-radius:9px;background:var(--hover)"><sc-for list="{{ cl.posViewOpts }}" as="o" hint-placeholder-count="2"><button onClick="{{ o.onClick }}" style="height:26px;padding:0 11px;border-radius:6px;border:none;font-size:12.5px;cursor:pointer;background:{{ o.bg }};color:{{ o.fg }};box-shadow:{{ o.sh }}">{{ o.label }}</button></sc-for></div>
+</div>
+</div>
+<div style="padding:0 20px 16px"><div style="display:flex;height:10px;border-radius:5px;overflow:hidden;gap:2px"><sc-for list="{{ cl.dist }}" as="d" hint-placeholder-count="5"><div style="flex:{{ d.flex }};background:{{ d.color }}"></div></sc-for></div></div>
+<sc-if value="{{ cl.showSecView }}">
+<div style="display:grid;grid-template-columns:{{ secPosCols }};gap:12px;padding:9px 20px;border-top:1px solid var(--line);font:500 10px/1.2 'Geist Mono',monospace;letter-spacing:.06em;text-transform:uppercase;color:var(--ink3)"><span style="padding-left:34px">Sector / stock</span><sc-if value="{{ wide }}"><span style="text-align:right">Shares</span></sc-if><span style="text-align:right">Price</span><span style="text-align:right">Value (USD)</span><sc-if value="{{ wide }}"><span style="text-align:right">Gain</span></sc-if><sc-if value="{{ wide }}"><span style="text-align:right">% of stocks</span></sc-if></div>
+<sc-for list="{{ cl.secGroups }}" as="g" hint-placeholder-count="5">
+<div style="border-top:1px solid var(--line)">
+<button onClick="{{ g.onToggle }}" style="width:100%;display:grid;grid-template-columns:{{ secPosCols }};gap:12px;align-items:center;padding:12px 20px;border:none;background:{{ g.bg }};color:var(--ink);cursor:pointer;text-align:left" style-hover="background:var(--hover)">
+<span style="display:flex;align-items:center;gap:10px;min-width:0"><span style="width:12px;font-size:9px;color:var(--ink3);display:inline-block;transform:rotate({{ g.rot }});transition:transform .15s;flex:none">▶</span><span style="width:10px;height:10px;border-radius:3px;background:{{ g.color }};flex:none"></span><span style="font-size:14px;font-weight:600;flex:none">{{ g.label }}</span><span style="font-size:12px;color:var(--ink3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ g.sub }}</span></span>
+<sc-if value="{{ wide }}"><span></span></sc-if>
+<span></span>
+<span style="text-align:right;font-size:13.5px;font-variant-numeric:tabular-nums;font-weight:600">{{ g.value }}</span>
+<sc-if value="{{ wide }}"><span style="text-align:right;font-size:12.5px;color:{{ g.gColor }};font-variant-numeric:tabular-nums">{{ g.gain }}</span></sc-if>
+<sc-if value="{{ wide }}"><span style="text-align:right;font-size:13.5px;font-weight:600;font-variant-numeric:tabular-nums">{{ g.share }}</span></sc-if>
+</button>
+<sc-if value="{{ g.open }}">
+<sc-for list="{{ g.positions }}" as="p" hint-placeholder-count="2">
+<button onClick="{{ p.onClick }}" style="width:100%;display:grid;grid-template-columns:{{ secPosCols }};gap:12px;align-items:center;padding:9px 20px;border:none;border-top:1px solid var(--line);background:transparent;color:var(--ink);font-size:13px;cursor:pointer;text-align:left" style-hover="background:var(--hover)">
+<span style="display:flex;align-items:baseline;gap:8px;min-width:0;padding-left:34px"><span style="font:600 12.5px/1.2 'Geist Mono',monospace;flex:none">{{ p.disp }}</span><span style="font-size:12px;color:var(--ink3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ p.name }}</span></span>
+<sc-if value="{{ wide }}"><span style="text-align:right;font-variant-numeric:tabular-nums;color:var(--ink2);font-size:12.5px">{{ p.shares }} sh</span></sc-if>
+<span style="text-align:right;font-variant-numeric:tabular-nums;color:var(--ink2)">{{ p.price }}</span>
+<span style="text-align:right;font-variant-numeric:tabular-nums;font-weight:500">{{ p.value }}</span>
+<sc-if value="{{ wide }}"><span style="text-align:right;font-variant-numeric:tabular-nums;font-size:12.5px;color:{{ p.gColor }}">{{ p.gain }}</span></sc-if>
+<sc-if value="{{ wide }}"><span style="text-align:right;font-variant-numeric:tabular-nums;font-size:12.5px;color:var(--ink2)">{{ p.weight }}</span></sc-if>
+</button>
+</sc-for>
+</sc-if>
+</div>
+</sc-for>
+</sc-if>
+<sc-if value="{{ cl.showAllView }}">
+<div style="display:grid;grid-template-columns:{{ posCols }};gap:12px;padding:10px 20px;font:500 10px/1.2 'Geist Mono',monospace;letter-spacing:.06em;text-transform:uppercase;color:var(--ink3);border-top:1px solid var(--line)"><span>Ticker</span><sc-if value="{{ wide }}"><span>Sector</span></sc-if><sc-if value="{{ wide }}"><span style="text-align:right">Shares</span></sc-if><span style="text-align:right">Price</span><span style="text-align:right">Value</span><sc-if value="{{ wide }}"><span style="text-align:right">Gain</span></sc-if><sc-if value="{{ wide }}"><span style="text-align:right">Wt</span></sc-if></div>
+<sc-for list="{{ cl.allPositions }}" as="p" hint-placeholder-count="6">
+<button onClick="{{ p.onClick }}" style="width:100%;display:grid;grid-template-columns:{{ posCols }};gap:12px;align-items:center;padding:9px 20px;border:none;border-top:1px solid var(--line);background:transparent;color:var(--ink);font-size:13px;cursor:pointer;text-align:left" style-hover="background:var(--hover)">
+<span style="display:flex;flex-direction:column;gap:2px;min-width:0"><span style="display:flex;align-items:baseline;gap:6px"><span style="font:600 12.5px/1.2 'Geist Mono',monospace">{{ p.disp }}</span><span style="font:500 9.5px/1 'Geist Mono',monospace;color:var(--ink3)">{{ p.ex }}</span></span><span style="font-size:12px;color:var(--ink3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ p.name }}</span></span>
+<sc-if value="{{ wide }}"><span style="display:flex;align-items:center;gap:7px;font-size:12.5px;color:var(--ink2);min-width:0"><span style="width:7px;height:7px;border-radius:2px;background:{{ p.sColor }};flex:none"></span><span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ p.sector }}</span></span></sc-if>
+<sc-if value="{{ wide }}"><span style="text-align:right;font-variant-numeric:tabular-nums;color:var(--ink2)">{{ p.shares }}</span></sc-if>
+<span style="text-align:right;font-variant-numeric:tabular-nums;color:var(--ink2)">{{ p.price }}</span>
+<span style="text-align:right;font-variant-numeric:tabular-nums;font-weight:500">{{ p.value }}</span>
+<sc-if value="{{ wide }}"><span style="text-align:right;font-variant-numeric:tabular-nums;font-size:12.5px;color:{{ p.gColor }}">{{ p.gain }}</span></sc-if>
+<sc-if value="{{ wide }}"><span style="text-align:right;font-variant-numeric:tabular-nums;font-size:12.5px;color:var(--ink2)">{{ p.weight }}</span></sc-if>
+</button>
+</sc-for>
+</sc-if>
+</div>
+</sc-if>
+<sc-if value="{{ cl.isREo }}">
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,360px),1fr));gap:12px;align-items:start">
+<div style="background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:20px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:14px">
+<div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap"><span style="font-size:15px;font-weight:600">{{ cl.distTitle }}</span><span style="font-size:12.5px;color:var(--ink3)">{{ cl.distSub }}</span></div>
+<div style="display:flex;height:12px;border-radius:6px;overflow:hidden;gap:2px"><sc-for list="{{ cl.dist }}" as="d" hint-placeholder-count="4"><div style="flex:{{ d.flex }};background:{{ d.color }}"></div></sc-for></div>
+<div style="display:flex;flex-direction:column">
+<sc-for list="{{ cl.dist }}" as="d" hint-placeholder-count="4">
+<div style="display:grid;grid-template-columns:minmax(0,1fr) auto 56px;gap:12px;align-items:center;padding:10px 0;border-top:1px solid var(--line)">
+<span style="display:flex;flex-direction:column;gap:2px;min-width:0"><span style="display:flex;align-items:center;gap:8px;font-size:13.5px;font-weight:500"><span style="width:8px;height:8px;border-radius:2px;background:{{ d.color }};flex:none"></span>{{ d.label }}</span><span style="font-size:11.5px;color:var(--ink3);padding-left:16px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ d.sub }}</span></span>
+<span style="font-size:13px;color:var(--ink2);font-variant-numeric:tabular-nums">{{ d.value }}</span>
+<span style="font-size:14px;font-weight:600;text-align:right;font-variant-numeric:tabular-nums">{{ d.share }}</span>
+</div>
+</sc-for>
+</div>
+</div>
+<sc-if value="{{ cl.hasDist2 }}">
+<div style="background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:20px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:14px">
+<div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap"><span style="font-size:15px;font-weight:600">By location</span><span style="font-size:12.5px;color:var(--ink3)">City or market</span></div>
+<div style="display:flex;height:12px;border-radius:6px;overflow:hidden;gap:2px"><sc-for list="{{ cl.dist2 }}" as="d" hint-placeholder-count="4"><div style="flex:{{ d.flex }};background:{{ d.color }}"></div></sc-for></div>
+<div style="display:flex;flex-direction:column">
+<sc-for list="{{ cl.dist2 }}" as="d" hint-placeholder-count="4">
+<div style="display:grid;grid-template-columns:minmax(0,1fr) auto 56px;gap:12px;align-items:center;padding:10px 0;border-top:1px solid var(--line)">
+<span style="display:flex;flex-direction:column;gap:2px;min-width:0"><span style="display:flex;align-items:center;gap:8px;font-size:13.5px;font-weight:500"><span style="width:8px;height:8px;border-radius:2px;background:{{ d.color }};flex:none"></span>{{ d.label }}</span><span style="font-size:11.5px;color:var(--ink3);padding-left:16px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ d.sub }}</span></span>
+<span style="font-size:13px;color:var(--ink2);font-variant-numeric:tabular-nums">{{ d.value }}</span>
+<span style="font-size:14px;font-weight:600;text-align:right;font-variant-numeric:tabular-nums">{{ d.share }}</span>
+</div>
+</sc-for>
+</div>
+</div>
+</sc-if>
+</div>
+</sc-if>
+
+
+<div style="background:var(--panel);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);overflow:hidden">
+<div style="display:grid;grid-template-columns:{{ assetCols }};gap:14px;padding:10px 20px;font:500 10.5px/1.2 'Geist Mono',monospace;letter-spacing:.06em;text-transform:uppercase;color:var(--ink3);"><span>Holding</span><sc-if value="{{ wide }}"><span>Where</span></sc-if><sc-if value="{{ wide }}"><span style="text-align:right">Native</span></sc-if><span style="text-align:right">USD</span><sc-if value="{{ wide }}"><span style="text-align:right">Gain</span></sc-if></div>
+<sc-for list="{{ cl.rows }}" as="r" hint-placeholder-count="3">
+<button onClick="{{ r.onClick }}" style="width:100%;display:grid;grid-template-columns:{{ assetCols }};gap:14px;align-items:center;padding:11px 20px;border:none;border-top:1px solid var(--line);background:transparent;color:var(--ink);font-size:13.5px;cursor:pointer;text-align:left" style-hover="background:var(--hover)">
+<span style="display:flex;flex-direction:column;gap:2px;min-width:0"><span style="font-weight:500">{{ r.name }}</span><span style="font-size:12px;color:var(--ink3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.sub }}</span></span>
+<sc-if value="{{ wide }}"><span style="font:600 10px/1 'Geist Mono',monospace;padding:3px 5px;border-radius:4px;border:1px solid var(--line2);color:var(--ink2);justify-self:start">{{ r.country }}</span></sc-if>
+<sc-if value="{{ wide }}"><span style="color:var(--ink2);font-variant-numeric:tabular-nums;text-align:right;font-size:12.5px">{{ r.native }}</span></sc-if>
+<span style="font-variant-numeric:tabular-nums;font-weight:500;text-align:right">{{ r.usd }}</span>
+<sc-if value="{{ wide }}"><span style="font-variant-numeric:tabular-nums;text-align:right;font-size:12.5px;color:{{ r.gColor }}">{{ r.gain }}</span></sc-if>
+</button>
+</sc-for>
+</div>
+
+</sc-if>
+<sc-if value="{{ cl.plain }}">
+<div style="background:var(--panel);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);overflow:hidden">
+<div style="display:grid;grid-template-columns:{{ assetCols }};gap:14px;padding:10px 20px;font:500 10.5px/1.2 'Geist Mono',monospace;letter-spacing:.06em;text-transform:uppercase;color:var(--ink3);"><span>Holding</span><sc-if value="{{ wide }}"><span>Where</span></sc-if><sc-if value="{{ wide }}"><span style="text-align:right">Native</span></sc-if><span style="text-align:right">USD</span><sc-if value="{{ wide }}"><span style="text-align:right">Gain</span></sc-if></div>
+<sc-for list="{{ cl.rows }}" as="r" hint-placeholder-count="3">
+<button onClick="{{ r.onClick }}" style="width:100%;display:grid;grid-template-columns:{{ assetCols }};gap:14px;align-items:center;padding:11px 20px;border:none;border-top:1px solid var(--line);background:transparent;color:var(--ink);font-size:13.5px;cursor:pointer;text-align:left" style-hover="background:var(--hover)">
+<span style="display:flex;flex-direction:column;gap:2px;min-width:0"><span style="font-weight:500">{{ r.name }}</span><span style="font-size:12px;color:var(--ink3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.sub }}</span></span>
+<sc-if value="{{ wide }}"><span style="font:600 10px/1 'Geist Mono',monospace;padding:3px 5px;border-radius:4px;border:1px solid var(--line2);color:var(--ink2);justify-self:start">{{ r.country }}</span></sc-if>
+<sc-if value="{{ wide }}"><span style="color:var(--ink2);font-variant-numeric:tabular-nums;text-align:right;font-size:12.5px">{{ r.native }}</span></sc-if>
+<span style="font-variant-numeric:tabular-nums;font-weight:500;text-align:right">{{ r.usd }}</span>
+<sc-if value="{{ wide }}"><span style="font-variant-numeric:tabular-nums;text-align:right;font-size:12.5px;color:{{ r.gColor }}">{{ r.gain }}</span></sc-if>
+</button>
+</sc-for>
+</div>
+</sc-if>
+</div>
+</sc-if>
+
+<sc-if value="{{ isHolding }}" hint-placeholder-val="{{ false }}">
+<div style="display:flex;flex-direction:column;gap:16px">
+<div style="display:flex;gap:6px;font-size:13px;color:var(--ink3);flex-wrap:wrap"><button onClick="{{ goAssets }}" style="border:none;background:none;padding:0;color:var(--ink2);cursor:pointer;font-size:13px" style-hover="color:var(--ink)">Assets</button><span>/</span><button onClick="{{ hd.goClass }}" style="border:none;background:none;padding:0;color:var(--ink2);cursor:pointer;font-size:13px" style-hover="color:var(--ink)">{{ hd.clsName }}</button><span>/</span><span>{{ hd.name }}</span></div>
+<div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:16px">
+<div style="display:flex;flex-direction:column;gap:10px">
+<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><span style="font-size:22px;font-weight:600;letter-spacing:-0.015em">{{ hd.name }}</span><span style="font:600 10px/1 'Geist Mono',monospace;padding:3px 5px;border-radius:4px;border:1px solid var(--line2);color:var(--ink2)">{{ hd.country }}</span><span style="font:600 10px/1 'Geist Mono',monospace;padding:3px 5px;border-radius:4px;background:var(--hover);color:var(--ink2)">{{ hd.ccy }}</span><span style="font-size:12.5px;color:var(--ink3)">{{ hd.kindTag }}</span></div>
+<span style="font-size:clamp(32px,5vw,44px);line-height:1;font-weight:500;letter-spacing:-0.03em;font-variant-numeric:tabular-nums">{{ hd.usd }}</span>
+<span style="font-size:13.5px;color:var(--ink2)">{{ hd.nativeLine }}</span>
+</div>
+<div style="display:flex;gap:8px;flex-wrap:wrap">
+<button onClick="{{ hd.onUpdate }}" style="height:36px;padding:0 14px;border-radius:9px;border:none;background:var(--ink);color:var(--bg);font-size:13px;font-weight:500;cursor:pointer" style-hover="opacity:.88">{{ hd.updateLabel }}</button>
+<button onClick="{{ hd.onEdit }}" style="height:36px;padding:0 14px;border-radius:9px;border:1px solid var(--line2);background:transparent;font-size:13px;cursor:pointer" style-hover="background:var(--hover)">Edit</button>
+<button onClick="{{ hd.onDelete }}" style="height:36px;padding:0 14px;border-radius:9px;border:1px solid var(--line2);background:transparent;color:var(--neg);font-size:13px;cursor:pointer" style-hover="background:var(--hover)">{{ delLabel }}</button>
+</div>
+</div>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px">
+<sc-for list="{{ hd.stats }}" as="st" hint-placeholder-count="4">
+<div style="background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 16px;display:flex;flex-direction:column;gap:6px">
+<span style="font:500 10.5px/1.2 'Geist Mono',monospace;letter-spacing:.06em;text-transform:uppercase;color:var(--ink3)">{{ st.label }}</span>
+<span style="font-size:18px;font-weight:500;font-variant-numeric:tabular-nums;color:{{ st.color }}">{{ st.value }}</span>
+<span style="font-size:12px;color:var(--ink2)">{{ st.sub }}</span>
+</div>
+</sc-for>
+</div>
+<sc-if value="{{ hd.hasPos }}">
+<div style="display:grid;grid-template-columns:{{ twoCol }};gap:12px;align-items:start">
+<div style="background:var(--panel);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);overflow:hidden;min-width:0">
+<div style="padding:16px 20px 10px;display:flex;flex-direction:column;gap:3px"><span style="font-size:15px;font-weight:600">Positions in this account</span><span style="font-size:12.5px;color:var(--ink3)">{{ hd.posSub }}</span></div>
+<sc-for list="{{ hd.positions }}" as="p" hint-placeholder-count="4">
+<button onClick="{{ p.onClick }}" style="width:100%;border:none;border-top:1px solid var(--line);background:transparent;cursor:pointer;text-align:left;display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr) minmax(0,1fr) 48px;gap:12px;align-items:center;padding:9px 20px;border-top:1px solid var(--line);color:var(--ink);text-decoration:none;font-size:13px" style-hover="background:var(--hover)">
+<span style="display:flex;flex-direction:column;gap:2px;min-width:0"><span style="display:flex;align-items:baseline;gap:6px"><span style="width:7px;height:7px;border-radius:2px;background:{{ p.sColor }};flex:none;align-self:center"></span><span style="font:600 12.5px/1.2 'Geist Mono',monospace">{{ p.disp }}</span></span><span style="font-size:12px;color:var(--ink3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ p.shares }} sh · {{ p.name }}</span></span>
+<span style="text-align:right;font-variant-numeric:tabular-nums;color:var(--ink2)">{{ p.price }}</span>
+<span style="display:flex;flex-direction:column;align-items:flex-end;gap:2px"><span style="font-variant-numeric:tabular-nums;font-weight:500">{{ p.value }}</span><span style="font-size:11.5px;font-variant-numeric:tabular-nums;color:{{ p.gColor }}">{{ p.gain }}</span></span>
+<span style="text-align:right;font-variant-numeric:tabular-nums;font-size:12.5px;color:var(--ink2)">{{ p.weight }}</span>
+</button>
+</sc-for>
+</div>
+<div style="background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:20px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:14px;min-width:0">
+<span style="font-size:15px;font-weight:600">By sector</span>
+<div style="display:flex;height:12px;border-radius:6px;overflow:hidden;gap:2px"><sc-for list="{{ hd.dist }}" as="d" hint-placeholder-count="4"><div style="flex:{{ d.flex }};background:{{ d.color }}"></div></sc-for></div>
+<div style="display:flex;flex-direction:column">
+<sc-for list="{{ hd.dist }}" as="d" hint-placeholder-count="4">
+<div style="display:grid;grid-template-columns:minmax(0,1fr) 56px;gap:12px;align-items:center;padding:9px 0;border-top:1px solid var(--line)">
+<span style="display:flex;flex-direction:column;gap:2px;min-width:0"><span style="display:flex;align-items:center;gap:8px;font-size:13px;font-weight:500"><span style="width:8px;height:8px;border-radius:2px;background:{{ d.color }};flex:none"></span>{{ d.label }}</span><span style="font-size:11.5px;color:var(--ink3);padding-left:16px">{{ d.sub }}</span></span>
+<span style="font-size:13.5px;font-weight:600;text-align:right;font-variant-numeric:tabular-nums">{{ d.share }}</span>
+</div>
+</sc-for>
+</div>
+</div>
+</div>
+</sc-if>
+<sc-if value="{{ hd.hasLoan }}">
+<button onClick="{{ hd.goLoan }}" style="background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px 20px;display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;cursor:pointer;color:var(--ink);text-align:left" style-hover="border-color:var(--line2)">
+<span style="display:flex;flex-direction:column;gap:4px"><span style="font:500 10.5px/1.2 'Geist Mono',monospace;letter-spacing:.06em;text-transform:uppercase;color:var(--ink3)">Linked loan</span><span style="font-size:15px;font-weight:500">{{ hd.loanName }}</span><span style="font-size:12.5px;color:var(--ink2)">{{ hd.loanSub }}</span></span>
+<span style="font-size:18px;font-weight:500;color:var(--neg);font-variant-numeric:tabular-nums">{{ hd.loanBal }} →</span>
+</button>
+</sc-if>
+<div style="background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:20px 20px 12px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:14px">
+<div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap"><div style="display:flex;flex-direction:column;gap:3px"><span style="font-size:15px;font-weight:600">{{ hd.chartTitle }}</span><span style="font-size:12.5px;color:var(--ink3)">{{ hd.chartSub }}</span></div><button onClick="{{ projOpt.onClick }}" style="height:32px;padding:0 12px;border-radius:9px;border:1px solid var(--line2);background:{{ projOpt.bg }};font-size:12.5px;cursor:pointer;display:flex;align-items:center;gap:8px"><span style="width:16px;border-top:2px dashed currentColor"></span>{{ projOpt.label }}</button></div>
+{{ hd.chart }}
+</div>
+
+<div style="background:var(--panel);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);overflow:hidden">
+<div style="padding:16px 20px;display:flex;justify-content:space-between;align-items:baseline;gap:12px"><span style="font-size:15px;font-weight:600">Value log</span><span style="font-size:12.5px;color:var(--ink3)">Logged whenever you update</span></div>
+<sc-for list="{{ hd.log }}" as="l" hint-placeholder-count="5">
+<div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(0,1fr);gap:14px;padding:11px 20px;border-top:1px solid var(--line);font-size:13.5px;align-items:center">
+<span style="color:var(--ink2)">{{ l.date }}</span><span style="text-align:right;font-variant-numeric:tabular-nums;font-weight:500">{{ l.value }}</span><span style="text-align:right;font-variant-numeric:tabular-nums;font-size:12.5px;color:{{ l.cColor }}">{{ l.change }}</span>
+</div>
+</sc-for>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isLiab }}" hint-placeholder-val="{{ false }}">
+<div style="display:flex;flex-direction:column;gap:16px">
+<div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:16px">
+<div style="display:flex;flex-direction:column;gap:8px"><span style="font:500 11px/1.2 'Geist Mono',monospace;letter-spacing:.06em;text-transform:uppercase;color:var(--ink3)">Liabilities</span><span style="font-size:clamp(32px,5vw,44px);line-height:1;font-weight:500;letter-spacing:-0.03em;font-variant-numeric:tabular-nums">{{ li.total }}</span><span style="font-size:13.5px;color:var(--ink2)"><span style="color:var(--pos)">{{ li.paid }}</span> paid down in 12 mo</span></div>
+<div style="display:flex;gap:8px"><button onClick="{{ projOpt.onClick }}" style="height:36px;padding:0 12px;border-radius:9px;border:1px solid var(--line2);background:{{ projOpt.bg }};font-size:12.5px;cursor:pointer;display:flex;align-items:center;gap:8px"><span style="width:16px;border-top:2px dashed currentColor"></span>{{ projOpt.label }}</button><button onClick="{{ openAddLoan }}" style="height:36px;padding:0 14px;border-radius:9px;border:none;background:var(--ink);color:var(--bg);font-size:13px;font-weight:500;cursor:pointer">+ Add loan</button></div>
+</div>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px">
+<sc-for list="{{ li.stats }}" as="st" hint-placeholder-count="4">
+<div style="background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 16px;display:flex;flex-direction:column;gap:6px">
+<span style="font:500 10.5px/1.2 'Geist Mono',monospace;letter-spacing:.06em;text-transform:uppercase;color:var(--ink3)">{{ st.label }}</span>
+<span style="font-size:18px;font-weight:500;font-variant-numeric:tabular-nums">{{ st.value }}</span>
+<span style="font-size:12px;color:var(--ink2)">{{ st.sub }}</span>
+</div>
+</sc-for>
+</div>
+<div style="background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:20px 20px 12px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:14px">
+<div style="display:flex;flex-direction:column;gap:3px"><span style="font-size:15px;font-weight:600">Payoff timeline</span><span style="font-size:12.5px;color:var(--ink3)">Balances stacked by loan; dashed region assumes current payments continue</span></div>
+{{ li.chart }}
+</div>
+<div style="background:var(--panel);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);overflow:hidden">
+<sc-for list="{{ li.rows }}" as="r" hint-placeholder-count="4">
+<button onClick="{{ r.onClick }}" style="width:100%;display:flex;flex-direction:column;gap:10px;padding:16px 20px;border:none;border-bottom:1px solid var(--line);background:transparent;color:var(--ink);cursor:pointer;text-align:left" style-hover="background:var(--hover)">
+<div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px;width:100%;flex-wrap:wrap">
+<span style="display:flex;align-items:center;gap:10px"><span style="width:8px;height:8px;border-radius:2px;background:{{ r.color }}"></span><span style="font-size:14px;font-weight:500">{{ r.name }}</span><span style="font:600 10px/1 'Geist Mono',monospace;padding:3px 5px;border-radius:4px;border:1px solid var(--line2);color:var(--ink2)">{{ r.country }}</span></span>
+<span style="font-size:15px;font-weight:500;font-variant-numeric:tabular-nums">{{ r.usd }} <span style="font-size:12px;color:var(--ink3);font-weight:400">{{ r.native }}</span></span>
+</div>
+<div style="height:6px;width:100%;background:var(--hover);border-radius:3px;overflow:hidden"><div style="height:100%;width:{{ r.paidPct }};background:var(--pos);border-radius:3px"></div></div>
+<div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;width:100%;font-size:12px;color:var(--ink2)"><span>{{ r.paid }} paid · {{ r.rate }} · {{ r.emi }}/mo</span><span>{{ r.link }}{{ r.payoff }}</span></div>
+</button>
+</sc-for>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isLoan }}" hint-placeholder-val="{{ false }}">
+<div style="display:flex;flex-direction:column;gap:16px">
+<div style="display:flex;gap:6px;font-size:13px;color:var(--ink3)"><button onClick="{{ goLiab }}" style="border:none;background:none;padding:0;color:var(--ink2);cursor:pointer;font-size:13px" style-hover="color:var(--ink)">Liabilities</button><span>/</span><span>{{ lo.name }}</span></div>
+<div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:16px">
+<div style="display:flex;flex-direction:column;gap:10px">
+<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><span style="font-size:22px;font-weight:600;letter-spacing:-0.015em">{{ lo.name }}</span><span style="font:600 10px/1 'Geist Mono',monospace;padding:3px 5px;border-radius:4px;border:1px solid var(--line2);color:var(--ink2)">{{ lo.country }}</span><span style="font:600 10px/1 'Geist Mono',monospace;padding:3px 5px;border-radius:4px;background:var(--hover);color:var(--ink2)">{{ lo.ccy }}</span></div>
+<span style="font-size:clamp(32px,5vw,44px);line-height:1;font-weight:500;letter-spacing:-0.03em;font-variant-numeric:tabular-nums">{{ lo.usd }}</span>
+<span style="font-size:13.5px;color:var(--ink2)">{{ lo.nativeLine }}</span>
+</div>
+<div style="display:flex;gap:8px;flex-wrap:wrap">
+<button onClick="{{ lo.onEdit }}" style="height:36px;padding:0 14px;border-radius:9px;border:none;background:var(--ink);color:var(--bg);font-size:13px;font-weight:500;cursor:pointer">Update balance</button>
+<button onClick="{{ lo.onDelete }}" style="height:36px;padding:0 14px;border-radius:9px;border:1px solid var(--line2);background:transparent;color:var(--neg);font-size:13px;cursor:pointer" style-hover="background:var(--hover)">{{ delLabel }}</button>
+</div>
+</div>
+<div style="background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px 20px;display:flex;flex-direction:column;gap:10px">
+<div style="display:flex;justify-content:space-between;font-size:13px;gap:12px;flex-wrap:wrap"><span><span style="font-weight:600">{{ lo.paid }}</span> <span style="color:var(--ink2)">of principal paid off</span></span><span style="color:var(--ink2)">{{ lo.principal }} borrowed {{ lo.startLabel }}</span></div>
+<div style="height:10px;background:color-mix(in oklab,var(--neg) 20%,transparent);border-radius:5px;overflow:hidden"><div style="height:100%;width:{{ lo.paidPct }};background:var(--pos);border-radius:5px"></div></div>
+</div>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px">
+<sc-for list="{{ lo.stats }}" as="st" hint-placeholder-count="4">
+<div style="background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 16px;display:flex;flex-direction:column;gap:6px">
+<span style="font:500 10.5px/1.2 'Geist Mono',monospace;letter-spacing:.06em;text-transform:uppercase;color:var(--ink3)">{{ st.label }}</span>
+<span style="font-size:18px;font-weight:500;font-variant-numeric:tabular-nums">{{ st.value }}</span>
+<span style="font-size:12px;color:var(--ink2)">{{ st.sub }}</span>
+</div>
+</sc-for>
+</div>
+<div style="background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:20px 20px 12px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:14px">
+<div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap"><div style="display:flex;flex-direction:column;gap:3px"><span style="font-size:15px;font-weight:600">Balance over time</span><span style="font-size:12.5px;color:var(--ink3)">{{ lo.chartSub }}</span></div><button onClick="{{ projOpt.onClick }}" style="height:32px;padding:0 12px;border-radius:9px;border:1px solid var(--line2);background:{{ projOpt.bg }};font-size:12.5px;cursor:pointer;display:flex;align-items:center;gap:8px"><span style="width:16px;border-top:2px dashed currentColor"></span>{{ projOpt.label }}</button></div>
+{{ lo.chart }}
+</div>
+<sc-if value="{{ lo.hasLink }}">
+<button onClick="{{ lo.goLink }}" style="background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px 20px;display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;cursor:pointer;color:var(--ink);text-align:left" style-hover="border-color:var(--line2)">
+<span style="display:flex;flex-direction:column;gap:4px"><span style="font:500 10.5px/1.2 'Geist Mono',monospace;letter-spacing:.06em;text-transform:uppercase;color:var(--ink3)">Secured against</span><span style="font-size:15px;font-weight:500">{{ lo.linkName }}</span><span style="font-size:12.5px;color:var(--ink2)">{{ lo.linkSub }}</span></span>
+<span style="font-size:18px;font-weight:500;font-variant-numeric:tabular-nums">{{ lo.equity }} <span style="font-size:12px;color:var(--ink3);font-weight:400">equity →</span></span>
+</button>
+</sc-if>
+</div>
+</sc-if>
+
+<sc-if value="{{ isGrowth }}" hint-placeholder-val="{{ false }}">
+<div style="display:flex;flex-direction:column;gap:16px">
+<div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:16px">
+<div style="display:flex;flex-direction:column;gap:8px"><span style="font:500 11px/1.2 'Geist Mono',monospace;letter-spacing:.06em;text-transform:uppercase;color:var(--ink3)">Growth</span><span style="font-size:clamp(32px,5vw,44px);line-height:1;font-weight:500;letter-spacing:-0.03em;font-variant-numeric:tabular-nums;color:{{ gr.dColor }}">{{ gr.delta }}</span><span style="font-size:13.5px;color:var(--ink2)">{{ gr.sub }}</span></div>
+<div style="display:flex;gap:8px;flex-wrap:wrap">
+<div style="display:flex;gap:2px;padding:3px;border-radius:10px;background:var(--hover)"><sc-for list="{{ gr.ctryOpts }}" as="o" hint-placeholder-count="3"><button onClick="{{ o.onClick }}" style="height:28px;padding:0 11px;border-radius:7px;border:none;font-size:12.5px;cursor:pointer;background:{{ o.bg }};color:{{ o.fg }};box-shadow:{{ o.sh }}">{{ o.label }}</button></sc-for></div>
+<div style="display:flex;gap:2px;padding:3px;border-radius:10px;background:var(--hover)">
+<sc-for list="{{ granges }}" as="o" hint-placeholder-count="4"><button onClick="{{ o.onClick }}" style="height:28px;padding:0 11px;border-radius:7px;border:none;font-size:12.5px;cursor:pointer;background:{{ o.bg }};color:{{ o.fg }};box-shadow:{{ o.sh }}">{{ o.label }}</button></sc-for>
+</div>
+<button onClick="{{ projOpt.onClick }}" style="height:34px;padding:0 12px;border-radius:10px;border:1px solid var(--line2);background:{{ projOpt.bg }};font-size:12.5px;cursor:pointer;display:flex;align-items:center;gap:8px"><span style="width:16px;border-top:2px dashed currentColor"></span>{{ projOpt.label }}</button>
+</div>
+</div>
+<div style="background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:20px 20px 12px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:14px">
+<div style="display:flex;flex-direction:column;align-items:flex-start;gap:10px">
+<span style="font-size:15px;font-weight:600;line-height:22px">{{ gr.chartTitle }}</span>
+<div style="display:flex;gap:8px;flex-wrap:wrap"><div style="display:flex;gap:2px;padding:3px;border-radius:9px;background:var(--hover)"><sc-for list="{{ gr.modeOpts }}" as="o" hint-placeholder-count="2"><button onClick="{{ o.onClick }}" style="height:26px;padding:0 10px;border-radius:6px;border:none;font-size:12.5px;cursor:pointer;background:{{ o.bg }};color:{{ o.fg }};box-shadow:{{ o.sh }}">{{ o.label }}</button></sc-for></div><div style="display:flex;gap:2px;padding:3px;border-radius:9px;background:var(--hover)"><sc-for list="{{ gr.realOpts }}" as="o" hint-placeholder-count="2"><button onClick="{{ o.onClick }}" style="height:26px;padding:0 10px;border-radius:6px;border:none;font-size:12.5px;cursor:pointer;background:{{ o.bg }};color:{{ o.fg }};box-shadow:{{ o.sh }}">{{ o.label }}</button></sc-for></div></div>
+</div>
+<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap;min-height:20px">
+<span style="flex:1 1 320px;font-size:12.5px;color:var(--ink3);text-wrap:pretty">{{ gr.chartSub }}</span>
+</div>
+{{ gr.chart }}
+<div style="display:flex;gap:12px;flex-wrap:wrap;justify-content:center;padding:6px 0 4px;font-size:12px;color:var(--ink2)"><sc-for list="{{ gr.legend }}" as="lg" hint-placeholder-count="6"><span style="display:flex;align-items:center;gap:6px"><span style="width:8px;height:8px;border-radius:2px;background:{{ lg.color }}"></span>{{ lg.name }}</span></sc-for></div>
+</div>
+<div style="background:var(--panel);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:20px;display:flex;flex-direction:column;gap:16px">
+<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap">
+<div style="display:flex;flex-direction:column;gap:3px"><span style="font-size:15px;font-weight:600">Projection assumptions</span><span style="font-size:12.5px;color:var(--ink3);text-wrap:pretty">Growth and inflation differ by country. Crypto, metals and vehicles share one rate.</span></div>
+<button onClick="{{ gr.resetRates }}" style="height:30px;padding:0 12px;border-radius:8px;border:1px solid var(--line2);background:transparent;color:var(--ink2);font-size:12.5px;cursor:pointer" style-hover="color:var(--ink);background:var(--hover)">Reset defaults</button>
+</div>
+<div style="display:flex;flex-direction:column;gap:12px;padding:14px;border:1px solid var(--line);border-radius:12px;background:var(--bg)">
+<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
+<div style="display:flex;gap:2px;padding:3px;border-radius:9px;background:var(--hover)"><sc-for list="{{ gr.atabOpts }}" as="o" hint-placeholder-count="2"><button onClick="{{ o.onClick }}" style="height:28px;padding:0 12px;border-radius:6px;border:none;font-size:12.5px;cursor:pointer;background:{{ o.bg }};color:{{ o.fg }};box-shadow:{{ o.sh }}">{{ o.label }}</button></sc-for></div>
+<span style="font-size:12px;color:var(--ink3)">Rates for assets held in {{ gr.atabName }}</span>
+</div>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px">
+<sc-for list="{{ gr.localRates }}" as="r" hint-placeholder-count="4">
+<label style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;border:1px solid var(--line);border-radius:10px">
+<span style="display:flex;flex-direction:column;gap:2px;min-width:0"><span style="display:flex;align-items:center;gap:8px;font-size:13px;font-weight:500"><span style="width:8px;height:8px;border-radius:2px;background:{{ r.color }};flex:none"></span>{{ r.name }}</span><span style="font-size:11.5px;color:var(--ink3);padding-left:16px">{{ r.held }}</span></span>
+<span style="display:flex;align-items:center;height:34px;width:92px;flex:none;border:1px solid var(--line2);border-radius:8px;background:var(--bg);padding-right:10px"><input value="{{ r.value }}" onChange="{{ r.onChange }}" inputmode="decimal" style="flex:1;min-width:0;height:100%;border:none;background:transparent;padding:0 2px 0 10px;font-size:13.5px;font-variant-numeric:tabular-nums;text-align:right;outline:none"><span style="font-size:12px;color:var(--ink3)">%/yr</span></span>
+</label>
+</sc-for>
+</div>
+</div>
+<div style="display:flex;flex-direction:column;gap:10px">
+<span style="font:500 10.5px/1.2 'Geist Mono',monospace;letter-spacing:.06em;text-transform:uppercase;color:var(--ink3)">Shared across countries</span>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px">
+<sc-for list="{{ gr.commonRates }}" as="r" hint-placeholder-count="4">
+<label style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;border:1px solid var(--line);border-radius:10px">
+<span style="display:flex;flex-direction:column;gap:2px;min-width:0"><span style="display:flex;align-items:center;gap:8px;font-size:13px;font-weight:500"><span style="width:8px;height:8px;border-radius:2px;background:{{ r.color }};flex:none"></span>{{ r.name }}</span><span style="font-size:11.5px;color:var(--ink3);padding-left:16px">{{ r.held }}</span></span>
+<span style="display:flex;align-items:center;height:34px;width:92px;flex:none;border:1px solid var(--line2);border-radius:8px;background:var(--bg);padding-right:10px"><input value="{{ r.value }}" onChange="{{ r.onChange }}" inputmode="decimal" style="flex:1;min-width:0;height:100%;border:none;background:transparent;padding:0 2px 0 10px;font-size:13.5px;font-variant-numeric:tabular-nums;text-align:right;outline:none"><span style="font-size:12px;color:var(--ink3)">%/yr</span></span>
+</label>
+</sc-for>
+</div>
+</div>
+<div style="display:flex;flex-wrap:wrap;gap:24px;align-items:center;border-top:1px solid var(--line);padding-top:16px">
+<span style="font-size:12.5px;color:var(--ink3)">Projection for {{ gr.projScope }}</span>
+<span style="display:flex;flex-direction:column;gap:2px"><span style="font-size:11.5px;color:var(--ink3)">Net worth by {{ gr.projYear }}</span><span style="font-size:17px;font-weight:500;font-variant-numeric:tabular-nums">{{ gr.projNom }}</span></span>
+<span style="display:flex;flex-direction:column;gap:2px"><span style="font-size:11.5px;color:var(--ink3)">In today’s dollars</span><span style="font-size:17px;font-weight:500;font-variant-numeric:tabular-nums">{{ gr.projReal }}</span></span>
+<span style="display:flex;flex-direction:column;gap:2px"><span style="font-size:11.5px;color:var(--ink3)">Lost to inflation</span><span style="font-size:17px;font-weight:500;font-variant-numeric:tabular-nums;color:var(--neg)">{{ gr.projLoss }}</span></span>
+</div>
+</div>
+<div style="display:grid;grid-template-columns:{{ twoCol }};gap:12px;align-items:start">
+<div style="background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:20px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:6px;min-width:0">
+<div style="display:flex;flex-direction:column;gap:3px;margin-bottom:10px"><span style="font-size:15px;font-weight:600">Where the change came from</span><span style="font-size:12.5px;color:var(--ink3)">{{ gr.attrSub }}</span></div>
+<sc-for list="{{ gr.water }}" as="w" hint-placeholder-count="5">
+<div style="display:grid;grid-template-columns:minmax(0,180px) minmax(0,1fr) 92px;gap:14px;align-items:center;padding:8px 0;border-top:1px solid var(--line)">
+<span style="font-size:13px;color:{{ w.lColor }};font-weight:{{ w.fw }}">{{ w.label }}</span>
+<div style="position:relative;height:18px"><div style="position:absolute;top:0;bottom:0;left:{{ w.left }};width:{{ w.width }};background:{{ w.color }};border-radius:3px"></div></div>
+<span style="text-align:right;font-variant-numeric:tabular-nums;font-size:13px;font-weight:{{ w.fw }};color:{{ w.vColor }}">{{ w.value }}</span>
+</div>
+</sc-for>
+</div>
+<div style="background:var(--panel);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);overflow:hidden;min-width:0">
+<div style="padding:16px 20px 10px;display:flex;flex-direction:column;gap:3px"><span style="font-size:15px;font-weight:600">Year by year</span><span style="font-size:12.5px;color:var(--ink3)">Net worth at year end</span></div>
+<div style="display:grid;grid-template-columns:52px minmax(0,1fr) minmax(0,1fr) 64px;gap:12px;padding:8px 20px;font:500 10px/1.2 'Geist Mono',monospace;letter-spacing:.06em;text-transform:uppercase;color:var(--ink3)"><span>Year</span><span style="text-align:right">Net worth</span><span style="text-align:right">Debt</span><span style="text-align:right">Δ</span></div>
+<sc-for list="{{ gr.years }}" as="y" hint-placeholder-count="8">
+<div style="display:grid;grid-template-columns:52px minmax(0,1fr) minmax(0,1fr) 64px;gap:12px;padding:9px 20px;border-top:1px solid var(--line);font-size:13px;font-variant-numeric:tabular-nums;align-items:center">
+<span style="color:var(--ink2)">{{ y.year }}</span><span style="text-align:right;font-weight:500">{{ y.nw }}</span><span style="text-align:right;color:var(--ink2)">{{ y.liab }}</span><span style="text-align:right;font-size:12px;color:{{ y.cColor }}">{{ y.change }}</span>
+</div>
+</sc-for>
+</div>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isGoals }}" hint-placeholder-val="{{ false }}">
+<div style="display:flex;flex-direction:column;gap:16px;max-width:760px">
+<div style="display:flex;flex-direction:column;gap:8px"><span style="font:500 11px/1.2 'Geist Mono',monospace;letter-spacing:.06em;text-transform:uppercase;color:var(--ink3)">Goals</span><span style="font-size:clamp(26px,4vw,34px);line-height:1.1;font-weight:500;letter-spacing:-0.02em">Net worth milestones</span><span style="font-size:13.5px;color:var(--ink2);text-wrap:pretty">{{ gl.sub }}</span></div>
+<sc-for list="{{ gl.rows }}" as="g" hint-placeholder-count="4">
+<div style="background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px 20px;display:flex;flex-direction:column;gap:12px">
+<div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap">
+<span style="display:flex;flex-direction:column;gap:3px"><span style="font-size:15px;font-weight:500">{{ g.name }}</span><span style="font-size:12.5px;color:{{ g.sColor }}">{{ g.status }}</span></span>
+<span style="display:flex;align-items:center;gap:14px"><span style="font-size:15px;font-weight:500;font-variant-numeric:tabular-nums">{{ g.prog }} <span style="color:var(--ink3);font-weight:400;font-size:13px">of {{ g.target }}</span></span><button onClick="{{ g.onDelete }}" style="border:none;background:none;color:var(--ink3);cursor:pointer;font-size:12px;padding:4px" style-hover="color:var(--neg)">Remove</button></span>
+</div>
+<div style="height:8px;background:var(--hover);border-radius:4px;overflow:hidden"><div style="height:100%;width:{{ g.progPct }};background:{{ g.barColor }};border-radius:4px"></div></div>
+</div>
+</sc-for>
+<div style="background:transparent;border:1px dashed var(--line2);border-radius:14px;padding:16px 18px;display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+<input value="{{ gform.name }}" onChange="{{ gform.onName }}" placeholder="Goal name, e.g. Emergency fund" style="flex:2 1 200px;height:38px;padding:0 12px;border-radius:9px;border:1px solid var(--line2);background:var(--panel);font-size:13.5px;outline:none" style-focus="border-color:var(--ink2)">
+<div style="flex:1 1 140px;display:flex;align-items:center;height:38px;border-radius:9px;border:1px solid var(--line2);background:var(--panel);padding:0 0 0 12px"><span style="color:var(--ink3);font-size:13.5px">$</span><input value="{{ gform.target }}" onChange="{{ gform.onTarget }}" placeholder="Target" inputmode="numeric" style="flex:1;min-width:0;height:100%;border:none;background:transparent;padding:0 10px 0 4px;font-size:13.5px;outline:none"></div>
+<button onClick="{{ gform.onAdd }}" style="height:38px;padding:0 14px;border-radius:9px;border:none;background:var(--ink);color:var(--bg);font-size:13px;font-weight:500;cursor:pointer">Add goal</button>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ phone }}"><div style="height:76px"></div></sc-if>
+</main>
+</div>
+</div>
+<sc-if value="{{ phone }}" hint-placeholder-val="{{ false }}">
+<nav style="position:fixed;left:0;right:0;bottom:0;z-index:30;background:var(--panel);border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(5,minmax(0,1fr));padding:0 4px env(safe-area-inset-bottom)">
+<sc-for list="{{ nav }}" as="n" hint-placeholder-count="5">
+<button onClick="{{ n.onClick }}" style="height:60px;border:none;background:transparent;color:{{ n.fg }};font-size:11.5px;font-weight:{{ n.fw }};cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:6px;padding:0">
+<span style="width:24px;height:3px;border-radius:0 0 2px 2px;background:{{ n.bar }}"></span><span>{{ n.label }}</span><span style="font-size:10.5px;color:var(--ink3);font-variant-numeric:tabular-nums;font-weight:400;min-height:13px;line-height:13px">{{ n.value }}</span>
+</button>
+</sc-for>
+</nav>
+</sc-if>
+
+<sc-if value="{{ drawer.open }}" hint-placeholder-val="{{ false }}">
+<div onClick="{{ drawer.close }}" style="position:fixed;inset:0;background:rgba(10,10,9,.32);z-index:45">
+<aside onClick="{{ stop }}" style="position:absolute;top:0;right:0;bottom:0;width:min(400px,100%);background:var(--panel);color:var(--ink);border-left:1px solid var(--line);box-shadow:-20px 0 60px rgba(0,0,0,.18);display:flex;flex-direction:column;overflow:auto">
+<div style="display:flex;justify-content:space-between;align-items:center;padding:18px 22px;border-bottom:1px solid var(--line)">
+<span style="display:flex;align-items:baseline;gap:8px"><span style="font:600 18px/1 'Geist Mono',monospace">{{ drawer.disp }}</span><span style="font:500 10.5px/1 'Geist Mono',monospace;color:var(--ink3)">{{ drawer.ex }}</span></span>
+<button onClick="{{ drawer.close }}" style="width:30px;height:30px;border-radius:8px;border:none;background:transparent;color:var(--ink2);cursor:pointer;font-size:18px" style-hover="background:var(--hover)">×</button>
+</div>
+<div style="padding:20px 22px;display:flex;flex-direction:column;gap:18px">
+<div style="display:flex;flex-direction:column;gap:8px">
+<span style="font-size:15px;font-weight:500">{{ drawer.name }}</span>
+<span style="display:flex;align-items:center;gap:7px;font-size:12.5px;color:var(--ink2)"><span style="width:8px;height:8px;border-radius:2px;background:{{ drawer.sColor }}"></span>{{ drawer.sector }} · held in {{ drawer.acct }}</span>
+</div>
+<div style="display:flex;flex-direction:column;gap:4px"><span style="font-size:34px;font-weight:500;letter-spacing:-0.03em;font-variant-numeric:tabular-nums;line-height:1">{{ drawer.usd }}</span><span style="font-size:12.5px;color:var(--ink2)">{{ drawer.native }}</span></div>
+<div style="display:grid;grid-template-columns:1fr 1fr;border:1px solid var(--line);border-radius:12px;overflow:hidden">
+<sc-for list="{{ drawer.stats }}" as="st" hint-placeholder-count="6"><div style="display:flex;flex-direction:column;gap:4px;padding:12px 14px;border-bottom:1px solid var(--line);border-right:1px solid var(--line);margin:0 -1px -1px 0"><span style="font:500 10px/1.2 'Geist Mono',monospace;letter-spacing:.06em;text-transform:uppercase;color:var(--ink3)">{{ st.label }}</span><span style="font-size:15px;font-weight:500;font-variant-numeric:tabular-nums;color:{{ st.color }}">{{ st.value }}</span><span style="font-size:11.5px;color:var(--ink2)">{{ st.sub }}</span></div></sc-for>
+</div>
+<div style="display:flex;flex-direction:column;gap:8px">
+<a href="{{ drawer.url }}" target="_blank" rel="noopener noreferrer" style="display:flex;align-items:center;justify-content:center;gap:8px;height:40px;border-radius:10px;background:var(--ink);color:var(--bg);font-size:13.5px;font-weight:500;text-decoration:none" style-hover="opacity:.88;color:var(--bg)">Open on Yahoo Finance ↗</a>
+<button onClick="{{ drawer.goAcct }}" style="height:38px;border-radius:10px;border:1px solid var(--line2);background:transparent;font-size:13px;cursor:pointer" style-hover="background:var(--hover)">View {{ drawer.acct }}</button>
+<span style="font-size:11.5px;color:var(--ink3);text-align:center">Prices are sample data in this concept</span>
+</div>
+</div>
+</aside>
+</div>
+</sc-if>
+
+<sc-if value="{{ modalOpen }}" hint-placeholder-val="{{ false }}">
+<div onClick="{{ closeModal }}" style="position:fixed;inset:0;background:rgba(10,10,9,.45);display:flex;align-items:{{ sheet.align }};justify-content:center;padding:{{ sheet.pad }};z-index:50;overflow:auto">
+<div onClick="{{ stop }}" style="width:100%;max-width:560px;background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:{{ sheet.radius }};box-shadow:0 24px 60px rgba(0,0,0,.25);max-height:{{ sheet.maxH }};overflow:auto;display:flex;flex-direction:column">
+<div style="display:flex;justify-content:space-between;align-items:center;padding:18px 22px;border-bottom:1px solid var(--line)"><span style="font-size:16px;font-weight:600">{{ fm.title }}</span><button onClick="{{ closeModal }}" style="width:30px;height:30px;border-radius:8px;border:none;background:transparent;color:var(--ink2);cursor:pointer;font-size:18px;line-height:1" style-hover="background:var(--hover)">×</button></div>
+<div style="padding:20px 22px;display:flex;flex-direction:column;gap:16px">
+<sc-if value="{{ fm.showKind }}">
+<div style="display:flex;gap:2px;padding:3px;border-radius:10px;background:var(--hover);align-self:flex-start">
+<sc-for list="{{ fm.kindOpts }}" as="o" hint-placeholder-count="2"><button onClick="{{ o.onClick }}" style="height:30px;padding:0 16px;border-radius:7px;border:none;font-size:13px;cursor:pointer;background:{{ o.bg }};color:{{ o.fg }};box-shadow:{{ o.sh }}">{{ o.label }}</button></sc-for>
+</div>
+</sc-if>
+<sc-if value="{{ fm.isUpdate }}">
+<div style="display:flex;flex-direction:column;gap:6px"><span style="font-size:12.5px;color:var(--ink2)">Current value of {{ fm.name }}</span>
+<div style="display:flex;align-items:center;height:48px;border-radius:10px;border:1px solid var(--line2);background:var(--bg);padding:0 0 0 14px"><span style="color:var(--ink3);font-size:18px">{{ fm.prefix }}</span><input value="{{ fm.value }}" onChange="{{ fset.value }}" inputmode="decimal" style="flex:1;min-width:0;height:100%;border:none;background:transparent;padding:0 12px 0 6px;font-size:20px;font-weight:500;outline:none;font-variant-numeric:tabular-nums"></div>
+<span style="font-size:12px;color:var(--ink3)">Was {{ fm.was }} · logged as today’s value, Oct 6, 2026</span></div>
+</sc-if>
+<sc-if value="{{ fm.isAsset }}">
+<div style="display:flex;flex-direction:column;gap:6px"><span style="font-size:12.5px;color:var(--ink2)">Asset class</span>
+<div style="display:flex;flex-wrap:wrap;gap:6px"><sc-for list="{{ fm.clsOpts }}" as="o" hint-placeholder-count="6"><button onClick="{{ o.onClick }}" style="height:32px;padding:0 12px;border-radius:8px;border:1px solid {{ o.bd }};background:{{ o.bg }};font-size:13px;cursor:pointer;display:flex;align-items:center;gap:7px"><span style="width:7px;height:7px;border-radius:2px;background:{{ o.color }}"></span>{{ o.label }}</button></sc-for></div></div>
+</sc-if>
+<sc-if value="{{ fm.isFull }}">
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px">
+<label style="display:flex;flex-direction:column;gap:6px"><span style="font-size:12.5px;color:var(--ink2)">{{ fm.nameLabel }}</span><input value="{{ fm.name }}" onChange="{{ fset.name }}" placeholder="{{ fm.namePh }}" style="height:40px;padding:0 12px;border-radius:9px;border:1px solid var(--line2);background:var(--bg);font-size:14px;outline:none" style-focus="border-color:var(--ink2)"></label>
+<div style="display:flex;flex-direction:column;gap:6px"><span style="font-size:12.5px;color:var(--ink2)">Held in</span>
+<div style="display:flex;gap:6px"><sc-for list="{{ fm.ctryOpts }}" as="o" hint-placeholder-count="2"><button onClick="{{ o.onClick }}" style="flex:1;height:40px;border-radius:9px;border:1px solid {{ o.bd }};background:{{ o.bg }};font-size:13px;cursor:pointer">{{ o.label }}</button></sc-for></div></div>
+</div>
+</sc-if>
+<sc-if value="{{ fm.isStocks }}">
+<div style="display:flex;flex-direction:column;gap:10px">
+<div style="display:flex;justify-content:space-between;align-items:baseline"><span style="font-size:12.5px;color:var(--ink2)">Positions</span><span style="font-size:12.5px;font-weight:500;font-variant-numeric:tabular-nums">{{ fm.posTotal }}</span></div>
+<sc-if value="{{ fm.hasPosRows }}">
+<div style="display:flex;flex-direction:column;border:1px solid var(--line);border-radius:10px;overflow:hidden">
+<sc-for list="{{ fm.posRows }}" as="p" hint-placeholder-count="2">
+<div style="display:flex;align-items:center;gap:10px;padding:9px 12px;border-bottom:1px solid var(--line)">
+<span style="display:flex;flex-direction:column;gap:2px;flex:1;min-width:0"><span style="display:flex;gap:8px;align-items:baseline"><span style="font:600 12.5px/1.2 'Geist Mono',monospace">{{ p.disp }}</span><span style="font-size:12px;color:var(--ink2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ p.name }}</span></span><span style="font-size:11.5px;color:var(--ink3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ p.meta }}</span></span>
+<span style="font-size:13px;font-weight:500;font-variant-numeric:tabular-nums">{{ p.value }}</span>
+<button onClick="{{ p.onRemove }}" style="width:26px;height:26px;border-radius:6px;border:none;background:transparent;color:var(--ink3);cursor:pointer;font-size:15px" style-hover="background:var(--hover);color:var(--neg)">×</button>
+</div>
+</sc-for>
+</div>
+</sc-if>
+<div style="display:flex;flex-direction:column;gap:8px;padding:12px;border:1px dashed var(--line2);border-radius:10px">
+<div style="display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr) minmax(0,1fr) auto;gap:8px">
+<input value="{{ fm.np.t }}" onChange="{{ fm.npSet.t }}" onKeyDown="{{ fm.onPosKey }}" placeholder="Ticker" style="height:36px;padding:0 10px;border-radius:8px;border:1px solid var(--line2);background:var(--bg);font:600 13px 'Geist Mono',monospace;outline:none;min-width:0">
+<input value="{{ fm.np.sh }}" onChange="{{ fm.npSet.sh }}" onKeyDown="{{ fm.onPosKey }}" placeholder="Shares" inputmode="decimal" style="height:36px;padding:0 10px;border-radius:8px;border:1px solid var(--line2);background:var(--bg);font-size:13px;outline:none;min-width:0">
+<input value="{{ fm.np.avg }}" onChange="{{ fm.npSet.avg }}" onKeyDown="{{ fm.onPosKey }}" placeholder="Avg cost" inputmode="decimal" style="height:36px;padding:0 10px;border-radius:8px;border:1px solid var(--line2);background:var(--bg);font-size:13px;outline:none;min-width:0">
+<button onClick="{{ fm.addPos }}" style="height:36px;padding:0 12px;border-radius:8px;border:1px solid var(--line2);background:var(--panel);font-size:13px;cursor:pointer" style-hover="background:var(--hover)">Add</button>
+</div>
+<span style="font-size:12px;color:{{ fm.npLookColor }}">{{ fm.npLook }}</span>
+<sc-if value="{{ fm.npManual }}">
+<div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.4fr);gap:8px">
+<input value="{{ fm.np.price }}" onChange="{{ fm.npSet.price }}" placeholder="Current price" inputmode="decimal" style="height:36px;padding:0 10px;border-radius:8px;border:1px solid var(--line2);background:var(--bg);font-size:13px;outline:none;min-width:0">
+<select value="{{ fm.np.sector }}" onChange="{{ fm.npSet.sector }}" style="height:36px;padding:0 8px;border-radius:8px;border:1px solid var(--line2);background:var(--bg);font-size:13px;outline:none;min-width:0"><sc-for list="{{ fm.sectorOpts }}" as="o" hint-placeholder-count="6"><option value="{{ o.v }}">{{ o.label }}</option></sc-for></select>
+</div>
+</sc-if>
+</div>
+<span style="font-size:12px;color:var(--ink3);text-wrap:pretty">Price, name and sector are looked up from the ticker. In this concept they come from a small sample list; a live build would pull quotes from a market-data API.</span>
+</div>
+</sc-if>
+<sc-if value="{{ fm.isRE }}">
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px">
+<div style="display:flex;flex-direction:column;gap:6px"><span style="font-size:12.5px;color:var(--ink2)">Property type</span><div style="display:flex;flex-wrap:wrap;gap:6px"><sc-for list="{{ fm.ptypeOpts }}" as="o" hint-placeholder-count="4"><button onClick="{{ o.onClick }}" style="height:32px;padding:0 10px;border-radius:8px;border:1px solid {{ o.bd }};background:{{ o.bg }};font-size:12.5px;cursor:pointer">{{ o.label }}</button></sc-for></div></div>
+<label style="display:flex;flex-direction:column;gap:6px"><span style="font-size:12.5px;color:var(--ink2)">City / location</span><input value="{{ fm.city }}" onChange="{{ fset.city }}" placeholder="e.g. Pune" style="height:40px;padding:0 12px;border-radius:9px;border:1px solid var(--line2);background:var(--bg);font-size:14px;outline:none"></label>
+</div>
+</sc-if>
+<sc-if value="{{ fm.showValue }}">
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px">
+<label style="display:flex;flex-direction:column;gap:6px"><span style="font-size:12.5px;color:var(--ink2)">Current value</span><div style="display:flex;align-items:center;height:40px;border-radius:9px;border:1px solid var(--line2);background:var(--bg);padding-left:12px"><span style="color:var(--ink3)">{{ fm.prefix }}</span><input value="{{ fm.value }}" onChange="{{ fset.value }}" inputmode="decimal" placeholder="0" style="flex:1;min-width:0;height:100%;border:none;background:transparent;padding:0 12px 0 4px;font-size:14px;outline:none"></div></label>
+<label style="display:flex;flex-direction:column;gap:6px"><span style="font-size:12.5px;color:var(--ink2)">Cost basis <span style="color:var(--ink3)">(optional)</span></span><div style="display:flex;align-items:center;height:40px;border-radius:9px;border:1px solid var(--line2);background:var(--bg);padding-left:12px"><span style="color:var(--ink3)">{{ fm.prefix }}</span><input value="{{ fm.cost }}" onChange="{{ fset.cost }}" inputmode="decimal" placeholder="What you paid" style="flex:1;min-width:0;height:100%;border:none;background:transparent;padding:0 12px 0 4px;font-size:14px;outline:none"></div></label>
+</div>
+</sc-if>
+<sc-if value="{{ fm.showUnits }}">
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px">
+<label style="display:flex;flex-direction:column;gap:6px"><span style="font-size:12.5px;color:var(--ink2)">Quantity</span><input value="{{ fm.units }}" onChange="{{ fset.units }}" inputmode="decimal" placeholder="e.g. 40" style="height:40px;padding:0 12px;border-radius:9px;border:1px solid var(--line2);background:var(--bg);font-size:14px;outline:none"></label>
+<div style="display:flex;flex-direction:column;gap:6px"><span style="font-size:12.5px;color:var(--ink2)">Unit</span><div style="display:flex;gap:6px"><sc-for list="{{ fm.unitOpts }}" as="o" hint-placeholder-count="2"><button onClick="{{ o.onClick }}" style="flex:1;height:40px;border-radius:9px;border:1px solid {{ o.bd }};background:{{ o.bg }};font-size:13px;cursor:pointer">{{ o.label }}</button></sc-for></div></div>
+</div>
+</sc-if>
+<sc-if value="{{ fm.isLoan }}">
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px">
+<label style="display:flex;flex-direction:column;gap:6px"><span style="font-size:12.5px;color:var(--ink2)">Current balance</span><div style="display:flex;align-items:center;height:40px;border-radius:9px;border:1px solid var(--line2);background:var(--bg);padding-left:12px"><span style="color:var(--ink3)">{{ fm.prefix }}</span><input value="{{ fm.balance }}" onChange="{{ fset.balance }}" inputmode="decimal" placeholder="0" style="flex:1;min-width:0;height:100%;border:none;background:transparent;padding:0 12px 0 4px;font-size:14px;outline:none"></div></label>
+<label style="display:flex;flex-direction:column;gap:6px"><span style="font-size:12.5px;color:var(--ink2)">Original principal</span><div style="display:flex;align-items:center;height:40px;border-radius:9px;border:1px solid var(--line2);background:var(--bg);padding-left:12px"><span style="color:var(--ink3)">{{ fm.prefix }}</span><input value="{{ fm.principal }}" onChange="{{ fset.principal }}" inputmode="decimal" placeholder="Amount borrowed" style="flex:1;min-width:0;height:100%;border:none;background:transparent;padding:0 12px 0 4px;font-size:14px;outline:none"></div></label>
+<label style="display:flex;flex-direction:column;gap:6px"><span style="font-size:12.5px;color:var(--ink2)">Interest rate</span><div style="display:flex;align-items:center;height:40px;border-radius:9px;border:1px solid var(--line2);background:var(--bg);padding-right:12px"><input value="{{ fm.rate }}" onChange="{{ fset.rate }}" inputmode="decimal" placeholder="e.g. 6.5" style="flex:1;min-width:0;height:100%;border:none;background:transparent;padding:0 4px 0 12px;font-size:14px;outline:none"><span style="color:var(--ink3)">% APR</span></div></label>
+<label style="display:flex;flex-direction:column;gap:6px"><span style="font-size:12.5px;color:var(--ink2)">Monthly payment / EMI</span><div style="display:flex;align-items:center;height:40px;border-radius:9px;border:1px solid var(--line2);background:var(--bg);padding-left:12px"><span style="color:var(--ink3)">{{ fm.prefix }}</span><input value="{{ fm.emi }}" onChange="{{ fset.emi }}" inputmode="decimal" placeholder="0" style="flex:1;min-width:0;height:100%;border:none;background:transparent;padding:0 12px 0 4px;font-size:14px;outline:none"></div></label>
+<label style="display:flex;flex-direction:column;gap:6px"><span style="font-size:12.5px;color:var(--ink2)">Term <span style="color:var(--ink3)">(years, optional)</span></span><input value="{{ fm.termY }}" onChange="{{ fset.termY }}" inputmode="numeric" placeholder="e.g. 20" style="height:40px;padding:0 12px;border-radius:9px;border:1px solid var(--line2);background:var(--bg);font-size:14px;outline:none"></label>
+<label style="display:flex;flex-direction:column;gap:6px"><span style="font-size:12.5px;color:var(--ink2)">Linked asset <span style="color:var(--ink3)">(optional)</span></span><select value="{{ fm.linked }}" onChange="{{ fset.linked }}" style="height:40px;padding:0 10px;border-radius:9px;border:1px solid var(--line2);background:var(--bg);font-size:14px;outline:none"><sc-for list="{{ fm.linkOpts }}" as="o" hint-placeholder-count="3"><option value="{{ o.v }}">{{ o.label }}</option></sc-for></select></label>
+</div>
+<span style="font-size:12px;color:var(--ink3);text-wrap:pretty">Link a loan to the asset it financed and equity (value − balance) is tracked automatically.</span>
+</sc-if>
+</div>
+<div style="display:flex;justify-content:space-between;align-items:center;gap:12px;padding:14px 22px;border-top:1px solid var(--line)">
+<span style="font-size:12.5px;color:var(--neg)">{{ fm.err }}</span>
+<div style="display:flex;gap:8px"><button onClick="{{ closeModal }}" style="height:36px;padding:0 14px;border-radius:9px;border:1px solid var(--line2);background:transparent;font-size:13px;cursor:pointer" style-hover="background:var(--hover)">Cancel</button><button onClick="{{ saveForm }}" style="height:36px;padding:0 16px;border-radius:9px;border:none;background:var(--ink);color:var(--bg);font-size:13px;font-weight:500;cursor:pointer" style-hover="opacity:.88">{{ fm.saveLabel }}</button></div>
+</div>
+</div>
+</div>
+</sc-if>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;classLayout&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;A · Original&quot;,&quot;B · Table&quot;,&quot;C · Treemap&quot;],&quot;default&quot;:&quot;A · Original&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Layout&quot;},&quot;fxRate&quot;:{&quot;editor&quot;:&quot;float&quot;,&quot;default&quot;:83.4,&quot;min&quot;:60,&quot;max&quot;:110,&quot;step&quot;:0.1,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Assumptions&quot;},&quot;projectionYears&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[5,10,20],&quot;default&quot;:10,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Assumptions&quot;}}">
+const h = React.createElement;
+const NOW = 105;
+const MN = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const mlab = m => MN[m % 12] + ' ' + (2018 + Math.floor(m / 12));
+const mshort = m => MN[m % 12] + " ’" + String(18 + Math.floor(m / 12)).padStart(2, '0');
+const rnd = s => { const x = Math.sin(s * 12.9898 + 78.233) * 43758.5453; return x - Math.floor(x); };
+const hs = str => { let v = 7; for (const ch of str) v = (v * 31 + ch.charCodeAt(0)) % 9973; return v; };
+const usd = v => (v < 0 ? '−' : '') + '$' + Math.abs(Math.round(v)).toLocaleString('en-US');
+const sgn = v => (v >= 0 ? '+' : '−') + '$' + Math.abs(Math.round(v)).toLocaleString('en-US');
+const cmp = v => { const a = Math.abs(v); const s = a >= 1e6 ? (a / 1e6).toFixed(2) + 'M' : a >= 1e5 ? Math.round(a / 1e3) + 'K' : a >= 1e3 ? (a / 1e3).toFixed(1).replace(/\.0$/, '') + 'K' : String(Math.round(a)); return (v < 0 ? '−' : '') + '$' + s; };
+const sgnCmp = v => (v >= 0 ? '+' : '−') + cmp(Math.abs(v));
+const inr = v => (v < 0 ? '−' : '') + '₹' + Math.abs(Math.round(v)).toLocaleString('en-IN');
+const nat = (v, c) => c === 'INR' ? inr(v) : usd(v);
+const sgnNat = (v, c) => (v >= 0 ? '+' : '−') + nat(Math.abs(v), c);
+const pct = (v, d = 1) => (v >= 0 ? '+' : '−') + Math.abs(v * 100).toFixed(d) + '%';
+const pctU = v => Math.round(v * 100) + '%';
+const pn = v => v >= 0 ? 'var(--pos)' : 'var(--neg)';
+const yrsFrom = m => { const y = (m - NOW) / 12; return y < 1 ? Math.max(1, Math.round(m - NOW)) + ' mo' : y.toFixed(y < 10 ? 1 : 0) + ' yrs'; };
+
+const CLS = [
+  { id: 'realestate', name: 'Real estate', color: 'oklch(0.70 0.11 65)', rate: 0.04 },
+  { id: 'stocks', name: 'Stocks', color: 'oklch(0.62 0.12 255)', rate: 0.07 },
+  { id: 'cash', name: 'Cash', color: 'oklch(0.68 0.10 175)', rate: 0.03 },
+  { id: 'crypto', name: 'Crypto', color: 'oklch(0.62 0.12 305)', rate: 0.05 },
+  { id: 'metals', name: 'Metals', color: 'oklch(0.78 0.11 95)', rate: 0.04 },
+  { id: 'other', name: 'Vehicles & other', color: 'oklch(0.66 0.04 250)', rate: -0.09 },
+];
+const TICKERS = {
+  AAPL: { name: 'Apple Inc.', price: 232.10, sector: 'Technology', ex: 'NASDAQ' },
+  MSFT: { name: 'Microsoft Corp.', price: 428.40, sector: 'Technology', ex: 'NASDAQ' },
+  NVDA: { name: 'NVIDIA Corp.', price: 128.20, sector: 'Technology', ex: 'NASDAQ' },
+  GOOGL: { name: 'Alphabet Inc. Class A', price: 178.30, sector: 'Communication Services', ex: 'NASDAQ' },
+  META: { name: 'Meta Platforms', price: 585.00, sector: 'Communication Services', ex: 'NASDAQ' },
+  AMZN: { name: 'Amazon.com Inc.', price: 205.00, sector: 'Consumer Discretionary', ex: 'NASDAQ' },
+  TSLA: { name: 'Tesla Inc.', price: 248.50, sector: 'Consumer Discretionary', ex: 'NASDAQ' },
+  JPM: { name: 'JPMorgan Chase & Co.', price: 246.00, sector: 'Financials', ex: 'NYSE' },
+  V: { name: 'Visa Inc.', price: 298.00, sector: 'Financials', ex: 'NYSE' },
+  JNJ: { name: 'Johnson & Johnson', price: 158.00, sector: 'Healthcare', ex: 'NYSE' },
+  UNH: { name: 'UnitedHealth Group', price: 560.00, sector: 'Healthcare', ex: 'NYSE' },
+  XOM: { name: 'Exxon Mobil Corp.', price: 118.00, sector: 'Energy', ex: 'NYSE' },
+  COST: { name: 'Costco Wholesale', price: 905.00, sector: 'Consumer Staples', ex: 'NASDAQ' },
+  CAT: { name: 'Caterpillar Inc.', price: 365.00, sector: 'Industrials', ex: 'NYSE' },
+  'RELIANCE.NS': { name: 'Reliance Industries', price: 2950, sector: 'Energy', ex: 'NSE' },
+  'HDFCBANK.NS': { name: 'HDFC Bank', price: 1720, sector: 'Financials', ex: 'NSE' },
+  'INFY.NS': { name: 'Infosys', price: 1880, sector: 'Technology', ex: 'NSE' },
+  'TCS.NS': { name: 'Tata Consultancy Services', price: 4150, sector: 'Technology', ex: 'NSE' },
+  'ITC.NS': { name: 'ITC Ltd.', price: 495, sector: 'Consumer Staples', ex: 'NSE' },
+  'BHARTIARTL.NS': { name: 'Bharti Airtel', price: 1610, sector: 'Communication Services', ex: 'NSE' },
+  'LT.NS': { name: 'Larsen & Toubro', price: 3600, sector: 'Industrials', ex: 'NSE' },
+};
+const SECTOR_COLORS = { 'Technology': 'oklch(0.64 0.12 255)', 'Financials': 'oklch(0.66 0.11 165)', 'Healthcare': 'oklch(0.66 0.12 20)', 'Energy': 'oklch(0.72 0.12 70)', 'Consumer Discretionary': 'oklch(0.64 0.12 305)', 'Consumer Staples': 'oklch(0.72 0.11 125)', 'Communication Services': 'oklch(0.68 0.10 210)', 'Industrials': 'oklch(0.66 0.06 90)', 'Utilities': 'oklch(0.70 0.09 190)', 'Materials': 'oklch(0.64 0.10 345)', 'Real Estate': 'oklch(0.70 0.10 45)', 'Other': 'oklch(0.66 0.02 250)' };
+const SECTORS = Object.keys(SECTOR_COLORS);
+const PTYPE_COLORS = { 'Residential': 'oklch(0.70 0.11 65)', 'Land': 'oklch(0.66 0.08 125)', 'REIT / fund': 'oklch(0.64 0.10 280)', 'Commercial': 'oklch(0.66 0.11 20)' };
+const PTYPES = Object.keys(PTYPE_COLORS);
+const tickerKey = (t, country) => { const u = String(t || '').trim().toUpperCase(); return country === 'IN' && u && !u.includes('.') ? u + '.NS' : u; };
+const posInfo = p => { const d = TICKERS[p.t]; return { ticker: p.t, disp: p.t.replace(/\.(NS|BO)$/, ''), ex: d ? d.ex : (p.t.endsWith('.NS') ? 'NSE' : '—'), name: d ? d.name : (p.name || p.t), price: d ? d.price : (+p.price || 0), sector: d ? d.sector : (p.sector || 'Other'), url: 'https://finance.yahoo.com/quote/' + encodeURIComponent(p.t) }; };
+const withPos = x => { if (!x.positions || !x.positions.length) return x; let v = 0, c = 0; x.positions.forEach(p => { const i = posInfo(p); v += p.sh * i.price; c += p.sh * (p.avg || i.price); }); return { ...x, value: v, cost: c }; };
+const DEF_RATES = { realestate: '4', stocks: '7', cash: '3', crypto: '5', metals: '4', other: '-9' };
+const LOCAL_CLS = ['realestate', 'stocks', 'cash'];
+const DEF_CRATES = { US: { inflation: '3', realestate: '4', stocks: '7', cash: '3.5' }, IN: { inflation: '5', realestate: '6', stocks: '11', cash: '6.5' }, common: { crypto: '5', metals: '4', other: '-9' } };
+const CTRY = { US: { name: 'United States', short: 'US', color: 'oklch(0.62 0.10 250)', lcolor: 'oklch(0.60 0.15 25)' }, IN: { name: 'India', short: 'India', color: 'oklch(0.72 0.12 60)', lcolor: 'oklch(0.72 0.11 45)' } };
+const noun = (cls, n) => ['stocks', 'cash', 'crypto'].includes(cls) ? (n === 1 ? 'account' : 'accounts') : cls === 'realestate' ? (n === 1 ? 'property' : 'properties') : (n === 1 ? 'asset' : 'assets');
+const clsById = id => CLS.find(c => c.id === id) || CLS[5];
+const LOAN_COLORS = ['oklch(0.62 0.15 28)', 'oklch(0.72 0.12 50)', 'oklch(0.55 0.12 5)', 'oklch(0.78 0.09 70)', 'oklch(0.66 0.10 340)'];
+
+const HOLD = [
+  { id: 'h1', name: 'Chase Checking', sub: 'Everyday account', cls: 'cash', country: 'US', ccy: 'USD', value: 6200, cost: null, start: 0, startVal: 2500, vol: .14 },
+  { id: 'h2', name: 'Ally High-Yield Savings', sub: '4.2% APY · emergency fund', cls: 'cash', country: 'US', ccy: 'USD', value: 11800, cost: null, start: 30, startVal: 3000, vol: .02 },
+  { id: 'h3', name: 'SBI NRE Savings', sub: 'Repatriable, tax-free interest', cls: 'cash', country: 'IN', ccy: 'INR', value: 640000, cost: null, start: 0, startVal: 300000, vol: .03 },
+  { id: 'h4', name: 'HDFC NRO Account', sub: 'Rental income in India', cls: 'cash', country: 'IN', ccy: 'INR', value: 185000, cost: null, start: 12, startVal: 80000, vol: .05 },
+  { id: 'h5', name: 'Fidelity Brokerage', sub: 'Taxable account', cls: 'stocks', country: 'US', ccy: 'USD', start: 8, startVal: 2000, vol: .08, positions: [{ t: 'AAPL', sh: 30, avg: 165 }, { t: 'MSFT', sh: 12, avg: 310 }, { t: 'JPM', sh: 15, avg: 170 }, { t: 'XOM', sh: 20, avg: 95 }, { t: 'JNJ', sh: 14, avg: 160 }, { t: 'AMZN', sh: 9, avg: 150 }] },
+  { id: 'h6', name: 'Roth IRA', sub: 'Retirement · tax-free', cls: 'stocks', country: 'US', ccy: 'USD', start: 24, startVal: 5500, vol: .08, positions: [{ t: 'NVDA', sh: 40, avg: 62 }, { t: 'COST', sh: 6, avg: 640 }, { t: 'UNH', sh: 6, avg: 500 }] },
+  { id: 'h7', name: 'Zerodha', sub: 'NSE equities', cls: 'stocks', country: 'IN', ccy: 'INR', start: 20, startVal: 150000, vol: .09, positions: [{ t: 'RELIANCE.NS', sh: 120, avg: 2300 }, { t: 'HDFCBANK.NS', sh: 150, avg: 1500 }, { t: 'INFY.NS', sh: 90, avg: 1450 }, { t: 'TCS.NS', sh: 25, avg: 3400 }] },
+  { id: 'h8', name: 'Coinbase', sub: '0.07 BTC · 0.9 ETH', cls: 'crypto', country: 'US', ccy: 'USD', value: 8600, cost: 6100, start: 40, startVal: 1500, vol: .3 },
+  { id: 'h9', name: 'Gold jewellery & coins', sub: '22K, kept in Hyderabad', cls: 'metals', country: 'IN', ccy: 'INR', value: 290000, cost: 170000, start: 0, startVal: 120000, vol: .04, units: 40, unit: 'g' },
+  { id: 'h10', name: 'Silver Eagles', sub: 'Home safe', cls: 'metals', country: 'US', ccy: 'USD', value: 640, cost: 480, start: 50, startVal: 400, vol: .06, units: 20, unit: 'oz t' },
+  { id: 'h11', name: 'Pune apartment', sub: '2BHK · Baner · rented', cls: 'realestate', country: 'IN', ccy: 'INR', value: 6200000, cost: 4800000, start: 54, startVal: 4800000, vol: .008, ptype: 'Residential', city: 'Pune' },
+  { id: 'h13', name: 'Plot · Mysuru', sub: '1,200 sq ft residential plot', cls: 'realestate', country: 'IN', ccy: 'INR', value: 1200000, cost: 900000, start: 36, startVal: 900000, vol: .005, ptype: 'Land', city: 'Mysuru' },
+  { id: 'h14', name: 'Fundrise eREIT', sub: 'Diversified US property fund', cls: 'realestate', country: 'US', ccy: 'USD', value: 4200, cost: 3600, start: 60, startVal: 1000, vol: .03, ptype: 'REIT / fund', city: 'US (diversified)' },
+  { id: 'h12', name: '2022 Honda CR-V', sub: 'Estimated private-sale value', cls: 'other', country: 'US', ccy: 'USD', value: 19500, cost: 31000, start: 64, startVal: 31000, vol: .006 },
+];
+const LOANS = [
+  { id: 'l1', name: 'Apartment loan · HDFC', country: 'IN', ccy: 'INR', principal: 3800000, balance: 3430000, rate: 8.5, emi: 33000, start: 54, termY: 20, linked: 'h11' },
+  { id: 'l2', name: 'Auto loan · Honda Financial', country: 'US', ccy: 'USD', principal: 26000, balance: 9100, rate: 5.9, emi: 501, start: 64, termY: 5, linked: 'h12' },
+  { id: 'l3', name: 'Student loan', country: 'US', ccy: 'USD', principal: 32000, balance: 13900, rate: 4.5, emi: 330, start: 30, termY: 10, linked: '' },
+  { id: 'l4', name: 'Amex Gold card', country: 'US', ccy: 'USD', principal: 1850, balance: 1850, rate: 24.9, emi: 150, start: 70, termY: null, linked: '', revolving: true },
+];
+const GOALS = [
+  { id: 'g1', name: '$100K net worth', target: 100000 },
+  { id: 'g2', name: '$150K net worth', target: 150000 },
+  { id: 'g3', name: 'Quarter million', target: 250000 },
+  { id: 'g4', name: 'Half a million', target: 500000 },
+];
+
+function squarify(items, x, y, w, h) {
+  const out = [], total = items.reduce((a, b) => a + b.v, 0); if (!total) return out;
+  const sc = w * h / total, arr = items.filter(it => it.v > 0).sort((a, b) => b.v - a.v).map(it => ({ it, a: it.v * sc }));
+  let rx = x, ry = y, rw = w, rh = h, row = [], i = 0;
+  const worst = (r, side) => { const s = r.reduce((q, b) => q + b.a, 0); const mx = Math.max(...r.map(z => z.a)), mn = Math.min(...r.map(z => z.a)); return Math.max(side * side * mx / (s * s), (s * s) / (side * side * mn)); };
+  const lay = r => { const s = r.reduce((q, b) => q + b.a, 0); if (rw >= rh) { const cw = s / rh; let cy = ry; r.forEach(z => { const ch = z.a / cw; out.push({ ...z.it, x: rx, y: cy, w: cw, h: ch }); cy += ch; }); rx += cw; rw -= cw; } else { const ch = s / rw; let cx = rx; r.forEach(z => { const cw = z.a / ch; out.push({ ...z.it, x: cx, y: ry, w: cw, h: ch }); cx += cw; }); ry += ch; rh -= ch; } };
+  while (i < arr.length) { const side = Math.min(rw, rh); if (!row.length || worst([...row, arr[i]], side) <= worst(row, side)) { row.push(arr[i]); i++; } else { lay(row); row = []; } }
+  if (row.length) lay(row);
+  return out;
+}
+const niceStep = (span, n) => { const raw = span / n; const p = Math.pow(10, Math.floor(Math.log10(raw))); const f = raw / p; return (f < 1.5 ? 1 : f < 3 ? 2 : f < 7 ? 5 : 10) * p; };
+
+function Chart(p) {
+  const [hv, setHv] = React.useState(null);
+  const ref = React.useRef(null);
+  const mini = !!p.mini; const ph = window.innerWidth < 640; const H = ph && !mini ? Math.round((p.height || 240) * .78) : (p.height || 240), W = 1000, pt = mini ? 6 : 16, pb = mini ? 6 : 26;
+  const x0 = p.x0, x1 = Math.max(p.x1, p.x0 + 1), span = x1 - x0;
+  const now = p.now == null ? x1 : p.now;
+  let mn = p.zero ? 0 : Infinity, mx = p.zero ? 0 : -Infinity;
+  p.series.forEach(s => { if (s.noScale) return; for (let i = x0; i <= x1; i++) { const v = s.vals[i]; if (v == null) continue; mn = Math.min(mn, v); mx = Math.max(mx, v); if (s.base) { mn = Math.min(mn, s.base[i]); mx = Math.max(mx, s.base[i]); } } });
+  if (!isFinite(mn)) { mn = 0; mx = 1; }
+  if (mn === mx) mx = mn + 1;
+  const goals = (p.goals || []).filter(g => g.v >= mn && g.v <= mx * 1.15);
+  goals.forEach(g => { mx = Math.max(mx, g.v); });
+  const st = niceStep(mx - mn, 4); const lo = Math.floor(mn / st) * st, hi = Math.ceil(mx / st) * st;
+  const X = i => (i - x0) / span * W, Y = v => pt + (1 - (v - lo) / (hi - lo)) * (H - pt - pb);
+  const pts = (arr, a, b) => { let d = ''; for (let i = a; i <= b; i++) d += (i === a ? 'M' : 'L') + X(i).toFixed(1) + ' ' + Y(arr[i]).toFixed(1); return d; };
+  const zeroY = Y(lo < 0 && hi > 0 ? 0 : lo);
+  const ticks = []; for (let v = lo; v <= hi + st / 2; v += st) ticks.push(v);
+  const els = [];
+  if (now > x0 && now < x1) els.push(h('rect', { key: 'proj', x: X(now), y: pt, width: W - X(now), height: H - pt - pb, style: { fill: 'var(--hover)' } }));
+  ticks.forEach((v, k) => els.push(h('line', { key: 'g' + k, x1: 0, x2: W, y1: Y(v), y2: Y(v), vectorEffect: 'non-scaling-stroke', style: { stroke: v === 0 && lo < 0 ? 'var(--line2)' : 'var(--line)', strokeWidth: 1 } })));
+  const sEnd = Math.min(x1, Math.max(x0, now));
+  p.series.forEach((s, k) => {
+    if (s.area) {
+      let d = pts(s.vals, x0, x1);
+      for (let i = x1; i >= x0; i--) d += 'L' + X(i).toFixed(1) + ' ' + (s.base ? Y(s.base[i]) : zeroY).toFixed(1);
+      els.push(h('path', { key: 'a' + k, d: d + 'Z', style: { fill: s.color, fillOpacity: s.areaOpacity == null ? 0.12 : s.areaOpacity } }));
+    }
+  });
+  p.series.forEach((s, k) => {
+    if (s.line !== false) {
+      const sw = { stroke: s.color, strokeWidth: s.width || 1.5, fill: 'none', strokeLinejoin: 'round' };
+      if (sEnd > x0) els.push(h('path', { key: 'l' + k, d: pts(s.vals, x0, sEnd), vectorEffect: 'non-scaling-stroke', style: sw }));
+      if (x1 > sEnd) els.push(h('path', { key: 'd' + k, d: pts(s.vals, sEnd, x1), vectorEffect: 'non-scaling-stroke', style: { ...sw, strokeDasharray: '5 4' } }));
+    }
+  });
+  goals.forEach((g, k) => els.push(h('line', { key: 'gl' + k, x1: 0, x2: W, y1: Y(g.v), y2: Y(g.v), vectorEffect: 'non-scaling-stroke', style: { stroke: 'var(--ink3)', strokeWidth: 1, strokeDasharray: '2 4' } })));
+  if (now > x0 && now < x1) els.push(h('line', { key: 'now', x1: X(now), x2: X(now), y1: pt, y2: H - pb, vectorEffect: 'non-scaling-stroke', style: { stroke: 'var(--ink3)', strokeWidth: 1 } }));
+  const xl = [];
+  if (span <= 30) { for (let i = x0; i <= x1; i++) if (i % 3 === 0) xl.push([i, mshort(i)]); }
+  else { const yrs = span / 12; const stp = yrs > 16 ? 4 : yrs > 8 ? 2 : 1; for (let i = x0; i <= x1; i++) if (i % 12 === 0 && (i / 12) % stp === 0) xl.push([i, String(2018 + i / 12)]); }
+  const lab = { position: 'absolute', font: "500 10.5px/14px 'Geist Mono',ui-monospace,monospace", color: 'var(--ink3)', whiteSpace: 'nowrap' };
+  const onMove = e => { const r = ref.current.getBoundingClientRect(); const cx = (e.touches ? e.touches[0].clientX : e.clientX) - r.left; setHv(Math.max(x0, Math.min(x1, Math.round(x0 + cx / r.width * span)))); };
+  const tipS = p.series.filter(s => s.name);
+  let tip = null;
+  if (hv != null) {
+    const lp = X(hv) / W * 100; const right = lp > 58;
+    tip = [
+      h('div', { key: 'guide', style: { position: 'absolute', top: pt, bottom: pb, left: lp + '%', width: 1, background: 'var(--ink2)', opacity: .5, pointerEvents: 'none' } }),
+      ...p.series.filter(s => s.line !== false && s.dot).map((s, k) => h('div', { key: 'dot' + k, style: { position: 'absolute', left: lp + '%', top: Y(s.vals[hv]), width: 9, height: 9, marginLeft: -4.5, marginTop: -4.5, borderRadius: '50%', background: 'var(--panel)', border: '2px solid ' + s.color, pointerEvents: 'none' } })),
+      h('div', { key: 'tip', style: { position: 'absolute', top: 6, left: lp + '%', transform: right ? 'translateX(calc(-100% - 12px))' : 'translateX(12px)', background: 'var(--panel)', border: '1px solid var(--line2)', borderRadius: 10, padding: '10px 12px', boxShadow: '0 8px 24px rgba(0,0,0,.12)', pointerEvents: 'none', minWidth: 170, display: 'flex', flexDirection: 'column', gap: 6, zIndex: 3 } },
+        h('div', { style: { font: "500 10.5px/1.2 'Geist Mono',monospace", letterSpacing: '.04em', textTransform: 'uppercase', color: 'var(--ink3)' } }, mlab(hv) + (hv > NOW ? ' · projected' : '')),
+        ...tipS.map((s, k) => h('div', { key: k, style: { display: 'flex', justifyContent: 'space-between', gap: 16, fontSize: 12.5, color: 'var(--ink)', fontVariantNumeric: 'tabular-nums' } },
+          h('span', { style: { display: 'flex', alignItems: 'center', gap: 6, color: 'var(--ink2)', whiteSpace: 'nowrap' } }, h('span', { style: { width: 7, height: 7, borderRadius: 2, background: s.color } }), s.name),
+          h('span', { style: { fontWeight: s.bold ? 600 : 500 } }, usd((s.tip || s.vals)[hv])))))
+    ];
+  }
+  if (mini) xl.length = 0;
+  const ends = p.series.filter(s => s.endLabel).map(s => ({ name: s.endName || s.name, v: (s.tip || s.vals)[x1], y: Y(s.vals[x1]), color: s.labelColor || s.color })).sort((a, b) => a.y - b.y);
+  for (let k = 1; k < ends.length; k++) if (ends[k].y < ends[k - 1].y + 32) ends[k].y = ends[k - 1].y + 32;
+  const endCol = ends.length && !ph ? h('div', { style: { position: 'relative', width: 104, flex: 'none', height: H } }, ends.map((e, k) => h('div', { key: k, style: { position: 'absolute', left: 4, top: Math.max(0, Math.min(H - 30, e.y - 15)), display: 'flex', flexDirection: 'column', gap: 1, borderLeft: '2px solid ' + e.color, paddingLeft: 7 } }, h('span', { style: { fontSize: 11, color: 'var(--ink3)', whiteSpace: 'nowrap' } }, e.name), h('span', { style: { fontSize: 13, fontWeight: 600, color: 'var(--ink)', fontVariantNumeric: 'tabular-nums' } }, cmp(e.v))))) : null;
+  return h('div', { style: { display: 'flex', gap: 8, userSelect: 'none' } },
+    mini ? null : h('div', { style: { position: 'relative', width: ph ? 36 : 46, flex: 'none', height: H } }, ticks.map(v => h('div', { key: v, style: { ...lab, right: 0, top: Y(v) - 7 } }, cmp(v)))),
+    h('div', { ref, onMouseMove: onMove, onTouchStart: onMove, onTouchMove: onMove, onTouchEnd: () => setTimeout(() => setHv(null), 1800), onMouseLeave: () => setHv(null), style: { position: 'relative', flex: 1, minWidth: 0, height: H, cursor: 'crosshair', touchAction: 'pan-y' } },
+      h('svg', { viewBox: `0 0 ${W} ${H}`, preserveAspectRatio: 'none', width: '100%', height: H, style: { display: 'block', overflow: 'visible' } }, ...els),
+      ...xl.map(([i, t]) => h('div', { key: 'x' + i, style: { ...lab, top: H - pb + 8, left: X(i) / W * 100 + '%', transform: 'translateX(-50%)' } }, t)),
+      !mini && now > x0 && now < x1 ? h('div', { key: 'nl', style: { ...lab, top: 0, left: X(now) / W * 100 + '%', transform: 'translateX(6px)' } }, 'Today → projected') : null,
+      ...goals.map((g, k) => h('div', { key: 'gt' + k, style: { ...lab, left: 6, top: Y(g.v) - 16 } }, g.label)),
+      tip), endCol);
+}
+
+class Component extends DCLogic {
+  state = { screen: 'overview', cls: 'stocks', hid: null, lid: null, range: 'All', grange: 'All', proj: true, theme: 'light', holdings: HOLD, loans: LOANS, goals: GOALS, modal: false, form: {}, narrow: false, del: false, gform: { name: '', target: '' }, afilter: 'all', agroup: 'Class', acollapsed: {}, aq: '', rates: DEF_RATES, inflation: '3', real: false, dataVer: 2 };
+
+  componentDidMount() {
+    this._rs = () => { const w = window.innerWidth; const bp = w < 640 ? 'p' : w < 1024 ? 't' : 'd'; const tc = (w - (bp === 'd' ? 240 : 0)) >= 820; if (bp !== this.state.bp || tc !== this.state.tc) this.setState({ bp, tc, narrow: bp !== 'd' }); };
+    this._rs(); window.addEventListener('resize', this._rs);
+    let t = 'light'; try { t = localStorage.getItem('holdings_theme') || 'light'; } catch (e) {}
+    this.setTheme(t);
+  }
+  componentWillUnmount() { window.removeEventListener('resize', this._rs); }
+  setTheme(t) { document.documentElement.dataset.theme = t; try { localStorage.setItem('holdings_theme', t); } catch (e) {} this.setState({ theme: t }); }
+  go(screen, extra = {}) { this.setState({ screen, del: false, ...extra }); window.scrollTo(0, 0); }
+
+  model() {
+    const fxR = +(this.props.fxRate ?? 83.4) || 83.4;
+    const PY = +(this.props.projectionYears ?? 10) || 10;
+    if (this.state.dataVer !== 2) { this.state.holdings = HOLD; this.state.dataVer = 2; }
+    const { holdings, loans } = this.state;
+    const rates = this.state.crates || DEF_CRATES;
+    const key = [holdings, loans, fxR, PY, rates];
+    if (this._mk && key.every((v, i) => v === this._mk[i])) return this._m;
+    const END = NOW + PY * 12, L = END + 1;
+    const fx = []; for (let m = 0; m < L; m++) fx[m] = m >= NOW ? fxR : 69.2 + (fxR - 69.2) * (m / NOW) + 1.6 * Math.sin(m / 6.5) * ((NOW - m) / NOW);
+    const toU = (v, c, m) => c === 'INR' ? v / fx[m] : v;
+    const H = {};
+    holdings.forEach(x0 => {
+      const x = withPos(x0);
+      const c = clsById(x.cls), seed = hs(x.id), na = [], u = [];
+      const src = LOCAL_CLS.includes(c.id) ? (rates[x.country] || {}) : rates.common; const rv = parseFloat(src[c.id]); const rate = (isNaN(rv) ? c.rate * 100 : rv) / 100;
+      for (let m = 0; m < L; m++) {
+        let v;
+        if (m < x.start) v = 0;
+        else if (m >= NOW) v = x.value * Math.pow(1 + rate, (m - NOW) / 12);
+        else {
+          const f = (m - x.start) / Math.max(1, NOW - x.start);
+          const b = x.startVal + (x.value - x.startVal) * Math.pow(f, 1.15);
+          const damp = Math.min(1, (NOW - m) / 5);
+          const n = ((rnd(seed + m) - .5) * 1.2 * (x.vol || 0) + Math.sin(m / 4.3 + seed) * (x.vol || 0) * .7) * damp;
+          const bump = x.cls === 'crypto' ? Math.exp(-Math.pow((m - 46) / 5, 2)) * 1.3 : 0;
+          v = Math.max(0, b * (1 + n + bump));
+        }
+        na[m] = v; u[m] = toU(v, x.ccy, m);
+      }
+      H[x.id] = { ...x, c, nat: na, u };
+    });
+    const Lo = {};
+    loans.forEach((x, idx) => {
+      const r = x.rate / 100 / 12, na = new Array(L).fill(0), sim = [];
+      let b = x.principal;
+      for (let m = x.start; m <= NOW; m++) { sim[m] = b; b = Math.max(0, b * (1 + r) - x.emi); }
+      const adj = x.balance - (sim[NOW] ?? x.balance);
+      for (let m = x.start; m < NOW; m++) na[m] = x.revolving ? x.balance * (0.55 + 0.9 * rnd(hs(x.id) + m)) : Math.max(0, sim[m] + adj * ((m - x.start) / Math.max(1, NOW - x.start)));
+      na[NOW] = x.balance;
+      let pay = x.balance <= 0 ? NOW : null, interest = 0; b = x.balance;
+      for (let m = NOW + 1; m < L; m++) { if (b > 0) { const i = b * r; interest += i; b = Math.max(0, b + i - x.emi); if (b === 0 && pay == null) pay = m; } na[m] = b; }
+      if (pay == null && b > 0) { let mm = L - 1; while (b > 0 && mm < NOW + 720) { const i = b * r; if (i >= x.emi) break; interest += i; b = Math.max(0, b + i - x.emi); mm++; } pay = b === 0 ? mm : null; }
+      Lo[x.id] = { ...x, nat: na, u: na.map((v, m) => toU(v, x.ccy, m)), pay, interest, color: LOAN_COLORS[idx % LOAN_COLORS.length] };
+    });
+    const z = () => new Array(L).fill(0);
+    const byCls = {}; CLS.forEach(c => byCls[c.id] = z());
+    const assets = z(), liab = z(), nw = z(), ctry = { US: { a: z(), l: z() }, IN: { a: z(), l: z() } };
+    const byCC = { US: {}, IN: {} }; ['US', 'IN'].forEach(k => CLS.forEach(c => byCC[k][c.id] = z()));
+    Object.values(H).forEach(x => { for (let m = 0; m < L; m++) { byCls[x.cls][m] += x.u[m]; assets[m] += x.u[m]; ctry[x.country].a[m] += x.u[m]; byCC[x.country][x.cls][m] += x.u[m]; } });
+    Object.values(Lo).forEach(x => { for (let m = 0; m < L; m++) { liab[m] += x.u[m]; ctry[x.country].l[m] += x.u[m]; } });
+    for (let m = 0; m < L; m++) nw[m] = assets[m] - liab[m];
+    this._mk = key;
+    this._m = { fx, fxR, END, L, H, Lo, byCls, byCC, assets, liab, nw, ctry, PY };
+    return this._m;
+  }
+
+  attr(m0, scope) {
+    const M = this.model(); let grow = 0, fxe = 0, debt = 0; const inS = x => !scope || scope.includes(x.country);
+    Object.values(M.H).filter(inS).forEach(x => { const k = x.ccy === 'INR'; grow += (x.nat[NOW] - x.nat[m0]) / (k ? M.fx[m0] : 1); if (k) fxe += x.nat[NOW] * (1 / M.fx[NOW] - 1 / M.fx[m0]); });
+    Object.values(M.Lo).filter(inS).forEach(x => { const k = x.ccy === 'INR'; debt += (x.nat[m0] - x.nat[NOW]) / (k ? M.fx[m0] : 1); if (k) fxe -= x.nat[NOW] * (1 / M.fx[NOW] - 1 / M.fx[m0]); });
+    return { grow, fxe, debt };
+  }
+
+  goalInfo(g) {
+    const M = this.model(); const i = M.nw.findIndex(v => v >= g.target); const now = M.nw[NOW];
+    let status, sColor = 'var(--ink2)';
+    if (i === -1) status = 'Beyond the ' + M.PY + '-year projection';
+    else if (i <= NOW) { status = 'Reached ' + mlab(i); sColor = 'var(--pos)'; }
+    else status = 'Projected ' + mlab(i) + ' · in ' + yrsFrom(i);
+    const p = Math.max(0, Math.min(1, now / g.target));
+    return { name: g.name, target: cmp(g.target), prog: cmp(now), progPct: pctU(p), status, sColor, barColor: p >= 1 ? 'var(--pos)' : 'var(--ink)', onDelete: () => this.setState(s => ({ goals: s.goals.filter(x => x.id !== g.id) })) };
+  }
+
+  openForm(form) { this.setState({ modal: true, form: { err: '', name: '', value: '', cost: '', units: '', unit: 'g', balance: '', principal: '', rate: '', emi: '', termY: '', linked: '', country: 'US', cls: 'stocks', positions: [], np: { t: '', sh: '', avg: '', price: '', sector: 'Technology' }, ptype: 'Residential', city: '', ...form } }); }
+  setNP(k, v) { this.setState(s => ({ form: { ...s.form, np: { ...s.form.np, [k]: v }, err: '' } })); }
+  addPos() {
+    const f = this.state.form, np = f.np, key = tickerKey(np.t, f.country), sh = +np.sh;
+    if (!key) return this.setF('err', 'Enter a ticker');
+    if (!(sh > 0)) return this.setF('err', 'Enter number of shares');
+    const known = TICKERS[key];
+    if (!known && !(+np.price > 0)) return this.setF('err', 'Ticker not in sample data — enter its price');
+    const p = { t: key, sh, avg: +np.avg > 0 ? +np.avg : (known ? known.price : +np.price) };
+    if (!known) { p.price = +np.price; p.sector = np.sector; p.name = key; }
+    this.setState(s => ({ form: { ...s.form, positions: [...s.form.positions.filter(q => q.t !== key), p], np: { t: '', sh: '', avg: '', price: '', sector: 'Technology' }, err: '' } }));
+  }
+  openAdd(kind, cls) { this.openForm({ mode: 'add', kind: kind || 'asset', cls: cls || (this.state.screen === 'class' ? this.state.cls : 'stocks') }); }
+  openEditHolding(id, update) { const x = withPos(this.state.holdings.find(v => v.id === id)); if (x.positions && x.positions.length) update = false; this.openForm({ mode: update ? 'update' : 'edit', kind: 'asset', id, name: x.name, cls: x.cls, country: x.country, value: String(Math.round(x.value)), cost: x.cost == null ? '' : String(Math.round(x.cost)), units: x.units == null ? '' : String(x.units), unit: x.unit || 'g', was: nat(x.value, x.ccy), positions: (x.positions || []).slice(), ptype: x.ptype || 'Residential', city: x.city || '' }); }
+  openEditLoan(id) { const x = this.state.loans.find(v => v.id === id); this.openForm({ mode: 'edit', kind: 'liability', id, name: x.name, country: x.country, balance: String(x.balance), principal: String(x.principal), rate: String(x.rate), emi: String(x.emi), termY: x.termY == null ? '' : String(x.termY), linked: x.linked || '' }); }
+  setF(k, v) { this.setState(s => ({ form: { ...s.form, [k]: v, err: '' } })); }
+
+  save() {
+    const f = this.state.form;
+    const num = v => (v === '' || v == null) ? NaN : +String(v).replace(/[,\s₹$]/g, '');
+    const err = e => this.setF('err', e);
+    if (f.mode !== 'update' && !String(f.name).trim()) return err('Give it a name');
+    const ccy = f.country === 'IN' ? 'INR' : 'USD';
+    if (f.kind === 'asset') {
+      const isStk = f.mode !== 'update' && f.cls === 'stocks';
+      if (isStk && !f.positions.length) return err('Add at least one position');
+      let val = num(f.value), cost = num(f.cost);
+      if (isStk) { const w = withPos({ positions: f.positions }); val = w.value; cost = w.cost; }
+      if (!(val >= 0)) return err('Enter the current value');
+      const units = num(f.units);
+      const extra = { positions: isStk ? f.positions : undefined, ptype: f.cls === 'realestate' ? f.ptype : undefined, city: f.cls === 'realestate' ? f.city.trim() : undefined };
+      if (f.id) {
+        this.setState(s => ({ holdings: s.holdings.map(x => x.id !== f.id ? x : f.mode === 'update' ? { ...x, value: val, startVal: x.start >= NOW ? val : x.startVal } : { ...x, ...extra, name: f.name.trim(), cls: f.cls, country: f.country, ccy, value: val, startVal: x.start >= NOW ? val : x.startVal, cost: isNaN(cost) ? null : cost, units: isNaN(units) ? null : units, unit: f.unit }), modal: false }));
+      } else {
+        const id = 'h' + Date.now();
+        this.setState(s => ({ holdings: [...s.holdings, { id, ...extra, name: f.name.trim(), sub: isStk ? 'Brokerage account' : 'Added manually', cls: f.cls, country: f.country, ccy, value: val, cost: isNaN(cost) ? null : cost, start: NOW, startVal: val, vol: 0, units: isNaN(units) ? null : units, unit: f.unit }], modal: false }));
+        this.go('holding', { hid: id });
+      }
+    } else {
+      const bal = num(f.balance), rate = num(f.rate), emi = num(f.emi), pr = num(f.principal), ty = num(f.termY);
+      if (!(bal >= 0)) return err('Enter the current balance');
+      if (!(rate >= 0)) return err('Enter the interest rate');
+      if (!(emi > 0)) return err('Enter the monthly payment');
+      const data = { name: f.name.trim(), country: f.country, ccy, balance: bal, principal: isNaN(pr) ? bal : Math.max(pr, bal), rate, emi, termY: isNaN(ty) ? null : ty, linked: f.linked };
+      if (f.id) this.setState(s => ({ loans: s.loans.map(x => x.id === f.id ? { ...x, ...data } : x), modal: false }));
+      else { const id = 'l' + Date.now(); this.setState(s => ({ loans: [...s.loans, { id, start: NOW, ...data }], modal: false })); this.go('loan', { lid: id }); }
+    }
+  }
+
+  renderVals() {
+    const s = this.state, M = this.model();
+    const bp = s.bp || 'd', phone = bp === 'p';
+    const wide = !phone;
+    const nwNow = M.nw[NOW], aNow = M.assets[NOW], lNow = M.liab[NOW];
+    const x1 = s.proj ? M.END : NOW;
+    const seg = (opts, cur, set) => opts.map(o => ({ label: o, onClick: () => set(o), bg: o === cur ? 'var(--panel)' : 'transparent', fg: o === cur ? 'var(--ink)' : 'var(--ink2)', sh: o === cur ? '0 1px 2px rgba(0,0,0,.1)' : 'none' }));
+    const R0 = { '1Y': NOW - 12, '3Y': NOW - 36, '5Y': NOW - 60, 'All': 0 };
+    const active = s.screen === 'class' || s.screen === 'holding' ? 'assets' : s.screen === 'loan' ? 'liabilities' : s.screen;
+    const navDef = [['overview', 'Overview', ''], ['assets', 'Assets', cmp(aNow)], ['liabilities', 'Liabilities', cmp(lNow)], ['growth', 'Growth', ''], ['goals', 'Goals', String(s.goals.length)]];
+    const nav = navDef.map(([k, l, v]) => ({ label: l, value: v, onClick: () => this.go(k), bg: active === k ? 'var(--sel)' : 'transparent', fw: active === k ? 600 : 400, fg: active === k ? 'var(--ink)' : 'var(--ink2)', bar: active === k ? 'var(--ink)' : 'transparent' }));
+    const holdArr = Object.values(M.H), loanArr = Object.values(M.Lo);
+    const clsActive = CLS.filter(c => holdArr.some(x => x.cls === c.id));
+    const clsNav = clsActive.map(c => ({ name: c.name, color: c.color, value: cmp(M.byCls[c.id][NOW]), onClick: () => this.go('class', { cls: c.id }), bg: (s.screen === 'class' && s.cls === c.id) ? 'var(--sel)' : 'transparent' }));
+    const d12 = nwNow - M.nw[NOW - 12];
+    const holdRow = x => {
+      const gain = x.cost != null ? x.value - x.cost : null;
+      const sub = x.positions && x.positions.length ? x.positions.length + ' positions · ' + x.positions.slice(0, 3).map(p => posInfo(p).disp).join(', ') + (x.positions.length > 3 ? '…' : '') : x.cls === 'realestate' && x.ptype ? x.ptype + ' · ' + (x.city || '') : (x.sub || '');
+      return { name: x.name, sub, country: x.country, native: x.ccy === 'INR' ? inr(x.value) : '', usd: usd(x.u[NOW]), gain: gain == null ? '—' : (x.ccy === 'INR' ? sgnCmp(gain / M.fxR) : sgnCmp(gain)) + ' · ' + pct(gain / x.cost, 0), gColor: gain == null ? 'var(--ink3)' : pn(gain), onClick: () => this.go('holding', { hid: x.id }) };
+    };
+    const posCols = wide ? 'minmax(0,2fr) minmax(0,1.3fr) 56px minmax(0,1fr) minmax(0,1fr) 64px 48px' : 'minmax(0,1.4fr) minmax(0,1fr) minmax(0,1fr)';
+    const secPosCols = wide ? 'minmax(0,2.4fr) 72px minmax(0,1fr) minmax(0,1fr) 64px 84px' : 'minmax(0,1.4fr) minmax(0,1fr) minmax(0,1fr)';
+    const posRows = list => { const tot = list.reduce((a, r) => a + r.u, 0); return list.sort((a, b) => b.u - a.u).map(r => ({ ...r, weight: pctU(r.u / (tot || 1)) })); };
+    const positionsOf = xs => { const out = []; xs.forEach(x => (x.positions || []).forEach(p => { const i = posInfo(p), v = p.sh * i.price, g = p.avg ? (i.price - p.avg) / p.avg : 0; out.push({ hid: x.id, t: p.t, onClick: () => this.setState({ panel: { hid: x.id, t: p.t } }), disp: i.disp, ex: i.ex, name: i.name + (xs.length > 1 ? ' · ' + x.name : ''), sector: i.sector, sColor: SECTOR_COLORS[i.sector] || SECTOR_COLORS.Other, shares: String(p.sh), price: nat(i.price, x.ccy), value: usd(x.ccy === 'INR' ? v / M.fxR : v), u: x.ccy === 'INR' ? v / M.fxR : v, gain: pct(g, 0), gColor: pn(g), url: i.url, tk: i.disp }); })); return posRows(out); };
+    const distOf = (items, colors) => { const m = {}; let tot = 0; items.forEach(it => { m[it.key] = m[it.key] || { v: 0, subs: [] }; m[it.key].v += it.u; if (it.sub && !m[it.key].subs.includes(it.sub)) m[it.key].subs.push(it.sub); tot += it.u; }); return Object.entries(m).sort((a, b) => b[1].v - a[1].v).map(([k, o]) => ({ label: k, color: colors[k] || 'oklch(0.66 0.02 250)', value: usd(o.v), share: (o.v / (tot || 1) * 100).toFixed(1) + '%', flex: (o.v / (tot || 1)).toFixed(4), sub: o.subs.join(', ') })); };
+    const linkedPairs = loanArr.filter(l => l.linked && M.H[l.linked]).map(l => ({ l, x: M.H[l.linked] }));
+    const eqNow = linkedPairs.reduce((a, { l, x }) => a + x.u[NOW] - l.u[NOW], 0);
+    const eq12 = linkedPairs.reduce((a, { l, x }) => a + x.u[NOW - 12] - l.u[NOW - 12], 0);
+
+    let ov = {};
+    if (s.screen === 'overview') {
+      const r0 = R0[s.range]; const d = nwNow - M.nw[r0];
+      const a12 = this.attr(NOW - 12);
+      ov = {
+        nw: usd(nwNow), delta: sgn(d) + (M.nw[r0] > 0 ? ' (' + pct(d / M.nw[r0]) + ')' : ''), dColor: pn(d), since: 'since ' + mlab(r0),
+        chart: h(Chart, { key: 'ov', x0: r0, x1, now: NOW, height: 270, goals: s.goals.map(g => ({ v: g.target, label: g.name })), series: [
+          { name: 'Net worth', vals: M.nw, color: 'var(--ink)', area: true, areaOpacity: .06, width: 2, dot: true, bold: true },
+          { name: 'Assets', vals: M.assets, color: 'var(--pos)', line: false, noScale: true },
+          { name: 'Liabilities', vals: M.liab, color: 'var(--neg)', line: false, noScale: true }] }),
+        stats: [
+          { label: 'Total assets', value: usd(aNow), sub: holdArr.length + ' accounts & assets · ' + sgnCmp(aNow - M.assets[NOW - 12]) + ' in 12 mo', color: 'var(--ink)', onClick: () => this.go('assets') },
+          { label: 'Liabilities', value: usd(lNow), sub: loanArr.length + ' loans · ' + cmp(M.liab[NOW - 12] - lNow) + ' paid down in 12 mo', color: 'var(--ink)', onClick: () => this.go('liabilities') },
+          { label: 'Equity built', value: usd(eqNow), sub: 'Across ' + linkedPairs.length + ' financed assets · ' + sgnCmp(eqNow - eq12) + ' in 12 mo', color: 'var(--ink)', onClick: () => this.go('growth') }],
+        alloc: clsActive.map(c => { const v = M.byCls[c.id][NOW], dd = v - M.byCls[c.id][NOW - 12]; return { name: c.name, color: c.color, value: usd(v), flex: (v / aNow).toFixed(4), share: pctU(v / aNow), delta: sgnCmp(dd), dColor: pn(dd), count: String(holdArr.filter(x => x.cls === c.id).length), onClick: () => this.go('class', { cls: c.id }) }; }).sort((a, b) => parseFloat(b.flex) - parseFloat(a.flex)),
+        equity: linkedPairs.map(({ l, x }) => { const e = x.u[NOW] - l.u[NOW], g = e - (x.u[NOW - 12] - l.u[NOW - 12]); const o = Math.max(0, Math.min(1, e / x.u[NOW])); return { name: x.name, equity: usd(e), owned: pctU(o), ownedPct: (o * 100).toFixed(1) + '%', color: x.c.color, value: cmp(x.u[NOW]), loan: cmp(l.u[NOW]), gain: sgnCmp(g), gColor: pn(g), onClick: () => this.go('holding', { hid: x.id }) }; }),
+        ctry: [['US', 'United States'], ['IN', 'India']].map(([k, n]) => { const a = M.ctry[k].a[NOW], l = M.ctry[k].l[NOW]; return { code: k, name: n, net: usd(a - l), assets: cmp(a), liab: cmp(l), share: pctU(a / aNow), sharePct: (a / aNow * 100).toFixed(1) + '%' }; }),
+        fx: sgn(a12.fxe), fxColor: pn(a12.fxe),
+        fxNote: 'Rupee moved ₹' + M.fx[NOW - 12].toFixed(2) + ' → ₹' + M.fx[NOW].toFixed(2) + ' per $. India assets lost USD value; the rupee loan shrank in USD terms.',
+      };
+    }
+
+    let as = {};
+    if (s.screen === 'assets') {
+      const q = (s.aq || '').trim().toLowerCase(), fl = s.afilter || 'all', gb = s.agroup || 'Class'; s.acollapsed = s.acollapsed || {};
+      const vis = holdArr.filter(x => (fl === 'all' || x.cls === fl) && (!q || (x.name + ' ' + (x.sub || '') + ' ' + (x.city || '') + ' ' + (x.positions || []).map(p => p.t + ' ' + posInfo(p).name).join(' ')).toLowerCase().includes(q))).sort((a, b) => b.u[NOW] - a.u[NOW]);
+      const defs = gb === 'Class' ? clsActive.map(c => ({ key: c.id, name: c.name, color: c.color, test: x => x.cls === c.id }))
+        : gb === 'Country' ? [{ key: 'US', name: 'United States', color: 'var(--ink2)', test: x => x.country === 'US' }, { key: 'IN', name: 'India', color: 'var(--ink3)', test: x => x.country === 'IN' }]
+        : [{ key: 'all', name: 'All holdings', color: 'var(--ink)', test: () => true }];
+      const groups = defs.map(dd => { const rows = vis.filter(dd.test); const tot = rows.reduce((a, x) => a + x.u[NOW], 0); const open = !s.acollapsed[gb + dd.key] || !!q; return { name: dd.name, color: dd.color, count: rows.length + ' ' + (gb === 'Class' ? noun(dd.key, rows.length) : (rows.length === 1 ? 'item' : 'items')), total: usd(tot), share: pctU(tot / aNow), open, rot: open ? '90deg' : '0deg', rows: rows.map(x => ({ ...holdRow(x), tag: gb === 'Country' ? x.c.name.split(' ')[0] : x.country })), onToggle: () => this.setState(st => ({ acollapsed: { ...st.acollapsed, [gb + dd.key]: !st.acollapsed[gb + dd.key] } })) }; }).filter(g => g.rows.length);
+      const allClosed = groups.length > 0 && groups.every(g => !g.open);
+      const tile = (key, name, color, v, meta) => ({ name, color, total: cmp(v), meta, onClick: () => this.setState({ afilter: fl === key && key !== 'all' ? 'all' : key }), bg: fl === key ? 'var(--panel)' : 'transparent', bd: fl === key ? 'var(--ink2)' : 'var(--line)' });
+      as = { total: usd(aNow), sub: holdArr.length + ' accounts & assets in ' + clsActive.length + ' classes · ' + sgnCmp(aNow - M.assets[NOW - 12]) + ' in 12 mo',
+        tiles: [tile('all', 'All assets', 'var(--ink)', aNow, holdArr.length + ' items'), ...clsActive.map(c => tile(c.id, c.name, c.color, M.byCls[c.id][NOW], pctU(M.byCls[c.id][NOW] / aNow) + ' · ' + holdArr.filter(x => x.cls === c.id).length + ' ' + noun(c.id, holdArr.filter(x => x.cls === c.id).length)))],
+        groupOpts: seg(['Class', 'Country', 'None'], gb, o => this.setState({ agroup: o })),
+        toggleLabel: allClosed ? 'Expand all' : 'Collapse all',
+        toggleAll: () => this.setState(st => { const c = { ...st.acollapsed }; defs.forEach(dd => c[gb + dd.key] = !allClosed); return { acollapsed: c }; }),
+        q: s.aq, onQ: e => this.setState({ aq: e.target.value }), groups, empty: groups.length === 0 };
+    }
+    const assetCols = wide ? 'minmax(0,2.6fr) 64px minmax(0,1fr) minmax(0,0.9fr) minmax(0,1fr)' : 'minmax(0,1.6fr) minmax(0,1fr)';
+
+    let cl = {};
+    if (s.screen === 'class') {
+      const c = clsById(s.cls), arr = M.byCls[c.id], v = arr[NOW], dd = v - arr[NOW - 12];
+      const first = Math.max(0, arr.findIndex(x => x > 0) - 2);
+      cl = { name: c.name, color: c.color, total: usd(v), delta: sgnCmp(dd), dColor: pn(dd), share: pctU(v / aNow), rate: LOCAL_CLS.includes(c.id) ? 'projected at ' + (s.crates || DEF_CRATES).US[c.id] + '%/yr US · ' + (s.crates || DEF_CRATES).IN[c.id] + '%/yr India' : 'projected at ' + (s.crates || DEF_CRATES).common[c.id] + '%/yr',
+        chart: h(Chart, { key: 'cl' + c.id, x0: first, x1, now: NOW, height: 240, series: [{ name: c.name, vals: arr, color: c.color, area: true, areaOpacity: .16, width: 2, dot: true }] }),
+        rows: holdArr.filter(x => x.cls === c.id).sort((a, b) => b.u[NOW] - a.u[NOW]).map(holdRow), onAdd: () => this.openAdd('asset', c.id) };
+      const inCls = holdArr.filter(x => x.cls === c.id);
+      const rich = c.id === 'stocks' || c.id === 'realestate';
+      const lp = String(this.props.classLayout ?? 'A · Original'); const layout = lp.startsWith('B') ? 'B' : lp.startsWith('C') ? 'C' : 'O';
+      cl.rich = rich; cl.plain = !rich; cl.isO = rich && layout === 'O'; cl.isB = rich && layout === 'B'; cl.isC = rich && layout === 'C';
+      if (rich && layout !== 'O') cl.chart = h(Chart, { key: 'clm' + c.id, x0: first, x1, now: NOW, height: 84, mini: true, series: [{ name: c.name, vals: arr, color: c.color, area: true, areaOpacity: .16, width: 2, dot: true }] });
+      const chipSt = on => ({ bg: on ? 'var(--sel)' : 'transparent', bd: on ? 'var(--ink2)' : 'var(--line2)' });
+      const mode = s.cMode || 'map';
+      cl.modeOpts = seg(['Treemap', 'List'], mode === 'map' ? 'Treemap' : 'List', o => this.setState({ cMode: o === 'Treemap' ? 'map' : 'list' }));
+      cl.showMap = mode === 'map';
+      const MW = wide ? 980 : 560, MH = wide ? 420 : 400; cl.mapH = MH;
+      const tileOut = (tt, o) => { const big = tt.w > 170 && tt.h > 110, okL = tt.w > 46 && tt.h > 30; return { l: (tt.x / MW * 100).toFixed(3) + '%', t: (tt.y / MH * 100).toFixed(3) + '%', w: (tt.w / MW * 100).toFixed(3) + '%', h: (tt.h / MH * 100).toFixed(3) + '%', label: okL ? o.label : '', sub: tt.w > 120 && tt.h > 72 ? o.sub : '', val: tt.w > 84 && tt.h > 56 ? o.val : '', fs: big ? 18 : 13, ff: o.ff, color: o.color, op: o.op, onClick: o.onClick, title: o.title }; };
+      if (c.id === 'stocks') {
+        const sf = s.secFilter || null;
+        const pos = positionsOf(inCls).map(p => ({ ...p, op: !sf || p.sector === sf ? 1 : .2 }));
+        const dist = distOf(pos.map(p => ({ key: p.sector, u: p.u })), SECTOR_COLORS);
+        cl.chips = [{ label: 'All sectors', share: '', color: 'var(--ink)', ...chipSt(!sf), onClick: () => this.setState({ secFilter: null }) }, ...dist.map(d => ({ label: d.label, share: d.share, color: d.color, ...chipSt(sf === d.label), onClick: () => this.setState({ secFilter: sf === d.label ? null : d.label }) }))];
+        const fpos = sf ? pos.filter(p => p.sector === sf) : pos;
+        const allPos = positionsOf(inCls); cl.allPositions = allPos; cl.hasAllPos = allPos.length > 0; cl.hasDist2 = false;
+        cl.isStk = true; cl.isREo = false;
+        const pv = s.posView || 'sector', so = s.secOpen || {};
+        cl.posViewOpts = seg(['By sector', 'All positions'], pv === 'sector' ? 'By sector' : 'All positions', o => this.setState({ posView: o === 'By sector' ? 'sector' : 'all' }));
+        cl.showSecView = pv === 'sector'; cl.showAllView = pv === 'all';
+        const secNames = [...new Set(allPos.map(p => p.sector))];
+        const anyOpen = secNames.some(n => so[n]);
+        cl.toggleSecsLabel = anyOpen ? 'Collapse all' : 'Expand all';
+        cl.toggleSecs = () => this.setState({ secOpen: anyOpen ? {} : Object.fromEntries(secNames.map(n => [n, true])) });
+        const stTot = allPos.reduce((q, p) => q + p.u, 0) || 1;
+        cl.secGroups = secNames.map(n => { const ps = allPos.filter(p => p.sector === n); const v = ps.reduce((q, p) => q + p.u, 0); let cost = 0; inCls.forEach(x => (x.positions || []).forEach(p => { const i = posInfo(p); if (i.sector === n) cost += p.sh * (p.avg || i.price) / (x.ccy === 'INR' ? M.fxR : 1); })); const g = cost ? (v - cost) / cost : 0; const open = !!so[n];
+          return { label: n, color: SECTOR_COLORS[n] || SECTOR_COLORS.Other, sub: (phone ? (v / stTot * 100).toFixed(1) + '% · ' : '') + ps.length + (ps.length === 1 ? ' stock · ' : ' stocks · ') + ps.map(p => p.disp).join(', '), value: usd(v), share: (v / stTot * 100).toFixed(1) + '%', gain: pct(g, 0), gColor: pn(g), u: v, open, rot: open ? '90deg' : '0deg', bg: open ? 'var(--hover)' : 'transparent', positions: ps, onToggle: () => this.setState(st => ({ secOpen: { ...(st.secOpen || {}), [n]: !(st.secOpen || {})[n] } })) }; }).sort((p, q) => q.u - p.u);
+        cl.dist = distOf(allPos.map(p => ({ key: p.sector, u: p.u, sub: p.tk })), SECTOR_COLORS); cl.distTitle = 'By sector'; cl.distSub = allPos.length + ' positions across ' + inCls.filter(x => x.positions && x.positions.length).length + ' accounts';
+        cl.positions = fpos;
+        const view = s.clView || 'positions';
+        cl.hasViewToggle = true; cl.entity = 'Account';
+        cl.viewOpts = seg(['Positions', 'Accounts'], view === 'positions' ? 'Positions' : 'Accounts', o => this.setState({ clView: o === 'Positions' ? 'positions' : 'accounts' }));
+        cl.showPosTable = view === 'positions'; cl.showAcctTable = view === 'accounts';
+        const facc = sf ? inCls.filter(x => (x.positions || []).some(p => posInfo(p).sector === sf)) : inCls;
+        cl.acctRows = facc.slice().sort((p, q) => q.u[NOW] - p.u[NOW]).map(holdRow);
+        cl.tableNote = view === 'positions' ? fpos.length + ' positions' + (sf ? ' in ' + sf : '') + ' · select one for details' : facc.length + ' accounts' + (sf ? ' holding ' + sf : '');
+        cl.listPos = mode === 'list'; cl.listAcct = false;
+        const tiles = [];
+        squarify(dist.map(d => ({ key: d.label, v: pos.filter(p => p.sector === d.label).reduce((q, p) => q + p.u, 0) })), 0, 0, MW, MH)
+          .forEach(sr => squarify(pos.filter(p => p.sector === sr.key).map(p => ({ ...p, v: p.u })), sr.x, sr.y, sr.w, sr.h).forEach(tt => tiles.push(tt)));
+        cl.tiles = tiles.map(tt => tileOut(tt, { label: tt.disp, sub: tt.name + ' · ' + tt.sector, val: tt.value + ' · ' + tt.weight, ff: "'Geist Mono',monospace", color: tt.sColor, op: tt.op, onClick: tt.onClick, title: tt.disp + ' · ' + tt.value + ' · ' + tt.weight }));
+        cl.hasAccts = true; cl.accts = inCls.slice().sort((p, q) => q.u[NOW] - p.u[NOW]).map(x => ({ name: x.name, value: cmp(x.u[NOW]), onClick: () => this.go('holding', { hid: x.id }) }));
+      } else if (c.id === 'realestate') {
+        const pf = s.ptFilter || null, tot = inCls.reduce((q, x) => q + x.u[NOW], 0) || 1;
+        const items = inCls.map(x => ({ hold: x, key: x.ptype || 'Residential', u: x.u[NOW] }));
+        const dist = distOf(items.map(i => ({ key: i.key, u: i.u })), PTYPE_COLORS);
+        cl.chips = [{ label: 'All types', share: '', color: 'var(--ink)', ...chipSt(!pf), onClick: () => this.setState({ ptFilter: null }) }, ...dist.map(d => ({ label: d.label, share: d.share, color: d.color, ...chipSt(pf === d.label), onClick: () => this.setState({ ptFilter: pf === d.label ? null : d.label }) }))];
+        const fit = items.filter(i => !pf || i.key === pf);
+        cl.isStk = false; cl.isREo = true;
+        cl.hasAllPos = false; cl.allPositions = []; cl.distTitle = 'By property type'; cl.distSub = inCls.length + ' properties';
+        cl.dist = distOf(inCls.map(x => ({ key: x.ptype || 'Residential', u: x.u[NOW], sub: x.name })), PTYPE_COLORS);
+        cl.dist2 = distOf(inCls.map(x => ({ key: x.city || (x.country === 'IN' ? 'India' : 'US'), u: x.u[NOW], sub: x.name })), {}); cl.dist2.forEach((d, i) => d.color = ['oklch(0.62 0.08 250)', 'oklch(0.70 0.07 200)', 'oklch(0.76 0.06 150)', 'oklch(0.66 0.05 300)'][i % 4]); cl.hasDist2 = true;
+        cl.hasViewToggle = false; cl.showPosTable = false; cl.showAcctTable = true; cl.entity = 'Property';
+        cl.acctRows = fit.sort((p, q) => q.u - p.u).map(i => holdRow(i.hold));
+        cl.tableNote = fit.length + ' ' + noun('realestate', fit.length) + (pf ? ' · ' + pf : '');
+        cl.listPos = false; cl.listAcct = mode === 'list'; cl.hasAccts = false; cl.accts = [];
+        cl.tiles = squarify(items.map(i => ({ ...i, v: i.u })), 0, 0, MW, MH).map(tt => tileOut(tt, { label: tt.hold.name, sub: tt.key + ' · ' + (tt.hold.city || ''), val: cmp(tt.u) + ' · ' + pctU(tt.u / tot), ff: "'Geist',sans-serif", color: PTYPE_COLORS[tt.key] || PTYPE_COLORS.Residential, op: !pf || tt.key === pf ? 1 : .2, onClick: () => this.go('holding', { hid: tt.hold.id }), title: tt.hold.name + ' · ' + cmp(tt.u) }));
+      }
+    }
+
+    let hd = {};
+    if (s.screen === 'holding' && M.H[s.hid]) {
+      const x = M.H[s.hid], inrH = x.ccy === 'INR';
+      const loan = loanArr.find(l => l.linked === x.id);
+      const gain = x.cost != null ? x.value - x.cost : null;
+      const stats = [];
+      if (x.cost != null) stats.push({ label: 'Cost basis', value: nat(x.cost, x.ccy), sub: inrH ? '≈ ' + usd(x.cost / M.fxR) + ' today' : 'What you paid', color: 'var(--ink)' });
+      if (gain != null) stats.push({ label: 'Unrealized gain', value: sgnNat(gain, x.ccy), sub: pct(gain / x.cost) + (inrH ? ' · ' + sgn(gain / M.fxR) : ''), color: pn(gain) });
+      if (x.units) stats.push({ label: 'Quantity', value: x.units + ' ' + x.unit, sub: nat(x.value / x.units, x.ccy) + ' per ' + x.unit, color: 'var(--ink)' });
+      const d12h = x.u[NOW] - x.u[Math.max(x.start, NOW - 12)];
+      stats.push({ label: '12-month change', value: sgn(d12h), sub: x.start > NOW - 12 ? 'Since added ' + mlab(x.start) : 'In USD terms', color: pn(d12h) });
+      if (inrH) { const fe = x.nat[NOW] * (1 / M.fx[NOW] - 1 / M.fx[NOW - 12]); stats.push({ label: 'Currency effect, 12 mo', value: sgn(fe), sub: '₹' + M.fx[NOW - 12].toFixed(2) + ' → ₹' + M.fx[NOW].toFixed(2) + ' per $', color: pn(fe) }); }
+      if (x.cls === 'realestate' && x.ptype) stats.unshift({ label: 'Property', value: x.ptype, sub: x.city || '', color: 'var(--ink)' });
+      if (loan) { const e = x.u[NOW] - loan.u[NOW]; stats.push({ label: 'Your equity', value: usd(e), sub: pctU(Math.max(0, e / x.u[NOW])) + ' owned outright', color: 'var(--ink)' }); }
+      const eqArr = loan ? x.u.map((v, i) => v - loan.u[i]) : null;
+      const x0h = x.start >= NOW ? NOW - 12 : Math.max(0, x.start - 2);
+      const series = loan ? [
+        { name: 'Value', vals: x.u, color: x.c.color, area: true, base: loan.u, areaOpacity: .22, width: 2, dot: true },
+        { name: 'Loan balance', vals: loan.u, color: 'var(--neg)', width: 1.5, dot: true },
+        { name: 'Equity', vals: eqArr, color: 'var(--ink)', line: false, noScale: true, bold: true }] : [{ name: 'Value', vals: x.u, color: x.c.color, area: true, areaOpacity: .16, width: 2, dot: true }];
+      const seed = hs(x.id); const ms = [x.start];
+      for (let m = x.start + 1; m < NOW; m++) if (rnd(seed * 7 + m) < 0.1) ms.push(m);
+      if (x.start < NOW) ms.push(NOW);
+      const logMs = ms.slice(-8);
+      const log = logMs.map((m, i) => { const prev = i > 0 ? x.nat[logMs[i - 1]] : null; const ch = prev != null ? x.nat[m] - prev : null; return { date: m === NOW ? 'Oct 6, 2026' : mlab(m) + (m === x.start ? ' · added' : ''), value: nat(x.nat[m], x.ccy), change: ch == null ? '—' : sgnNat(ch, x.ccy) + (prev > 0 ? ' · ' + pct(ch / prev) : ''), cColor: ch == null ? 'var(--ink3)' : pn(ch) }; }).reverse();
+      hd = { name: x.name, clsName: x.c.name, country: x.country === 'IN' ? 'India' : 'United States', ccy: x.ccy, usd: usd(x.u[NOW]),
+        nativeLine: inrH ? inr(x.value) + ' at ₹' + M.fxR.toFixed(2) + '/$ · ' + (x.sub || '') : (x.sub || ''),
+        stats, chart: h(Chart, { key: 'hd' + x.id, x0: x0h, x1, now: NOW, height: 250, zero: !!loan, series }),
+        chartTitle: loan ? 'Value vs. loan' : 'Value over time', chartSub: loan ? 'The shaded gap between the two lines is your equity' : (inrH ? 'Shown in USD; includes rupee movement' : 'Interpolated between logged values'),
+        hasLoan: !!loan, loanName: loan ? loan.name : '', loanSub: loan ? loan.rate + '% · ' + nat(loan.emi, loan.ccy) + '/mo' : '', loanBal: loan ? usd(loan.u[NOW]) : '', goLoan: () => loan && this.go('loan', { lid: loan.id }),
+        log, goClass: () => this.go('class', { cls: x.cls }),
+        hasPos: !!(x.positions && x.positions.length), kindTag: x.positions && x.positions.length ? 'Brokerage account' : x.cls === 'realestate' ? 'Property' : ['cash', 'crypto'].includes(x.cls) ? 'Account' : 'Asset',
+        posSub: x.positions && x.positions.length ? x.positions.length + ' positions · click a row to open it on Yahoo Finance' : '', updateLabel: x.positions && x.positions.length ? 'Edit positions' : 'Update value',
+        positions: x.positions && x.positions.length ? positionsOf([x]) : [],
+        dist: x.positions && x.positions.length ? distOf(positionsOf([x]).map(p => ({ key: p.sector, u: p.u, sub: p.tk })), SECTOR_COLORS) : [], onUpdate: () => this.openEditHolding(x.id, true), onEdit: () => this.openEditHolding(x.id, false),
+        onDelete: () => { if (!s.del) return this.setState({ del: true }); this.setState(st => ({ holdings: st.holdings.filter(v => v.id !== x.id), loans: st.loans.map(l => l.linked === x.id ? { ...l, linked: '' } : l) })); this.go('class', { cls: x.cls }); } };
+    }
+
+    let li = {};
+    if (s.screen === 'liabilities') {
+      const monthly = loanArr.reduce((a, l) => a + (l.ccy === 'INR' ? l.emi / M.fxR : l.emi), 0);
+      const wr = lNow > 0 ? loanArr.reduce((a, l) => a + l.rate * l.u[NOW], 0) / lNow : 0;
+      const pays = loanArr.map(l => l.pay); const df = pays.some(p => p == null) ? null : Math.max(NOW, ...pays);
+      const sorted = [...loanArr].sort((a, b) => b.u[NOW] - a.u[NOW]);
+      let cum = new Array(M.L).fill(0); const series = [];
+      sorted.forEach(l => { const top = cum.map((v, i) => v + l.u[i]); series.push({ name: l.name, vals: top, base: cum, tip: l.u, color: l.color, area: true, areaOpacity: .5, width: 1 }); cum = top; });
+      li = { total: usd(lNow), paid: cmp(M.liab[NOW - 12] - lNow),
+        stats: [
+          { label: 'Monthly payments', value: usd(monthly), sub: 'All EMIs, converted to USD' },
+          { label: 'Weighted rate', value: wr.toFixed(2) + '%', sub: 'By current balance' },
+          { label: 'Debt-free', value: df ? mlab(df) : 'Not on track', sub: df ? 'In ' + yrsFrom(df) + ' at current payments' : 'A payment doesn’t cover interest' },
+          { label: 'Interest remaining', value: usd(loanArr.reduce((a, l) => a + (l.ccy === 'INR' ? l.interest / M.fxR : l.interest), 0)), sub: 'If paid on schedule' }],
+        chart: h(Chart, { key: 'li', x0: 0, x1, now: NOW, height: 250, series }),
+        rows: sorted.map(l => { const pd = l.principal > 0 ? Math.max(0, 1 - l.balance / l.principal) : 0; const lk = l.linked && M.H[l.linked]; return { name: l.name, color: l.color, country: l.country, usd: usd(l.u[NOW]), native: l.ccy === 'INR' ? inr(l.balance) : '', paid: pctU(pd), paidPct: (pd * 100).toFixed(1) + '%', rate: l.rate + '%', emi: nat(l.emi, l.ccy), link: lk ? 'Secures ' + lk.name + ' · ' : '', payoff: l.pay ? 'Paid off ' + mlab(l.pay) : 'No payoff at this payment', onClick: () => this.go('loan', { lid: l.id }) }; }) };
+    }
+
+    let lo = {};
+    if (s.screen === 'loan' && M.Lo[s.lid]) {
+      const l = M.Lo[s.lid], lk = l.linked && M.H[l.linked];
+      const pd = l.principal > 0 ? Math.max(0, 1 - l.balance / l.principal) : 0;
+      const x0l = l.start >= NOW ? NOW - 6 : Math.max(0, l.start - 3);
+      const x1l = s.proj ? Math.min(M.END, l.pay ? l.pay + 6 : M.END) : NOW;
+      const series = [{ name: 'Balance', vals: l.u, color: 'var(--neg)', area: true, areaOpacity: .1, width: 2, dot: true }];
+      if (lk) series.push({ name: lk.name, vals: lk.u, color: lk.c.color, width: 1.5, dot: true });
+      lo = { name: l.name, country: l.country === 'IN' ? 'India' : 'United States', ccy: l.ccy, usd: usd(l.u[NOW]),
+        nativeLine: l.ccy === 'INR' ? inr(l.balance) + ' at ₹' + M.fxR.toFixed(2) + '/$' : 'Current balance',
+        paid: pctU(pd), paidPct: (pd * 100).toFixed(1) + '%', principal: nat(l.principal, l.ccy), startLabel: 'in ' + mlab(l.start),
+        stats: [
+          { label: 'Interest rate', value: l.rate + '%', sub: l.revolving ? 'Revolving credit' : 'Fixed APR' },
+          { label: 'Monthly payment', value: nat(l.emi, l.ccy), sub: l.ccy === 'INR' ? '≈ ' + usd(l.emi / M.fxR) : (l.revolving ? 'Your planned payment' : 'EMI') },
+          { label: 'Projected payoff', value: l.pay ? mlab(l.pay) : 'Never', sub: l.pay ? 'In ' + yrsFrom(l.pay) + (l.termY ? ' · ' + l.termY + '-yr term' : '') : 'Payment doesn’t cover interest' },
+          { label: 'Interest remaining', value: nat(l.interest, l.ccy), sub: 'If paid on schedule' }],
+        chart: h(Chart, { key: 'lo' + l.id, x0: x0l, x1: Math.max(x1l, x0l + 2), now: NOW, height: 240, zero: true, series }),
+        chartSub: lk ? 'Against the value of ' + lk.name : 'History and payoff projection',
+        hasLink: !!lk, linkName: lk ? lk.name : '', linkSub: lk ? 'Worth ' + usd(lk.u[NOW]) + ' · ' + pctU(Math.max(0, (lk.u[NOW] - l.u[NOW]) / lk.u[NOW])) + ' owned' : '', equity: lk ? usd(lk.u[NOW] - l.u[NOW]) : '', goLink: () => lk && this.go('holding', { hid: lk.id }),
+        onEdit: () => this.openEditLoan(l.id),
+        onDelete: () => { if (!s.del) return this.setState({ del: true }); this.setState(st => ({ loans: st.loans.filter(v => v.id !== l.id) })); this.go('liabilities'); } };
+    }
+
+    let gr = {};
+    if (s.screen === 'growth') {
+      const cf = s.gctry || 'All', scope = cf === 'All' ? ['US', 'IN'] : [cf];
+      const cr = s.crates || DEF_CRATES, real = !!s.real;
+      const infOf = k => { const v = parseFloat(cr[k].inflation); return (isNaN(v) ? 0 : v) / 100; };
+      const sumS = (get, nominal, ks) => { const out = new Array(M.L).fill(0); (ks || scope).forEach(k => { const a = get(k), r = infOf(k); for (let i = 0; i < M.L; i++) out[i] += (real && !nominal) ? a[i] / Math.pow(1 + r, (i - NOW) / 12) : a[i]; }); return out; };
+      const An = sumS(k => M.ctry[k].a, true), Ln = sumS(k => M.ctry[k].l, true), Nn = An.map((v, i) => v - Ln[i]);
+      const A = sumS(k => M.ctry[k].a), Lb = sumS(k => M.ctry[k].l), NW = A.map((v, i) => v - Lb[i]);
+      const m0 = R0[s.grange], a = this.attr(m0, scope), d = Nn[NOW] - Nn[m0];
+      const scopeName = cf === 'All' ? 'all countries' : CTRY[cf].name;
+      const gmode = s.gmode || 'simple';
+      let cum = new Array(M.L).fill(0); const series = []; let legend;
+      const order = clsActive.filter(c => scope.some(k => M.byCC[k][c.id][NOW] > 0)).sort((p, q) => sumS(k => M.byCC[k][q.id], true)[NOW] - sumS(k => M.byCC[k][p.id], true)[NOW]);
+      const owed = { name: 'Owed', vals: Lb, color: 'var(--neg)', width: 1.75, dot: true, endLabel: true };
+      if (gmode === 'class') {
+        order.forEach(c => { const own = sumS(k => M.byCC[k][c.id]); const top = cum.map((v, i) => v + own[i]); series.push({ name: c.name, vals: top, base: cum, tip: own, color: c.color, area: true, areaOpacity: .32, width: .75 }); cum = top; });
+        series.push(owed);
+        series.unshift({ name: 'Net worth', vals: NW, color: 'var(--ink)', width: 2.5, dot: true, bold: true, endLabel: true });
+        legend = [...order.map(c => ({ name: c.name, color: c.color })), { name: 'Owed', color: 'var(--neg)' }, { name: 'Net worth', color: 'var(--ink)' }];
+      } else if (gmode === 'country') {
+        scope.forEach(k => { const ak = sumS(() => M.ctry[k].a, false, [k]), lk = sumS(() => M.ctry[k].l, false, [k]); series.push({ name: CTRY[k].short + ' net worth', endName: CTRY[k].short, vals: ak.map((v, i) => v - lk[i]), color: CTRY[k].color, width: 2.25, dot: true, endLabel: true }); });
+        if (scope.length > 1) series.unshift({ name: 'Total net worth', endName: 'Total', vals: NW, color: 'var(--ink)', width: 2.5, dot: true, bold: true, endLabel: true });
+        legend = [...(scope.length > 1 ? [{ name: 'Total net worth', color: 'var(--ink)' }] : []), ...scope.map(k => ({ name: CTRY[k].short + ' net worth', color: CTRY[k].color }))];
+      } else {
+        series.push({ name: 'Net worth', vals: NW, color: 'var(--ink)', width: 2.5, dot: true, bold: true, endLabel: true });
+        series.push({ name: 'Assets', vals: A, color: 'var(--pos)', area: true, areaOpacity: .1, width: 1.5, dot: true, endLabel: true });
+        series.push({ ...owed, area: true, areaOpacity: .1 });
+        legend = [{ name: 'Net worth', color: 'var(--ink)' }, { name: 'Assets', color: 'var(--pos)' }, { name: 'Owed', color: 'var(--neg)' }];
+      }
+      const pEnd = Nn[M.END], pReal = scope.reduce((q, k) => q + (M.ctry[k].a[M.END] - M.ctry[k].l[M.END]) / Math.pow(1 + infOf(k), M.PY), 0);
+      const steps = [{ label: 'Net worth ' + mlab(m0), v: Nn[m0], total: true }, { label: 'Asset growth & savings', v: a.grow }, { label: 'Debt paid down', v: a.debt }];
+      if (scope.includes('IN')) steps.push({ label: 'Currency (₹ → $)', v: a.fxe });
+      steps.push({ label: 'Net worth today', v: Nn[NOW], total: true });
+      let run = 0, mxv = 1; steps.forEach(st => { if (st.total) run = st.v; else run += st.v; mxv = Math.max(mxv, run, st.total ? st.v : 0); });
+      run = 0;
+      const water = steps.map(st => { let from, to; if (st.total) { from = 0; to = st.v; run = st.v; } else { from = run; to = run + st.v; run = to; } const lft = Math.max(0, Math.min(from, to)); return { label: st.label, value: st.total ? usd(st.v) : sgn(st.v), left: (lft / mxv * 100).toFixed(2) + '%', width: Math.max(0.6, Math.abs(to - from) / mxv * 100).toFixed(2) + '%', color: st.total ? 'var(--ink)' : pn(st.v), fw: st.total ? 600 : 400, lColor: st.total ? 'var(--ink)' : 'var(--ink2)', vColor: st.total ? 'var(--ink)' : pn(st.v) }; });
+      const years = []; for (let y = 2018; y <= 2026; y++) { const i = Math.min(NOW, (y - 2018) * 12 + 11), pi = (y - 2019) * 12 + 11; const ch = y > 2018 && Nn[pi] !== 0 ? (Nn[i] - Nn[pi]) / Math.abs(Nn[pi]) : null; years.push({ year: y === 2026 ? '2026*' : String(y), nw: cmp(Nn[i]), liab: cmp(Ln[i]), change: ch == null ? '—' : pct(ch, 0), cColor: ch == null ? 'var(--ink3)' : pn(ch) }); }
+      const at = s.atab || 'US';
+      const setRate = (grp, key) => e => { const v = e.target.value; this.setState(st => { const c0 = st.crates || DEF_CRATES; return { crates: { ...c0, [grp]: { ...c0[grp], [key]: v } } }; }); };
+      const heldIn = (k, cid) => M.byCC[k][cid][NOW] > 0 ? cmp(M.byCC[k][cid][NOW]) + ' held' : 'none held';
+      const infTxt = scope.map(k => CTRY[k].short + ' ' + (infOf(k) * 100).toFixed(1) + '%').join(', ');
+      gr = { delta: sgn(d), dColor: pn(d), sub: 'Net worth change since ' + mlab(m0) + ' · ' + scopeName + ' · ' + usd(Nn[m0]) + ' → ' + usd(Nn[NOW]),
+        chart: h(Chart, { key: 'gr' + cf, x0: m0, x1, now: NOW, height: 300, zero: true, series }),
+        legend,
+        attrSub: (cf === 'All' ? '' : CTRY[cf].name + ' only. ') + 'Asset growth uses ' + mlab(m0) + ' exchange rates, so currency moves are split out', water, years: years.reverse(),
+        ctryOpts: seg(['All', 'United States', 'India'], cf === 'All' ? 'All' : CTRY[cf].name, o => { const k = o === 'All' ? 'All' : o === 'India' ? 'IN' : 'US'; this.setState(k === 'All' ? { gctry: k } : { gctry: k, atab: k }); }),
+        atabOpts: seg(['United States', 'India'], CTRY[at].name, o => this.setState({ atab: o === 'India' ? 'IN' : 'US' })),
+        atabName: CTRY[at].name,
+        localRates: [{ name: 'Inflation', color: 'var(--ink3)', value: cr[at].inflation ?? '', held: 'Used for today’s dollars', onChange: setRate(at, 'inflation') }, ...LOCAL_CLS.map(cid => { const c = clsById(cid); return { name: c.name, color: c.color, value: cr[at][cid] ?? '', held: heldIn(at, cid), onChange: setRate(at, cid) }; })],
+        commonRates: ['crypto', 'metals', 'other'].map(cid => { const c = clsById(cid); return { name: c.name, color: c.color, value: cr.common[cid] ?? '', held: holdArr.some(x => x.cls === cid) ? cmp(M.byCls[cid][NOW]) + ' held' : 'none held', onChange: setRate('common', cid) }; }),
+        modeOpts: seg(['Simple', 'By asset class', 'By country'], gmode === 'class' ? 'By asset class' : gmode === 'country' ? 'By country' : 'Simple', o => this.setState({ gmode: o === 'Simple' ? 'simple' : o === 'By country' ? 'country' : 'class' })),
+        realOpts: seg(['Nominal', 'Today’s dollars'], real ? 'Today’s dollars' : 'Nominal', o => this.setState({ real: o !== 'Nominal' })),
+        resetRates: () => this.setState({ crates: DEF_CRATES }),
+        chartTitle: (real ? 'In today’s dollars' : 'What you own, what you owe') + (cf === 'All' ? '' : ' · ' + CTRY[cf].name),
+        chartSub: real ? 'Each country restated in Oct 2026 dollars at its own inflation: ' + infTxt : 'Nominal dollars, not adjusted for inflation',
+        projNom: usd(pEnd), projReal: usd(pReal), projYear: mlab(M.END), projLoss: usd(pEnd - pReal), projScope: scopeName };
+    }
+
+    const gl = { sub: 'Projected dates use the country-specific growth rates set on the Growth page, current loan payments, and no new savings. Amounts are nominal.', rows: s.goals.map(g => this.goalInfo(g)) };
+    if (s.screen === 'overview') gl.rows = gl.rows.filter(r => r.sColor !== 'var(--pos)').slice(0, 3);
+
+    const f = s.form, isLoanF = f.kind === 'liability';
+    const opt = (cur, v) => ({ bg: cur === v ? 'var(--sel)' : 'transparent', bd: cur === v ? 'var(--ink2)' : 'var(--line2)' });
+    const fm = {
+      title: f.mode === 'update' ? 'Update value' : f.mode === 'edit' ? (isLoanF ? 'Edit loan' : 'Edit ' + noun(f.cls, 1)) : 'Add to portfolio',
+      showKind: f.mode === 'add', isUpdate: f.mode === 'update', isFull: f.mode !== 'update', isAsset: f.mode !== 'update' && !isLoanF, isLoan: f.mode !== 'update' && isLoanF,
+      showUnits: f.mode !== 'update' && !isLoanF && f.cls === 'metals',
+      kindOpts: seg(['Asset', 'Liability'], isLoanF ? 'Liability' : 'Asset', o => this.setF('kind', o === 'Asset' ? 'asset' : 'liability')),
+      clsOpts: CLS.map(c => ({ label: c.name, color: c.color, onClick: () => this.setF('cls', c.id), ...opt(f.cls, c.id) })),
+      ctryOpts: [['US', 'United States · $'], ['IN', 'India · ₹']].map(([k, l]) => ({ label: l, onClick: () => this.setF('country', k), ...opt(f.country, k) })),
+      unitOpts: [['g', 'Grams'], ['oz t', 'Troy oz']].map(([k, l]) => ({ label: l, onClick: () => this.setF('unit', k), ...opt(f.unit, k) })),
+      linkOpts: [{ v: '', label: 'None' }, ...holdArr.map(x => ({ v: x.id, label: x.name }))],
+      prefix: (f.mode === 'update' ? (s.holdings.find(x => x.id === f.id) || {}).country : f.country) === 'IN' ? '₹' : '$',
+      name: f.name || '', value: f.value || '', cost: f.cost || '', units: f.units || '', balance: f.balance || '', principal: f.principal || '', rate: f.rate || '', emi: f.emi || '', termY: f.termY || '', linked: f.linked || '', was: f.was || '',
+      namePh: isLoanF ? 'e.g. Personal loan · ICICI' : f.cls === 'stocks' ? 'e.g. Schwab brokerage' : f.cls === 'realestate' ? 'e.g. Austin condo' : f.cls === 'cash' ? 'e.g. Chase savings' : 'e.g. Gold coins',
+      nameLabel: isLoanF ? 'Loan name' : f.cls === 'stocks' ? 'Account name' : f.cls === 'realestate' ? 'Property name' : 'Name', err: f.err || '',
+      saveLabel: f.mode === 'add' ? (isLoanF ? 'Add loan' : 'Add ' + noun(f.cls, 1)) : 'Save',
+    };
+    const isStkF = fm.isAsset && f.cls === 'stocks';
+    const np = f.np || {}, npKey = tickerKey(np.t, f.country), npKnown = npKey ? TICKERS[npKey] : null;
+    const fccy = f.country === 'IN' ? 'INR' : 'USD';
+    Object.assign(fm, {
+      isStocks: isStkF, showValue: fm.isAsset && !isStkF, isRE: fm.isAsset && f.cls === 'realestate',
+      ptypeOpts: PTYPES.map(k => ({ label: k, onClick: () => this.setF('ptype', k), ...opt(f.ptype, k) })), city: f.city || '',
+      posRows: (f.positions || []).map(p => { const i = posInfo(p); return { disp: i.disp, name: i.name, meta: p.sh + ' sh · avg ' + nat(p.avg, fccy) + ' · now ' + nat(i.price, fccy) + ' · ' + i.sector, value: nat(p.sh * i.price, fccy), onRemove: () => this.setState(s => ({ form: { ...s.form, positions: s.form.positions.filter(q => q.t !== p.t) } })) }; }),
+      posTotal: (f.positions || []).length ? nat(withPos({ positions: f.positions }).value, fccy) : '',
+      hasPosRows: (f.positions || []).length > 0,
+      np: { t: np.t || '', sh: np.sh || '', avg: np.avg || '', price: np.price || '', sector: np.sector || 'Technology' },
+      npLook: npKnown ? npKnown.name + ' · ' + npKnown.sector + ' · ' + nat(npKnown.price, fccy) + ' · ' + npKnown.ex : npKey ? 'Not in sample data. Enter the price and sector.' : (f.country === 'IN' ? 'Try RELIANCE, INFY, TCS, ITC, LT' : 'Try AAPL, GOOGL, META, V, CAT, TSLA'),
+      npLookColor: npKnown ? 'var(--pos)' : 'var(--ink3)', npManual: !!npKey && !npKnown,
+      sectorOpts: SECTORS.map(k => ({ v: k, label: k })),
+      npSet: { t: e => this.setNP('t', e.target.value.toUpperCase()), sh: e => this.setNP('sh', e.target.value), avg: e => this.setNP('avg', e.target.value), price: e => this.setNP('price', e.target.value), sector: e => this.setNP('sector', e.target.value) },
+      addPos: () => this.addPos(), onPosKey: e => { if (e.key === 'Enter') this.addPos(); },
+    });
+    const fset = { city: e => this.setF('city', e.target.value) }; ['name', 'value', 'cost', 'units', 'balance', 'principal', 'rate', 'emi', 'termY', 'linked'].forEach(k => fset[k] = e => this.setF(k, e.target.value));
+
+    let drawer = { open: false };
+    if (s.panel && M.H[s.panel.hid]) {
+      const x = M.H[s.panel.hid], p = (x.positions || []).find(q => q.t === s.panel.t);
+      if (p) {
+        const i = posInfo(p), v = p.sh * i.price, cost = p.sh * (p.avg || i.price), g = v - cost, vu = x.ccy === 'INR' ? v / M.fxR : v;
+        drawer = { open: true, disp: i.disp, ex: i.ex, name: i.name, sector: i.sector, sColor: SECTOR_COLORS[i.sector] || SECTOR_COLORS.Other, acct: x.name, usd: usd(vu), native: x.ccy === 'INR' ? inr(v) + ' at ₹' + M.fxR.toFixed(2) + '/$' : p.sh + ' shares × ' + usd(i.price), url: i.url,
+          stats: [{ label: 'Price', value: nat(i.price, x.ccy), sub: 'Sample quote', color: 'var(--ink)' }, { label: 'Shares', value: String(p.sh), sub: '', color: 'var(--ink)' }, { label: 'Avg cost', value: nat(p.avg || i.price, x.ccy), sub: 'Per share', color: 'var(--ink)' }, { label: 'Cost basis', value: nat(cost, x.ccy), sub: '', color: 'var(--ink)' }, { label: 'Unrealized gain', value: sgnNat(g, x.ccy), sub: pct(g / cost), color: pn(g) }, { label: 'Weight in stocks', value: pctU(vu / (M.byCls.stocks[NOW] || 1)), sub: '', color: 'var(--ink)' }],
+          close: () => this.setState({ panel: null }), goAcct: () => { this.setState({ panel: null }); this.go('holding', { hid: x.id }); } };
+      }
+    }
+    return {
+      drawer,
+      wide, narrow: s.narrow, phone, sidebar: bp === 'd', topbar: bp !== 'd', tabletNav: bp === 't', nav, clsNav,
+      allocCols: phone ? 'minmax(0,1fr) auto 44px' : 'minmax(0,1fr) auto 48px 76px',
+      sheet: { align: phone ? 'flex-end' : 'flex-start', pad: phone ? '0' : '6vh 16px', radius: phone ? '16px 16px 0 0' : '16px', maxH: phone ? '92vh' : 'none' },
+      themeShort: s.theme === 'dark' ? 'Light' : 'Dark',
+      sideNw: usd(nwNow), sideDelta: sgn(d12) + ' (' + pct(d12 / M.nw[NOW - 12]) + ') 12 mo', sideColor: pn(d12),
+      themeLabel: s.theme === 'dark' ? 'Light mode' : 'Dark mode', toggleTheme: () => this.setTheme(s.theme === 'dark' ? 'light' : 'dark'),
+      openAdd: () => this.openAdd('asset'), openAddLoan: () => this.openAdd('liability'),
+      isOverview: s.screen === 'overview', isAssets: s.screen === 'assets', isClass: s.screen === 'class', isHolding: s.screen === 'holding' && !!M.H[s.hid], isLiab: s.screen === 'liabilities', isLoan: s.screen === 'loan' && !!M.Lo[s.lid], isGrowth: s.screen === 'growth', isGoals: s.screen === 'goals',
+      ranges: seg(['1Y', '3Y', '5Y', 'All'], s.range, o => this.setState({ range: o })),
+      granges: seg(['1Y', '3Y', '5Y', 'All'], s.grange, o => this.setState({ grange: o })),
+      projOpt: { label: s.proj ? M.PY + '-yr projection on' : 'Projection off', bg: s.proj ? 'var(--sel)' : 'transparent', onClick: () => this.setState(st => ({ proj: !st.proj })) },
+      twoCol: s.tc !== false ? 'minmax(0,1.45fr) minmax(0,1fr)' : 'minmax(0,1fr)', assetCols, posCols, secPosCols,
+      ov, as, cl, hd, li, lo, gr, gl,
+      delLabel: s.del ? 'Confirm delete' : 'Delete',
+      goAssets: () => this.go('assets'), goLiab: () => this.go('liabilities'), goGoals: () => this.go('goals'),
+      gform: { name: s.gform.name, target: s.gform.target, onName: e => this.setState({ gform: { ...s.gform, name: e.target.value } }), onTarget: e => this.setState({ gform: { ...s.gform, target: e.target.value } }),
+        onAdd: () => { const t = +String(s.gform.target).replace(/[,$\s]/g, ''); if (!(t > 0)) return; this.setState(st => ({ goals: [...st.goals, { id: 'g' + Date.now(), name: st.gform.name.trim() || cmp(t) + ' net worth', target: t }].sort((a, b) => a.target - b.target), gform: { name: '', target: '' } })); } },
+      modalOpen: s.modal, fm, fset, closeModal: () => this.setState({ modal: false }), stop: e => e.stopPropagation(), saveForm: () => this.save(),
+    };
+  }
+}
+</script>
+</body>
+</html>
