@@ -10,7 +10,9 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
-    "seed": "node scripts/seed-local.mjs"
+    "seed": "node scripts/seed-local.mjs",
+    "spec:coverage": "node scripts/spec-coverage.mjs",
+    "test:scripts": "node --test scripts/*.test.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",
