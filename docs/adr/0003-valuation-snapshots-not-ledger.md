@@ -4,4 +4,4 @@ Holdings and Liabilities are tracked as periodic point-in-time Valuations (see C
 
 ## Status
 
-accepted
+accepted; amended by ADR 0005 (Cost Basis is now tracked as a current figure) and ADR 0008 (automatic daily Valuations for Stocks Holdings; FX by date instead of a rate frozen on each Valuation)
