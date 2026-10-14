@@ -43,6 +43,21 @@ Read the `## N.` section of `openspec/changes/<change>/tasks.md`, plus the chang
 
 `spec-driven` changes, including those planned before this convention (no `Blocked by` lines), are worked with `/opsx:apply`, not `/implement-spec`.
 
+## Changes that depend on other changes
+
+`Blocked by` orders tickets inside one change. Between changes, the same idea is one line directly under `# Proposal` in `proposal.md`:
+
+```markdown
+# Proposal
+
+Depends on: `redesign-holding-entry`, `redesign-shell-and-overview`
+```
+
+- Name each other change whose code or specs this one builds on, or write `Depends on: none`. Only **direct** dependencies: a change used through another needn't be repeated, and the order a map listed changes in is not a dependency.
+- A change is **ready to build** when every change it names is merged into the base branch. Changes whose dependencies are all merged can be built at the same time, each with its own `/implement-spec` run. Parallelism is derived from the edges, never declared, the same as for tickets.
+- Archive a dependency first when this change's delta specs MODIFY, REMOVE or RENAME its requirements, because those operations need the requirement to exist in `openspec/specs/`.
+- If a dependency changes after this change was proposed, update this change with `/opsx:update` before building it.
+
 ## Wayfinding operations
 
 Used by `/wayfinder`. The **map** is a single GitHub issue with **child** issues as decision tickets. A map's destination is normally "an OpenSpec change `<name>` ready for `/opsx:propose`". The issues are the **trail**; the **record** is the change's `design.md` (see **Handoff**).
@@ -56,6 +71,6 @@ Used by `/wayfinder`. The **map** is a single GitHub issue with **child** issues
 - **Resolve**: `gh issue comment <n> --body "<answer>"`, then `gh issue close <n>`, then append a context pointer (gist + link) to the map's Decisions-so-far.
 - **Evidence**: research and prototype findings stay on pushed, never-merged `research/<name>` / `prototype/<name>` branches, linked from the ticket.
 - **Close the map**: when resolving a ticket leaves no open decision tickets and nothing under Not yet specified, comment `Destination reached → /opsx:propose <change>` on the map and close it. Reopen it with a new decision ticket if review surfaces an undecided question.
-- **Handoff**: `/opsx:propose` reads the closed map. Each resolved decision becomes an entry under `design.md` `## Decisions` (with the alternatives considered) linking its ticket; a hard-to-reverse decision also gets an ADR in `docs/adr/`.
+- **Handoff**: `/opsx:propose` reads the closed map. Each resolved decision becomes an entry under `design.md` `## Decisions` (with the alternatives considered) linking its ticket; a hard-to-reverse decision also gets an ADR in `docs/adr/`. When a map hands off to several changes, each proposal's `Depends on:` line records which of them it builds on (see **Changes that depend on other changes**).
 - **Labels**: the six `wayfinder:*` labels (`map`, `research`, `prototype`, `grilling`, `task`, `needs-team`) must exist on the repo (`setup-project.sh` creates them).
 - `.scratch/` is git-ignored: a local scratchpad only, never a tracker.

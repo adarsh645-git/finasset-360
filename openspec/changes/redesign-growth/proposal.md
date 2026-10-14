@@ -1,5 +1,7 @@
 # Proposal
 
+Depends on: `redesign-shell-and-overview`, `redesign-data-model`, `redesign-calculations`
+
 ## Why
 
 The mockup redesign ([map #13](https://github.com/adarsh645-git/finasset-360/issues/13)) moves every Projection setting onto the Growth page and makes it the one place to see how Net Worth got here and where it is heading. After `redesign-update-pass` the User can record and update everything, but cannot change a growth rate, inflation, Monthly savings or the horizon. Every Projection, and every Goal date later, runs on defaults until this change ships. It is change 8 of the [nine-change sequence](https://github.com/adarsh645-git/finasset-360/issues/16).

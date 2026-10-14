@@ -1,5 +1,7 @@
 # Proposal
 
+Depends on: `redesign-holding-entry`, `redesign-shell-and-overview`, `redesign-data-model`
+
 ## Why
 
 After `redesign-asset-pages` the app shows everything a User owns but nothing they owe: there is no Liabilities page, no Loan detail and no way to add a loan, so Net Worth, Equity and the Projection run on whatever the seed script put in. The mockup's screens 6, 7 and the liability side of screen 10 ([map #13](https://github.com/adarsh645-git/finasset-360/issues/13), [Liabilities as loans #3](https://github.com/adarsh645-git/finasset-360/issues/3)) close that gap. This is change 6 of the [nine-change sequence](https://github.com/adarsh645-git/finasset-360/issues/16), and `redesign-update-pass` needs its balance edit next.

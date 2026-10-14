@@ -1,5 +1,7 @@
 # Proposal
 
+Depends on: `redesign-liabilities`, `redesign-holding-entry`, `redesign-shell-and-overview`
+
 ## Why
 
 The User updates 10–30 values once a month in one sitting (docs/SPEC.md l.20). After `redesign-shell-and-overview` the Overview's "Needs updating (N)" card lists every Stale item, but clearing it means about four clicks per item: open the item's page, open Update value, confirm, go back. That's around 55 clicks for 14 items, even when a house's value hasn't changed. The user chose a light guided pass on the existing modals ([#20](https://github.com/adarsh645-git/finasset-360/issues/20), option 2). It ships as change 7 of the [nine-change sequence](https://github.com/adarsh645-git/finasset-360/issues/16), after `redesign-liabilities`, because a pass covers both Holdings and loans and needs both modals.

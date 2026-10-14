@@ -1,5 +1,7 @@
 # Proposal
 
+Depends on: `redesign-data-model`, `redesign-calculations`
+
 ## Why
 
 After `redesign-data-model`, production shows only a signed-in "Being rebuilt" page. The new schema and read model hold real data, but nothing displays it. Every later page change in the [nine-change sequence](https://github.com/adarsh645-git/finasset-360/issues/16) also needs the same shell, design tokens, theme, chart and number formatting. This change builds those shared pieces once and uses them for the first real screen, the Overview, so the User can see their Net Worth again. It is change 3 of 9 ([map #13](https://github.com/adarsh645-git/finasset-360/issues/13)).

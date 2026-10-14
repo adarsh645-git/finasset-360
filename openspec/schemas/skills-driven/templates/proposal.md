@@ -1,5 +1,9 @@
 # Proposal
 
+Depends on: none
+<!-- Other changes this one builds on, each in backticks, e.g. Depends on: `add-x`, `add-y`.
+     Only direct dependencies. They must be merged before this change is built. -->
+
 ## Why
 
 <!-- Explain the motivation for this change. What problem does this solve? Why now? -->

@@ -1,5 +1,7 @@
 # Proposal
 
+Depends on: none
+
 ## Why
 
 The mockup redesign ([map #13](https://github.com/adarsh645-git/finasset-360/issues/13)) changes nearly every number the app shows. Net Worth is now in USD and history is converted with each date's FX Rate. History is interpolated between Valuations. The Projection runs month by month, per Country and per Asset Class, and includes Monthly savings and amortizing Liabilities. Goals get derived dates. The app can't be rebuilt screen by screen until these rules exist and are proven, so this change goes first in the [nine-change sequence](https://github.com/adarsh645-git/finasset-360/issues/16).
