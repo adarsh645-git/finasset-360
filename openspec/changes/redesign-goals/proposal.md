@@ -1,5 +1,7 @@
 # Proposal
 
+Depends on: `redesign-shell-and-overview`, `redesign-data-model`, `redesign-calculations`
+
 ## Why
 
 The old app had one dated Target Net Worth and a Required Contribution solver. The redesign ([map #13](https://github.com/adarsh645-git/finasset-360/issues/13)) replaces them with any number of dateless Goals, each with a derived date ([#6](https://github.com/adarsh645-git/finasset-360/issues/6)). `redesign-calculations` already computes the Goal status and `redesign-data-model` already stores Goals. Nothing shows them yet: the Goals nav item is plain text, the Overview has no Goals card, and the chart draws no goal lines. This is the last change in the [nine-change sequence](https://github.com/adarsh645-git/finasset-360/issues/16), and it finishes the mockup.

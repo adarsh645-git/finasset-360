@@ -1,5 +1,7 @@
 # Proposal
 
+Depends on: `redesign-calculations`
+
 ## Why
 
 The redesign ([map #13](https://github.com/adarsh645-git/finasset-360/issues/13)) changes the shape of almost every record. A Stocks Holding becomes an account of Positions, Asset Classes are a fixed six, Liabilities are flat loans, Valuations are dated with no FX on them, FX comes from a shared daily table, and Goals and per-Country Projection Assumptions replace Target Net Worth and the single growth rate. The old Miller-column app can't run on that model, and production holds only test data. This change is the cutover, second in the [nine-change sequence](https://github.com/adarsh645-git/finasset-360/issues/16). It ships early because Stocks history only starts once the daily cron takes snapshots.

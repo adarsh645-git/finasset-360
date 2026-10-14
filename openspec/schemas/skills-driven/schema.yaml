@@ -7,7 +7,7 @@ artifacts:
     description: Initial proposal document outlining the change
     template: proposal.md
     instruction: |
-      **skills-driven:** Use the opsx-to-spec skill to write this artifact. Synthesise the grilling or wayfinder map already done; do not re-interview. If a wayfinder map is referenced (a GitHub issue labelled wayfinder:map), read its Decisions so far and the linked tickets' resolution comments (gh issue view <n> --comments). Map Problem Statement to Why, Solution to What Changes, and Out of Scope to non-goals. Use the domain-modeling skill for ubiquitous language: name every domain concept with its GLOSSARY.md term, and when a new or fuzzy term appears, settle it with the user and record it in GLOSSARY.md. If the change has no user-visible behaviour (a refactor or infrastructure), say so under What Changes as `Acceptance scenarios: none - <reason>`.
+      **skills-driven:** Use the opsx-to-spec skill to write this artifact. Synthesise the grilling or wayfinder map already done; do not re-interview. If a wayfinder map is referenced (a GitHub issue labelled wayfinder:map), read its Decisions so far and the linked tickets' resolution comments (gh issue view <n> --comments). Map Problem Statement to Why, Solution to What Changes, and Out of Scope to non-goals. Use the domain-modeling skill for ubiquitous language: name every domain concept with its GLOSSARY.md term, and when a new or fuzzy term appears, settle it with the user and record it in GLOSSARY.md. If the change has no user-visible behaviour (a refactor or infrastructure), say so under What Changes as `Acceptance scenarios: none - <reason>`. Put a `Depends on:` line directly under the `# Proposal` heading naming, in backticks, each other change whose code or specs this change builds on (`Depends on: none` when it stands alone). Name only direct dependencies, not the order a map happened to list changes in. The rule is in docs/agents/issue-tracker.md (Changes that depend on other changes).
 
       Create the proposal document that establishes WHY this change is needed.
 
@@ -284,6 +284,8 @@ apply:
   tracks: tasks.md
   instruction: |
     This change uses the skills-driven layout: tasks.md is a graph of tickets with Blocked by edges.
+    First read the `Depends on:` line in proposal.md: if any change it names is not yet merged into the
+    base branch, stop and tell the user which ones before writing code.
     Suggest /implement-spec openspec/changes/<change> to build the ready tickets in parallel. If the user
     prefers apply, work tickets in Blocked by order, never starting one whose blockers are unticked, and
     go red first: a ticket's tests named with its scenario IDs fail before any code, and they pass in the

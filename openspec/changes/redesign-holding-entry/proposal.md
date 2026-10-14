@@ -1,5 +1,7 @@
 # Proposal
 
+Depends on: `redesign-shell-and-overview`, `redesign-data-model`
+
 ## Why
 
 After `redesign-data-model` and `redesign-shell-and-overview`, production shows an Overview of real data, but a User has no way to add or change what they own. The seed script is the only way data gets in. This change adds the mockup's add/edit modal, Holding detail page and position drawer. It is the fourth change in the [nine-change sequence](https://github.com/adarsh645-git/finasset-360/issues/16), and from here **the app is usable again**.

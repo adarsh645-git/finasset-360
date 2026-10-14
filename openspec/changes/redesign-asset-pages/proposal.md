@@ -1,5 +1,7 @@
 # Proposal
 
+Depends on: `redesign-holding-entry`, `redesign-shell-and-overview`
+
 ## Why
 
 After `redesign-holding-entry` a User can add Holdings and open each one, but there is no page that lists them all, and no page per Asset Class. The sidebar class rows, Overview's Allocation rows and the Assets nav item are still plain text. The mockup's Assets screen and its class pages (layout A, the approved one) fill that gap. They are change 5 in the [nine-change sequence](https://github.com/adarsh645-git/finasset-360/issues/16) of the [mockup redesign map](https://github.com/adarsh645-git/finasset-360/issues/13).
