@@ -1,74 +1,133 @@
 # FinAsset 360
 
-A multi-tenant net-worth tracker: each signed-in User records what they own (Holdings) and owe (Liabilities), and sees their own portfolio distribution against goals.
+A multi-tenant net-worth tracker: each signed-in User records what they own (Holdings) and owe (Liabilities) across Countries, sees it all rolled up to USD, and projects it forward against their Goals.
 
 ## Language
 
+### People and scope
+
 **User**:
 An authenticated account (via Google sign-in), isolated from every other User's data by database-enforced Row-Level Security. Owns exactly one Portfolio.
-_Avoid_: Account, tenant
-
-**Asset Class**:
-A category of thing one can own — Real Estate, Equity, Precious Metal, Cash, Crypto, etc.
-_Avoid_: Asset type, category
-
-**Holding**:
-One specific thing owned within an Asset Class — e.g. "10 shares of AAPL," "123 Main St," "3 oz gold coins." Belongs to exactly one Asset Class.
-_Avoid_: Asset, position, item
+_Avoid_: Account (in the UI "account" is the noun for some Holdings, see Asset Class), tenant
 
 **Portfolio**:
-The full set of a user's Holdings. The basis for the distribution view. Also the anchor record for that User's account-level settings (home/display currency, Target Allocation, Projection) — a Liability belongs to the User, not conceptually "inside" the Portfolio, but is scoped through this same anchor since a User has exactly one.
+The full set of a User's Holdings and Liabilities, and the anchor for that User's settings (Projection Assumptions, Monthly savings, Goals). Everything in it rolls up to USD.
 _Avoid_: Assets, holdings list
 
-**Liability Class**:
-A category of debt — Mortgage, Auto Loan, Credit Card, etc. Mirrors Asset Class.
-_Avoid_: Debt type
+**Country**:
+Where a Holding or Liability lives, currently US or India. It fixes the item's native currency (USD or INR) and supplies its own inflation and growth rates to the Projection.
+_Avoid_: Region, market, currency (the currency follows from the Country)
 
-**Liability**:
-One specific debt owed — e.g. "mortgage on 123 Main St." Belongs to exactly one Liability Class. May optionally carry Amortization Assumptions and be linked to the Holding it financed (e.g. a mortgage linked to the house it's secured against), enabling a combined Projected Net Position for that pair.
-_Avoid_: Debt, loan (unless the Liability Class itself is "Loan")
+### What a User owns
 
-**Amortization Assumptions**:
-Optional loan details (interest rate, required payment, any recurring extra payment, any escrow portion) attached to a Liability, letting Projection shrink that Liability's balance forward over time using standard loan-payoff math instead of holding it flat. When the balance reaches zero, the freed payment is added to the Projection's monthly contribution from that point on. Not specific to the "Mortgage" Liability Class — any Liability can carry them (e.g. an Auto Loan).
-_Avoid_: Loan terms, mortgage details (not Mortgage-specific)
+**Asset Class**:
+One of six fixed categories of thing a User can own: Real estate, Stocks, Cash, Crypto, Metals, Vehicles & other. The set is fixed, so Users cannot add classes. Each class has a colour, a noun (Stocks, Cash and Crypto are an "account", Real estate is a "property", the rest an "asset") and a Projection rate rule: Real estate, Stocks and Cash take a rate per Country, the other three share one rate. Rough guide: fixed deposits and savings schemes go in Cash, funds and ETFs in Stocks.
+_Avoid_: Asset type, category, custom class, Equity (the old name for Stocks, now means something else)
 
-**Valuation**:
-A point-in-time recorded value for a Holding, or a point-in-time recorded balance for a Liability. Holdings and Liabilities both accumulate a Valuation History over time (never just overwritten), so Net Worth trend can be reconstructed.
-_Avoid_: Price, value (as a standalone term — always tie it to a point in time)
+**Holding**:
+One thing a User owns, in one Country and one Asset Class: an account ("Fidelity Brokerage"), a property ("Pune apartment") or an asset ("Gold coins"). A Stocks Holding's value and Cost Basis come from its Positions. Every other Holding has an entered value and an optional Cost Basis.
+_Avoid_: Asset, item
 
-**Net Worth**:
-Derived value: sum of current Holding Valuations minus sum of current Liability Valuations, each converted to the Portfolio's home currency using the FX rate stored on that Valuation at the time it was recorded. Never stored directly — always computed from the latest Valuations.
-_Avoid_: Total assets, balance
+**Position**:
+One stock held inside a Stocks Holding: a ticker, a number of shares and an average cost per share, in the Holding's currency. At most one per ticker per Holding. Only its current state is kept, with no history of trades. Its price, name and Sector come from market data, or, for a ticker market data doesn't cover, from a Hand Price, Sector and name the User enters.
+_Avoid_: Lot, trade, stock (as the noun for this record)
 
-**Live Estimate**:
-A real-time computed value for a live-priced Holding (one tracking a market symbol — stocks, gold), derived as quantity × the latest cached market price. Shown in the UI as a convenience alongside the Holding's actual Valuation History, but never itself recorded as a Valuation — a Valuation is always a deliberate, user-recorded snapshot. Only exists for Holdings with a market symbol; a Holding valued manually (e.g. Real Estate) has no Live Estimate.
-_Avoid_: Current value, live price, current price (always say "Live Estimate" to keep it distinct from Valuation)
+**Hand Price**:
+The price per share a User enters on a Position whose ticker has no market data (an Indian ticker, or a fund with no ticker), stored with the date it was entered. Market data always takes precedence over it.
+_Avoid_: Manual quote, override
 
-**Target Allocation**:
-A goal percentage per Asset Class (e.g. 60% Equity / 20% Real Estate / 10% Gold / 10% Cash), compared against the Portfolio's actual current distribution. Present-tense — describes a desired balance, not a trajectory.
-The "Target" prefix denotes a value the User is aiming at; it carries no tense — the tense rides on the noun (compare Target Net Worth, which is future-dated).
-_Avoid_: Goal, plan (too vague — always say "Target Allocation" for this specific concept)
+**Cost Basis**:
+What was paid for a Holding, in its native currency. For a Stocks Holding it is the sum of shares × average cost over its Positions. For any other Holding it is optional and entered by hand. A current figure, not a history. Unrealized gain = value − Cost Basis.
+_Avoid_: Purchase price, book value
 
-**Projection**:
-A forward-looking trajectory of future Net Worth, a single Holding's value, or a Projected Net Position, computed from one shared set of assumptions (growth rate, contributions, inflation, timeline) rather than per-item settings. Holdings and Liabilities are projected on **separate rules** and netted at each future point — a Projection never grows an already-netted figure, so a Liability's Amortization Assumptions genuinely move the projected Net Worth line. Distinct from Target Allocation — a Projection is about *when*, Target Allocation is about *balance right now*. Computed entirely in **nominal** terms (rates are quoted nominal, and a loan's rate is contractually nominal), then deflated for display so the figures read in today's purchasing power; both lines are charted, forking at today, since a raw future dollar amount conveys little on its own.
-_Avoid_: Forecast, plan
+**Description**:
+Optional short free text on a Holding, shown under its name and included in search. Carries no weight anywhere else.
+_Avoid_: Held at, notes
 
-**Target Net Worth**:
-An amount the User wants to reach by a specific date — the amount and the date together are one term, never a bare figure. Stated in today's purchasing power, so it compares against the Projection's inflation-adjusted line. Exactly one per User.
-_Avoid_: Net worth goal, milestone, target (unqualified — collides with Target Allocation)
-
-**Required Contribution**:
-The monthly contribution needed to reach the Target Net Worth by its date, derived by inverting the Projection. Always shown against the achievable date at the User's current contribution, so an implausible figure stays legible. Negative when the Portfolio alone suffices — read then as withdrawal capacity. Derived, never stored.
-_Avoid_: Needed savings, shortfall (the shortfall is the gap in Net Worth, not in contribution)
-
-**Projected Net Position**:
-For a Holding linked to a Liability with Amortization Assumptions, the paired figure at a future point in a Projection: that Holding's projected value minus its linked Liability's projected balance (e.g. a house's projected value minus its projected remaining mortgage balance).
-_Avoid_: Equity, home equity (collides with "Equity" the Asset Class, e.g. stocks) — always say "Projected Net Position"
+**Property type**:
+A Real estate Holding's kind: Residential, Land, REIT / fund or Commercial.
+_Avoid_: Property category
 
 **Sector**:
-A stock's market-sector/industry label (e.g. "Technology," "Financial Services"), resolved from the market-data provider and shown alongside a Holding's ticker and company name when picked from the stock-picker's suggestions. Stored on the Holding once resolved, purely descriptive — carries no weight in Target Allocation, Projection, or Net Worth, and is unrelated to Asset Class (a User-defined ownership category) despite both being "what kind of thing is this." Only ever set for a Holding resolved through the stock-picker; a manually-entered Holding (Real Estate, etc.) has none.
-_Avoid_: Segment (the Projection already uses "segment" for its piecewise time chunks — say "Sector" here to avoid the collision), category, industry (the provider's own field name, not the term to use in this app)
+A ticker's market-sector label, one of a fixed list of 12 (e.g. "Technology", "Financial Services"). Belongs to the ticker, or to a Position with a Hand Price, never to a Holding. Purely descriptive, and unrelated to Asset Class: the Sector "Real Estate" is not the Asset Class "Real estate".
+_Avoid_: Segment, category, industry
 
-**Held at**:
-A freeform label for where a Holding is held — a brokerage, a bank, an exchange, "at home," etc. — so two Holdings of the same thing (e.g. Apple stock in a 401k and in a taxable brokerage) don't need to be told apart by hacking the distinction into Name. Applies to every Asset Class, not just market-symbol Holdings (a Cash Holding at "Chase Checking" vs "Ally Savings" is the identical need). Purely descriptive, like Sector — carries no weight anywhere else in the app, and is edit-form-only (never shown in the Portfolio tree, the page header, Check-in, or the staleness list).
-_Avoid_: Account (reserved above for the User's own login concept), Brokerage (too narrow — doesn't fit Cash, Crypto, or Precious Metal)
+### What a User owes
+
+**Liability**:
+One specific debt owed, e.g. "Home loan, Austin" or "Amex Gold card". Belongs to one Country and carries its balance, original principal, interest rate (APR), Monthly payment, start month and optional term, so every Liability amortizes in a Projection. May be flagged revolving (a credit card) and linked to the Holding it financed. In the UI a single Liability is called a "loan".
+_Avoid_: Debt, Liability Class
+
+**Monthly payment**:
+What the User pays toward a Liability each month, including any regular extra payment and excluding escrow (taxes and insurance collected with the payment). Shown as "EMI" for fixed loans. When a Liability is paid off, its Monthly payment rolls into that Country's Monthly savings.
+_Avoid_: Escrow-inclusive payment, required payment
+
+### Values over time
+
+**Valuation**:
+The value of a Holding, or the balance of a Liability, on a date, in its native currency; at most one per item per day. Recorded each time the User saves a value (an unchanged value still records today's Valuation), and for a Stocks Holding also recorded automatically each day after prices refresh. The only source of past values; values between Valuations are interpolated. In UI copy, the "Value log".
+_Avoid_: Live Estimate, snapshot, price
+
+**Current value**:
+What a Holding is worth now. For a Stocks Holding, the sum of shares × latest price over its Positions, always computed. For any other Holding, its latest Valuation. A Liability's current balance is its latest Valuation, never amortized forward.
+_Avoid_: Live Estimate, latest price
+
+**FX Rate**:
+The daily rate of INR per USD. Current values convert at today's rate; a past value converts at the rate on its date. Never stored on a Valuation.
+_Avoid_: Exchange rate captured at recording, home-currency rate
+
+**Net Worth**:
+The sum of Holdings' current values minus the sum of Liabilities' current balances, each converted to USD at today's FX Rate. Past Net Worth uses interpolated Valuations at each date's FX Rate. Never stored.
+_Avoid_: Total assets, balance
+
+**Currency effect**:
+The part of a change in USD Net Worth caused only by the rupee moving against the dollar between two dates. INR assets count positive, INR loans negative.
+_Avoid_: FX gain, exchange loss
+
+**Equity**:
+For a Holding linked to a Liability, the Holding's value minus that Liability's balance, both in USD, at any point, recorded or projected. "% owned" is Equity ÷ value. "Equity built" is the sum across all linked pairs.
+_Avoid_: Net position, Projected Net Position, home equity
+
+**Allocation**:
+The Portfolio's current split of Holding value across the six Asset Classes, in USD, with each class's share and 12-month change. Descriptive only: there is no target to compare it against.
+_Avoid_: Distribution, mix, Target Allocation
+
+**Stale**:
+A Holding or Liability whose user-entered figure is more than 30 days old: its latest Valuation for a manually valued Holding or a Liability, or its oldest Hand Price date for a Stocks Holding. Automatic daily Valuations never count, so a Stocks Holding of listed US tickers is never Stale.
+_Avoid_: Outdated, expired
+
+### Looking forward
+
+**Projection**:
+A month-by-month forward trajectory of every Holding, Liability, Asset Class, Country and Net Worth over the User's horizon. Each Holding compounds at its Asset Class's rate for its Country; each Liability amortizes by its interest rate and Monthly payment, and is "Not on track" if the payment doesn't cover the interest; each Country's Monthly savings are added on top. Holdings and Liabilities are projected separately and netted at each point. FX is held flat at today's rate. Computed in nominal terms.
+_Avoid_: Forecast, plan
+
+**Projection Assumptions**:
+A User's projection settings: per Country, an inflation rate and Real estate, Stocks and Cash growth rates; one shared rate each for Crypto, Metals and Vehicles & other; a savings growth rate; and a horizon in years. A blank rate means the default, which comes from the Country or the Asset Class.
+_Avoid_: Plan settings, growth inputs
+
+**Monthly savings**:
+The amount a User adds each month in a Country, in that Country's currency, invested at that Country's Stocks rate and rising each year by the savings growth rate. Freed Monthly payments from paid-off Liabilities are added to it. Counted in Net Worth and the Country totals, never in a single Holding.
+_Avoid_: Contribution, Required Contribution
+
+**Today's dollars**:
+A figure restated in the purchasing power of the current month, by deflating each Country's series at its own inflation rate and then summing. Applies to past and projected values alike.
+_Avoid_: Real terms, inflation-adjusted (in UI copy)
+
+**Goal**:
+A Net Worth milestone the User wants to pass: a name plus a target in nominal USD, with no date. A User may have any number. Its date is derived as the first month, in recorded history or the Projection, where Net Worth reaches the target: "Reached ⟨date⟩", "Projected ⟨date⟩", or "Beyond the N-year projection".
+_Avoid_: Target Net Worth, target (unqualified)
+
+## Retired terms
+
+Kept here so older docs, tickets and code can still be read:
+
+- **Liability Class**: removed. Liabilities are no longer classed; only the revolving flag remains.
+- **Amortization Assumptions**: folded into Liability; every Liability now has a rate and Monthly payment.
+- **Live Estimate**: replaced by Current value; a Stocks Holding's value is always computed live.
+- **Target Allocation**: dropped; see Allocation.
+- **Target Net Worth**: replaced by Goal.
+- **Required Contribution**: removed; Goals have no date to solve for.
+- **Projected Net Position**: renamed Equity.
+- **Held at**: replaced by the Holding's name and Description.
+- **Home currency**: everything rolls up to USD.
