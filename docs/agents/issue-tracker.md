@@ -23,7 +23,7 @@ The single statement of this rule: the schema, its README and templates point he
 - Every scenario heading starts with a stable ID: `#### Scenario: BA-01 <name>`. An ID is a capital letter, optionally more capitals or digits, a hyphen, then digits (`BA-01`, `KB1-17`).
 - A test proves a scenario by carrying its ID, exactly as written, in the test name (`it("BA-01 …")`, `@DisplayName("BA-01 …")`), in a suite CI already runs (Vitest, Playwright, JUnit, pytest, `node --test`).
 - A test name covering several scenarios spells out each ID (`BA-01/BA-02`), since `BA-01/02` covers only BA-01.
-- `npm run spec:coverage` enforces it: it fails, naming each ID, when a scenario in an active `skills-driven` change has no such test or a heading has no ID.
+- `npm run spec:coverage` enforces it: it fails, naming each ID, when a scenario in a started `skills-driven` change has no such test or a heading has no ID. A change counts as started once its `tasks.md` has a ticked box, so proposed changes waiting their turn never block CI.
 
 ## When a skill says "publish to the issue tracker"
 

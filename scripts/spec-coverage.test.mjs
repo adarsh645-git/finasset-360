@@ -18,8 +18,9 @@ const repo = (files) => {
   return dir;
 };
 
-const change = (name, schema, headings) => ({
+const change = (name, schema, headings, { started = true } = {}) => ({
   [`openspec/changes/${name}/.openspec.yaml`]: `schema: ${schema}\ncreated: 2026-10-10\n`,
+  [`openspec/changes/${name}/tasks.md`]: `## 1. Slice\n\n- [${started ? "x" : " "}] 1.1 Tests written and failing (red)\n- [ ] 1.2 Tests pass\n`,
   [`openspec/changes/${name}/specs/area/spec.md`]: [
     "## ADDED Requirements",
     "### Requirement: Something",
@@ -95,6 +96,34 @@ test("other schemas and archived changes are ignored", () => {
   assert.equal(result.ok, true);
   assert.equal(result.total, 0);
   assert.match(report(result), /no scenarios in scope/);
+});
+
+test("a change with no ticked box has not started and is ignored", () => {
+  const result = coverage(
+    repo({
+      ...change("add-goals", "skills-driven", ["ZG-01 owner adds a goal"], {
+        started: false,
+      }),
+      ...change("add-audience", "skills-driven", ["ZA-01 owner sees the list"]),
+      "frontend/src/audience.test.ts": 'it("ZA-01 shows the list", () => {});\n',
+    }),
+  );
+  assert.equal(result.ok, true);
+  assert.equal(result.total, 1);
+  assert.deepEqual(result.uncovered, []);
+});
+
+test("a ticked box counts with any case or spacing", () => {
+  const result = coverage(
+    repo({
+      ...change("add-goals", "skills-driven", ["ZG-02 owner removes a goal"], {
+        started: false,
+      }),
+      "openspec/changes/add-goals/tasks.md": "## 1. Slice\n\n- [ X] 1.1 red\n",
+    }),
+  );
+  assert.equal(result.ok, false);
+  assert.deepEqual(result.uncovered, [{ change: "add-goals", id: "ZG-02" }]);
 });
 
 test("a scenario without an ID fails the check", () => {

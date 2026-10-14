@@ -7,7 +7,7 @@ on:
 
 jobs:
   spec-coverage:
-    name: Every scenario in an active skills-driven change has a test naming its ID
+    name: Every scenario in a started skills-driven change has a test naming its ID
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

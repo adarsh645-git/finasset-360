@@ -10,6 +10,8 @@ import { fileURLToPath } from "node:url";
 const SCHEMA = "skills-driven";
 const NOT_CODE = ["openspec/", "docs/"];
 const SCENARIO_HEADING = /^####\s+Scenario:/;
+// The checkbox format `/opsx:apply` counts as done: `x` in any case or spacing.
+const TICKED_BOX = /^\s*-\s+\[\s*x\s*\]/im;
 const ID = String.raw`[A-Z][A-Z0-9]*-\d+`;
 const LEADING_ID = new RegExp(
   String.raw`^####\s+Scenario:\s*(${ID})(?![A-Za-z0-9-])`,
@@ -56,6 +58,9 @@ const activeChanges = (root) => {
       const meta = readText(join(changesDir, name, ".openspec.yaml"));
       return meta.match(/^schema:\s*(\S+)/m)?.[1] === SCHEMA;
     })
+    // A change is checked only once work has started: a proposed change
+    // waiting its turn would otherwise fail CI for every other PR.
+    .filter((name) => TICKED_BOX.test(readText(join(changesDir, name, "tasks.md"))))
     .sort();
 };
 
@@ -80,7 +85,7 @@ const scenarios = (root, change) =>
       })),
   );
 
-/** Checks every scenario ID in active skills-driven changes against the code. */
+/** Checks every scenario ID in started skills-driven changes against the code. */
 export const coverage = (root) => {
   const found = idsInCode(root);
   const required = [];
@@ -107,7 +112,7 @@ export const coverage = (root) => {
 export const report = ({ total, covered, uncovered, unidentified }) => {
   const lines = [
     total === 0 && unidentified.length === 0
-      ? `spec:coverage: no scenarios in scope (no active ${SCHEMA} change has scenarios).`
+      ? `spec:coverage: no scenarios in scope (no started ${SCHEMA} change has scenarios).`
       : `spec:coverage: ${covered} of ${total} scenarios covered by a test naming their ID.`,
   ];
   if (uncovered.length > 0) {

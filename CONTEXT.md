@@ -49,7 +49,7 @@ A Real estate Holding's kind: Residential, Land, REIT / fund or Commercial.
 _Avoid_: Property category
 
 **Sector**:
-A ticker's market-sector label, one of a fixed list of 12 (e.g. "Technology", "Financial Services"). Belongs to the ticker, or to a Position with a Hand Price, never to a Holding. Purely descriptive, and unrelated to Asset Class: the Sector "Real Estate" is not the Asset Class "Real estate".
+A ticker's market-sector label, one of a fixed list of 12 (e.g. "Technology", "Financials"). Belongs to the ticker, or to a Position with a Hand Price, never to a Holding. Purely descriptive, and unrelated to Asset Class: the Sector "Real Estate" is not the Asset Class "Real estate".
 _Avoid_: Segment, category, industry
 
 ### What a User owes
@@ -65,7 +65,7 @@ _Avoid_: Escrow-inclusive payment, required payment
 ### Values over time
 
 **Valuation**:
-The value of a Holding, or the balance of a Liability, on a date, in its native currency; at most one per item per day. Recorded each time the User saves a value (an unchanged value still records today's Valuation), and for a Stocks Holding also recorded automatically each day after prices refresh. The only source of past values; values between Valuations are interpolated. In UI copy, the "Value log".
+The value of a Holding, or the balance of a Liability, on a date, in its native currency; at most one per item per day. Recorded each time the User saves a value (an unchanged value still records today's Valuation), and for a Stocks Holding also recorded automatically each day after prices refresh. The only source of past values; values between Valuations are interpolated. Each records whether the User entered it or the daily job wrote it; only User-entered ones count toward Stale. In UI copy, the "Value log".
 _Avoid_: Live Estimate, snapshot, price
 
 **Current value**:
@@ -96,6 +96,10 @@ _Avoid_: Distribution, mix, Target Allocation
 A Holding or Liability whose user-entered figure is more than 30 days old: its latest Valuation for a manually valued Holding or a Liability, or its oldest Hand Price date for a Stocks Holding. Automatic daily Valuations never count, so a Stocks Holding of listed US tickers is never Stale.
 _Avoid_: Outdated, expired
 
+**Update pass**:
+One sitting that walks the User through every Stale item, oldest first, in each item's own update form, and ends with how Net Worth moved. Skipped items stay Stale. Never stored.
+_Avoid_: Check-in, check-in session
+
 ### Looking forward
 
 **Projection**:
@@ -107,15 +111,19 @@ A User's projection settings: per Country, an inflation rate and Real estate, St
 _Avoid_: Plan settings, growth inputs
 
 **Monthly savings**:
-The amount a User adds each month in a Country, in that Country's currency, invested at that Country's Stocks rate and rising each year by the savings growth rate. Freed Monthly payments from paid-off Liabilities are added to it. Counted in Net Worth and the Country totals, never in a single Holding.
+The amount a User adds each month in a Country, in that Country's currency, invested at that Country's Stocks rate and rising each year by the savings growth rate. Freed Monthly payments from paid-off Liabilities are added to it at their own amount and do not rise. Counted in Net Worth and the Country totals, never in a single Holding.
 _Avoid_: Contribution, Required Contribution
 
 **Today's dollars**:
 A figure restated in the purchasing power of the current month, by deflating each Country's series at its own inflation rate and then summing. Applies to past and projected values alike.
 _Avoid_: Real terms, inflation-adjusted (in UI copy)
 
+**Country scope**:
+Which Countries a view counts: all of them, or just one (United States or India). It filters the Growth page's figures and change attribution. View state only, never stored.
+_Avoid_: Region filter, market
+
 **Goal**:
-A Net Worth milestone the User wants to pass: a name plus a target in nominal USD, with no date. A User may have any number. Its date is derived as the first month, in recorded history or the Projection, where Net Worth reaches the target: "Reached ⟨date⟩", "Projected ⟨date⟩", or "Beyond the N-year projection".
+A Net Worth milestone the User wants to pass: an optional name plus a target in nominal USD, with no date. A Goal with no name is shown as "⟨compact target⟩ net worth". A User may have any number. Its date is derived as the first month, in recorded history or the Projection, where Net Worth reaches the target: "Reached ⟨date⟩", "Projected ⟨date⟩", or "Beyond the N-year projection".
 _Avoid_: Target Net Worth, target (unqualified)
 
 ## Retired terms
