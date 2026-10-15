@@ -57,6 +57,30 @@ export type StocksHolding = {
 
 export type StalenessInput = ManualItem | StocksHolding;
 
+/** One month of the nominal USD Net Worth series. `month` is `YYYY-MM`. */
+export type NetWorthPoint = { month: string; netWorth: number };
+
+export type GoalStatusInput = {
+  /** Recorded history, then the Projection over the horizon. */
+  series: readonly NetWorthPoint[];
+  /** Index of today's month in `series`. */
+  todayIndex: number;
+  target: number;
+  horizonYears: number;
+};
+
+export type GoalStatus = {
+  status: "reached" | "projected" | "beyond";
+  /** `YYYY-MM` of the first point at or above the target; absent when beyond. */
+  month?: string;
+  /** Negative when reached in the past; absent when beyond. */
+  monthsFromToday?: number;
+  /** The horizon N, set when beyond. */
+  horizonYears?: number;
+  /** Today's Net Worth over the target, clamped to 0 to 1. */
+  progress: number;
+};
+
 export type Staleness = {
   /** Whole UTC calendar days since the user-entered figure; null when there is none. */
   ageDays: number | null;
