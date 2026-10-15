@@ -62,7 +62,7 @@ const holding = (country: Country, assetClass: AssetClassId, currentValue: numbe
   currentValue,
 });
 const run = (holdings: ProjectionHolding[], assumptions = {}) =>
-  project({ holdings, assumptions, fxRate: FX });
+  project({ holdings, liabilities: [], assumptions, fxRate: FX });
 
 describe("PR-02 A filled-in zero rate overrides the default", () => {
   it("PR-02 a $100,000 US Stocks Holding stays $100,000 at 0%", () => {

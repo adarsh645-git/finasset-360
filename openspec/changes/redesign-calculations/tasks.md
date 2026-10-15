@@ -27,12 +27,12 @@ The Projection returns monthly series from today over the User's horizon. Each H
 Blocked by: 2
 Each Liability amortizes by its APR and Monthly payment. The Projection reports its payoff month (even past the horizon) and interest remaining, flags Not on track with the 720-month limit, and nets Liabilities against Holdings into Net Worth (D4).
 
-- [ ] 3.1 Tests named PR-04, PR-08, PR-09, PR-10, PR-11, PR-12, PR-13, PR-14 written and failing (red)
-- [ ] 3.2 The payoff month matches the annuity formula, and the balance stays 0 after payoff (PR-08, PR-09)
-- [ ] 3.3 Interest remaining equals total paid minus today's balance, and payoff past the horizon is still reported (PR-11, PR-12)
-- [ ] 3.4 Not on track covers payment ≤ interest and payoff beyond 720 months, and such a balance grows with no payoff or interest remaining (PR-13, PR-14)
-- [ ] 3.5 Month-0 Net Worth equals today's, and a higher Monthly payment strictly raises projected Net Worth (PR-04, PR-10)
-- [ ] 3.6 Tests named PR-04, PR-08, PR-09, PR-10, PR-11, PR-12, PR-13, PR-14 pass in CI suites; npm run spec:coverage passes
+- [x] 3.1 Tests named PR-04, PR-08, PR-09, PR-10, PR-11, PR-12, PR-13, PR-14 written and failing (red)
+- [x] 3.2 The payoff month matches the annuity formula, and the balance stays 0 after payoff (PR-08, PR-09)
+- [x] 3.3 Interest remaining equals total paid minus today's balance, and payoff past the horizon is still reported (PR-11, PR-12)
+- [x] 3.4 Not on track covers payment ≤ interest and payoff beyond 720 months, and such a balance grows with no payoff or interest remaining (PR-13, PR-14)
+- [x] 3.5 Month-0 Net Worth equals today's, and a higher Monthly payment strictly raises projected Net Worth (PR-04, PR-10)
+- [x] 3.6 Tests named PR-04, PR-08, PR-09, PR-10, PR-11, PR-12, PR-13, PR-14 pass in CI suites; npm run spec:coverage passes
 
 ## 4. Projection: Monthly savings and roll-ups
 
