@@ -75,10 +75,10 @@ A User can record a loan, edit it, update its balance and archive it, and link i
 Blocked by: 2
 A User can add and remove Goals and set or clear any Projection Assumption, Monthly savings, savings growth and horizon. A blank means the default (D11, D12).
 
-- [ ] 7.1 Tests named DM-34, DM-35, DM-36, DM-37, DM-38 written and failing (red)
-- [ ] 7.2 `POST /api/goals` stores an optional name and `target_usd > 0`; `DELETE /api/goals/[id]` really deletes it (DM-34, DM-35)
-- [ ] 7.3 `PATCH /api/projection-assumptions` updates only the fields sent, treats null as blank, upserts `country_assumption` rows and enforces the ranges (DM-36, DM-37, DM-38)
-- [ ] 7.4 Tests named DM-34, DM-35, DM-36, DM-37, DM-38 pass in CI suites; npm run spec:coverage passes
+- [x] 7.1 Tests named DM-34, DM-35, DM-36, DM-37, DM-38 written and failing (red)
+- [x] 7.2 `POST /api/goals` stores an optional name and `target_usd > 0`; `DELETE /api/goals/[id]` really deletes it (DM-34, DM-35)
+- [x] 7.3 `PATCH /api/projection-assumptions` updates only the fields sent, treats null as blank, upserts `country_assumption` rows and enforces the ranges (DM-36, DM-37, DM-38)
+- [x] 7.4 Tests named DM-34, DM-35, DM-36, DM-37, DM-38 pass in CI suites; npm run spec:coverage passes
 
 ## 8. The daily job: FX, prices and Stocks snapshots
 
