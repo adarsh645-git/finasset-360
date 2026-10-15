@@ -200,3 +200,111 @@ describe("Net Worth nets Liabilities against Holdings", () => {
     for (let k = 1; k <= earlierPayoff; k++) expect(high[k]).toBeGreaterThan(low[k]);
   });
 });
+
+describe("Monthly savings and roll-ups", () => {
+  const FX = 80;
+  const run = (
+    assumptions: Parameters<typeof projectPortfolio>[0]["assumptions"],
+    holdings: Holding[] = [],
+    liabilities: Liability[] = [],
+  ) => projectPortfolio({ holdings, liabilities, assumptions, fxRate: FX });
+
+  it("PR-15 level savings match the annuity formula", () => {
+    const result = run({ US: { stocks: 0.07, monthlySavings: 1_000 }, savingsGrowth: 0 });
+    const m = 1.07 ** (1 / 12) - 1;
+    const expected = (1_000 * ((1 + m) ** 120 - 1)) / m;
+    expect(result.savings.US.nativePool[120]).toBeCloseTo(expected, 2);
+    expect(result.savings.US.nativePool[0]).toBe(0);
+  });
+
+  it("PR-16 savings step up once a year", () => {
+    const pool = run({ US: { stocks: 0, monthlySavings: 1_000 }, savingsGrowth: 0.1 }).savings.US.nativePool;
+    expect(pool[12]).toBeCloseTo(12_000, 6);
+    expect(pool[13]).toBeCloseTo(13_100, 6);
+    expect(pool[24]).toBeCloseTo(25_200, 6);
+  });
+
+  it("PR-17 blank savings reproduce the no-savings Projection", () => {
+    const holdings: Holding[] = [{ id: "h", country: "US", assetClass: "stocks", value: 50_000 }];
+    const liabilities: Liability[] = [{ id: "l", country: "IN", balance: 8_000_000, apr: 0.09, monthlyPayment: 80_000 }];
+    const result = run({}, holdings, liabilities);
+    expect(result.liabilities[0].payoffMonth ?? Infinity).toBeGreaterThan(120);
+    for (const country of ["US", "IN"] as const) {
+      expect(result.savings[country].usdPool.every((v) => v === 0)).toBe(true);
+    }
+    expect(result.totals.savingsUsd.every((v) => v === 0)).toBe(true);
+    result.netWorthUsd.forEach((nw, k) => {
+      expect(nw).toBeCloseTo(result.holdings.totalUsd[k] - result.liabilities[0].usdBalances[k], 6);
+    });
+  });
+
+  const indiaLoan = (balance: number, payment: number): Liability => ({
+    id: "l",
+    country: "IN",
+    balance,
+    apr: 0,
+    monthlyPayment: payment,
+  });
+
+  it("PR-18 a freed payment starts the month after payoff", () => {
+    const result = run({}, [], [indiaLoan(600_000, 20_000)]);
+    expect(result.liabilities[0].payoffMonth).toBe(30);
+    const amounts = result.savings.IN.monthlyAmounts;
+    expect(amounts[30]).toBe(0);
+    expect(amounts[31]).toBe(20_000);
+    expect(amounts[1]).toBe(0);
+  });
+
+  it("PR-19 a freed payment does not rise with savings growth", () => {
+    const result = run(
+      { IN: { monthlySavings: 50_000 }, savingsGrowth: 0.05 },
+      [],
+      [indiaLoan(580_000, 20_000)],
+    );
+    expect(result.liabilities[0].payoffMonth).toBe(29);
+    const amounts = result.savings.IN.monthlyAmounts;
+    expect(amounts[30]).toBeCloseTo(50_000 * 1.05 ** 2 + 20_000, 6);
+    expect(amounts[37]).toBeCloseTo(50_000 * 1.05 ** 3 + 20_000, 6);
+  });
+
+  const full = () =>
+    run(
+      { US: { monthlySavings: 1_000 }, IN: { monthlySavings: 40_000 }, savingsGrowth: 0.03, horizonYears: 5 },
+      [
+        { id: "a", country: "US", assetClass: "realEstate", value: 300_000 },
+        { id: "b", country: "US", assetClass: "cash", value: 20_000 },
+        { id: "c", country: "IN", assetClass: "stocks", value: 2_000_000 },
+        { id: "d", country: "IN", assetClass: "crypto", value: 500_000 },
+        { id: "e", country: "IN", assetClass: "metals", value: 700_000 },
+        { id: "f", country: "US", assetClass: "vehiclesOther", value: 15_000 },
+      ],
+      [
+        { id: "l1", country: "US", balance: 200_000, apr: 0.06, monthlyPayment: 2_000 },
+        { id: "l2", country: "IN", balance: 1_000_000, apr: 0.09, monthlyPayment: 30_000 },
+      ],
+    );
+
+  it("PR-20 totals reconcile at every month", () => {
+    const r = full();
+    const classes = Object.keys(r.assetClassUsd) as AssetClassId[];
+    r.totals.assetsUsd.forEach((assets, k) => {
+      expect(classes.reduce((s, c) => s + r.assetClassUsd[c][k], 0)).toBeCloseTo(assets, 6);
+      expect(r.countries.US.netUsd[k] + r.countries.IN.netUsd[k]).toBeCloseTo(r.netWorthUsd[k], 6);
+      expect(r.netWorthUsd[k]).toBeCloseTo(assets - r.totals.liabilitiesUsd[k], 6);
+      expect(r.countries.US.assetsUsd[k] + r.countries.IN.assetsUsd[k]).toBeCloseTo(assets, 6);
+      for (const c of ["US", "IN"] as const) {
+        const byClass = classes.reduce((s, id) => s + r.countryAssetClassUsd[c][id][k], 0);
+        expect(byClass).toBeCloseTo(r.countries[c].assetsUsd[k], 6);
+      }
+      expect(r.countries.US.savingsUsd[k] + r.countries.IN.savingsUsd[k]).toBeCloseTo(r.totals.savingsUsd[k], 6);
+    });
+  });
+
+  it("PR-21 savings count in the Stocks class but in no Holding", () => {
+    const cash: Holding[] = [{ id: "cash", country: "US", assetClass: "cash", value: 10_000 }];
+    const withSavings = run({ US: { monthlySavings: 1_000 } }, cash);
+    withSavings.assetClassUsd.stocks.forEach((v, k) => expect(v).toBeCloseTo(withSavings.savings.US.usdPool[k], 6));
+    const without = run({}, cash);
+    expect(withSavings.holdings.holdings[0].usdValues).toEqual(without.holdings.holdings[0].usdValues);
+  });
+});
