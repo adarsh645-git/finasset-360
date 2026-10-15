@@ -11,6 +11,19 @@ export function hasKey(body: unknown, key: string): boolean {
   return typeof body === "object" && body !== null && key in body;
 }
 
+/** The request's JSON body when it is a JSON object, or `null` for anything
+ * else (malformed JSON, an array, a bare scalar). */
+export async function readJsonObject(request: Request): Promise<Record<string, unknown> | null> {
+  try {
+    const body: unknown = await request.json();
+    return typeof body === "object" && body !== null && !Array.isArray(body)
+      ? (body as Record<string, unknown>)
+      : null;
+  } catch {
+    return null;
+  }
+}
+
 /** A trimmed, non-empty string at `body[key]`, or `undefined` if the key is
  * missing, not a string, or blank after trimming. */
 export function readTrimmedString(body: unknown, key: string): string | undefined {
