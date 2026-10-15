@@ -2,7 +2,8 @@
 // Nothing here imports from the old portfolio types; later tickets append
 // their own types (Holding, Liability, Valuation, ...) to this file.
 
-export type Country = "US" | "IN";
+export const COUNTRIES = ["US", "IN"] as const;
+export type Country = (typeof COUNTRIES)[number];
 
 export const ASSET_CLASS_IDS = [
   "realEstate",

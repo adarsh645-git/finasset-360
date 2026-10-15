@@ -1,12 +1,16 @@
 import { resolveAssumptions, type ResolvedAssumptions } from "./defaults";
-import { ASSET_CLASS_IDS } from "./types";
+import { toUsd } from "./fx";
+import { ASSET_CLASS_IDS, COUNTRIES } from "./types";
 import type { AssetClassId, Country, Holding, Liability, ProjectionAssumptionsInput } from "./types";
 
-export interface ProjectHoldingsInput {
-  holdings: Holding[];
+interface ProjectionInput {
   assumptions: ProjectionAssumptionsInput;
   /** Today's FX Rate: INR per USD. Held flat for the whole Projection. */
   fxRate: number;
+}
+
+export interface ProjectHoldingsInput extends ProjectionInput {
+  holdings: Holding[];
 }
 
 export interface HoldingSeries {
@@ -22,21 +26,11 @@ export interface HoldingsProjection {
   totalUsd: number[];
 }
 
-const SHARED_RATE_KEY = {
-  crypto: "crypto",
-  metals: "metals",
-  vehiclesOther: "vehiclesOther",
-} as const;
-
 function annualRate(assumptions: ResolvedAssumptions, country: Country, assetClass: AssetClassId): number {
   if (assetClass === "realEstate" || assetClass === "stocks" || assetClass === "cash") {
     return assumptions[country][assetClass];
   }
-  return assumptions[SHARED_RATE_KEY[assetClass]];
-}
-
-function toUsd(native: number, country: Country, fxRate: number): number {
-  return country === "IN" ? native / fxRate : native;
+  return assumptions[assetClass];
 }
 
 /** Compounds each Holding monthly as v x (1+r)^(k/12), FX flat at today's rate. */
@@ -59,10 +53,8 @@ export function projectHoldings({ holdings, assumptions, fxRate }: ProjectHoldin
 /** A Liability that doesn't pay off within this many months is Not on track. */
 const PAYOFF_LIMIT_MONTHS = 720;
 
-export interface ProjectLiabilitiesInput {
+export interface ProjectLiabilitiesInput extends ProjectionInput {
   liabilities: Liability[];
-  assumptions: ProjectionAssumptionsInput;
-  fxRate: number;
 }
 
 export interface LiabilitySeries {
@@ -120,11 +112,9 @@ export function projectLiabilities({ liabilities, assumptions, fxRate }: Project
   });
 }
 
-export interface ProjectPortfolioInput {
+export interface ProjectPortfolioInput extends ProjectionInput {
   holdings: Holding[];
   liabilities: Liability[];
-  assumptions: ProjectionAssumptionsInput;
-  fxRate: number;
 }
 
 export interface SavingsSeries {
@@ -156,8 +146,6 @@ export interface PortfolioProjection {
   countryAssetClassUsd: Record<Country, ByAssetClass>;
   countries: Record<Country, CountryRollup>;
 }
-
-const COUNTRIES: Country[] = ["US", "IN"];
 
 const zeros = (length: number): number[] => new Array<number>(length).fill(0);
 

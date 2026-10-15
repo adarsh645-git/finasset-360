@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { equity, equitySeries, equityBuilt, percentOwned } from "@/lib/calc";
+import { equity, equitySeries, equityBuilt, percentOwned, toUsd } from "@/lib/calc";
 
 describe("equity", () => {
   it("EQ-01 Equity of a financed property", () => {
@@ -8,7 +8,7 @@ describe("equity", () => {
 
   it("EQ-02 An India pair converts to USD at the FX Rate", () => {
     const fx = 83.4;
-    expect(equity(16680000 / fx, 8340000 / fx)).toBeCloseTo(100000, 6);
+    expect(equity(toUsd(16680000, "IN", fx), toUsd(8340000, "IN", fx))).toBeCloseTo(100000, 6);
   });
 
   it("EQ-03 Equity follows a projected series point by point", () => {

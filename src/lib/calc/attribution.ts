@@ -1,5 +1,5 @@
 import { lookupFxRate, toUsd, type FxRate } from "./fx";
-import { valueOn, type HistoryItem } from "./history";
+import { netWorthSign, valueOn, type HistoryItem } from "./history";
 import type { Country } from "./types";
 
 export type AttributionScope = Country | "ALL";
@@ -28,25 +28,24 @@ export function attributeChange(
     debtPaidDown: 0,
     currencyEffect: 0,
   };
+  const fxThen = lookupFxRate(rates, rangeStart).rate;
+  const fxNow = lookupFxRate(rates, today).rate;
   for (const item of items) {
     if (scope !== "ALL" && item.country !== scope) continue;
-    const fxThen = lookupFxRate(rates, rangeStart).rate;
-    const fxNow = lookupFxRate(rates, today).rate;
     const nativeThen = valueOn(item, rangeStart, today);
     const nativeNow = valueOn(item, today, today);
     const currency =
       toUsd(nativeNow, item.country, fxNow) -
       toUsd(nativeNow, item.country, fxThen);
+    result.currencyEffect += netWorthSign(item) * currency;
     if (item.kind === "holding") {
       result.assetGrowth += toUsd(nativeNow - nativeThen, item.country, fxThen);
-      result.currencyEffect += currency;
     } else {
       result.debtPaidDown += toUsd(
         nativeThen - nativeNow,
         item.country,
         fxThen,
       );
-      result.currencyEffect -= currency;
     }
   }
   return result;

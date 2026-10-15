@@ -73,4 +73,25 @@ describe("goal status", () => {
       progress: 0,
     });
   });
+
+  it("counts months from the point's month, not the array distance", () => {
+    const quarterly: NetWorthPoint[] = [
+      { month: "2026-10", netWorth: 100_000 },
+      { month: "2027-01", netWorth: 120_000 },
+      { month: "2027-04", netWorth: 150_000 },
+    ];
+    expect(deriveGoalStatus(quarterly, 0, 150_000, 10)).toMatchObject({
+      status: "projected",
+      month: "2027-04",
+      monthsFromToday: 6,
+    });
+  });
+
+  it("a target of 0 or less never gives NaN or Infinity progress", () => {
+    expect(deriveGoalStatus(series(100), TODAY_INDEX, 0, 10)).toMatchObject({
+      status: "reached",
+      progress: 1,
+    });
+    expect(deriveGoalStatus(series(-100), TODAY_INDEX, 0, 10).progress).toBe(0);
+  });
 });

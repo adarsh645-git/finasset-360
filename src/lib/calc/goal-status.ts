@@ -4,6 +4,8 @@ export interface NetWorthPoint {
   netWorth: number;
 }
 
+import { monthsFromToday } from "./dates";
+
 export type GoalStatus =
   | { status: "reached"; month: string; progress: number }
   | { status: "projected"; month: string; monthsFromToday: number; progress: number }
@@ -18,13 +20,15 @@ export function deriveGoalStatus(
   target: number,
   horizonYears: number,
 ): GoalStatus {
-  const progress = clamp(series[todayIndex].netWorth / target, 0, 1);
+  const todayNetWorth = series[todayIndex].netWorth;
+  // A target of 0 or less is met by any Net Worth at or above it.
+  const progress = target > 0 ? clamp(todayNetWorth / target, 0, 1) : todayNetWorth >= target ? 1 : 0;
   const firstIndex = series.findIndex((point) => point.netWorth >= target);
 
   if (firstIndex === -1) return { status: "beyond", horizonYears, progress };
   const month = series[firstIndex].month;
   if (firstIndex <= todayIndex) return { status: "reached", month, progress };
-  return { status: "projected", month, monthsFromToday: firstIndex - todayIndex, progress };
+  return { status: "projected", month, monthsFromToday: monthsFromToday(month, series[todayIndex].month), progress };
 }
 
 function clamp(value: number, min: number, max: number): number {

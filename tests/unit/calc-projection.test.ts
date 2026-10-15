@@ -61,6 +61,32 @@ describe("projection of Holdings", () => {
     expect(result.totalUsd).toHaveLength(points);
   });
 
+  it.each([
+    [1, 13],
+    [10, 121],
+    [40, 481],
+  ])("PR-03 a %i-year horizon gives every Portfolio series %i points", (years, points) => {
+    const result = projectPortfolio({
+      holdings: [holding("US", "cash")],
+      liabilities: [{ id: "l1", country: "US", balance: 1_000, apr: 0.05, monthlyPayment: 100 }],
+      assumptions: { horizonYears: years, US: { monthlySavings: 500 } },
+      fxRate: FX,
+    });
+    const lengths = [
+      result.netWorthUsd,
+      result.totals.assetsUsd,
+      result.totals.liabilitiesUsd,
+      result.totals.savingsUsd,
+      result.holdings.totalUsd,
+      result.holdings.holdings[0].usdValues,
+      result.liabilities[0].usdBalances,
+      result.savings.US.nativePool,
+      result.countries.IN.netUsd,
+      result.assetClassUsd.stocks,
+    ].map((series) => series.length);
+    expect(lengths.every((length) => length === points)).toBe(true);
+  });
+
   it("PR-03 month 0 equals the current value", () => {
     const result = project([holding("IN", "stocks", 250_000)]);
     expect(result.holdings[0].nativeValues[0]).toBe(250_000);
@@ -71,6 +97,17 @@ describe("projection of Holdings", () => {
     expect(result.holdings).toEqual([]);
     expect(result.totalUsd).toHaveLength(25);
     expect(result.totalUsd.every((v) => v === 0)).toBe(true);
+
+    const portfolio = projectPortfolio({ holdings: [], liabilities: [], assumptions: { horizonYears: 2 }, fxRate: FX });
+    expect(portfolio.netWorthUsd).toHaveLength(25);
+    const allSeries: number[][] = [
+      portfolio.netWorthUsd,
+      ...Object.values(portfolio.totals),
+      ...Object.values(portfolio.assetClassUsd),
+      ...Object.values(portfolio.countries).flatMap((c) => Object.values(c)),
+      ...Object.values(portfolio.savings).flatMap((s) => [s.monthlyAmounts, s.nativePool, s.usdPool]),
+    ];
+    expect(allSeries.every((series) => series.every((v) => v === 0))).toBe(true);
   });
 
   it.each([
@@ -153,6 +190,16 @@ describe("projection of Liabilities", () => {
     expect(project([loan(120_000, 0.1, payment)]).notOnTrack).toBe(flag);
   });
 
+  it("PR-13 a payment of 1,001 would take 833 months, beyond the 720-month limit", () => {
+    // Closed form for the months to pay off: n = ceil(-ln(1 - B*i/P) / ln(1+i)).
+    const months = Math.ceil(-Math.log(1 - (120_000 * 0.1) / 12 / 1_001) / Math.log(1 + 0.1 / 12));
+    expect(months).toBe(833);
+    expect(months).toBeGreaterThan(720);
+    const result = project([loan(120_000, 0.1, 1_001)], { horizonYears: 1 });
+    expect(result.notOnTrack).toBe(true);
+    expect(result.payoffMonth).toBeUndefined();
+  });
+
   it("PR-13 a payment of 1,100 pays off in month 289", () => {
     expect(project([loan(120_000, 0.1, 1_100)]).payoffMonth).toBe(289);
   });
@@ -182,7 +229,12 @@ describe("Net Worth nets Liabilities against Holdings", () => {
     { id: "l2", country: "IN", balance: 4_170_000, apr: 0.09, monthlyPayment: 60_000 },
   ];
   const netWorth = (payment: number) =>
-    projectPortfolio({ holdings, liabilities: liabilities(payment), assumptions: {}, fxRate: FX }).netWorthUsd;
+    projectPortfolio({
+      holdings,
+      liabilities: liabilities(payment),
+      assumptions: { US: { monthlySavings: 1_000 }, IN: { monthlySavings: 50_000 }, savingsGrowth: 0.03 },
+      fxRate: FX,
+    }).netWorthUsd;
 
   it("PR-04 month 0 equals today's Net Worth", () => {
     expect(netWorth(2_000)[0]).toBeCloseTo(300_000 + 200_000 - 200_000 - 50_000, 6);

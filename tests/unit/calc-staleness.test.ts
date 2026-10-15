@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { checkStaleness, oldestHandPriceDate } from "@/lib/calc";
 
-const TODAY = new Date("2026-09-12T15:00:00Z");
+const TODAY = "2026-09-12";
 
 function daysBefore(days: number): string {
   return new Date(Date.UTC(2026, 8, 12 - days)).toISOString().slice(0, 10);
@@ -31,12 +31,18 @@ describe("staleness", () => {
       ageDays: 47,
       stale: true,
     });
+    // The automatic Valuation recorded today would read fresh if it were passed.
+    expect(checkStaleness(daysBefore(0), TODAY).stale).toBe(false);
   });
 
   it("ST-04 Listed US tickers never go Stale", () => {
     const positions = [{ handPriceDate: null }, { handPriceDate: null }];
     expect(oldestHandPriceDate(positions)).toBeNull();
-    expect(checkStaleness(oldestHandPriceDate(positions), TODAY).stale).toBe(false);
+    // The 90-day-old last Valuation is never passed: nothing user-entered.
+    expect(checkStaleness(oldestHandPriceDate(positions), TODAY)).toEqual({
+      ageDays: null,
+      stale: false,
+    });
   });
 
   it("ST-05 A brand-new item is fresh", () => {

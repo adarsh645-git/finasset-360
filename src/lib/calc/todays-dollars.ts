@@ -1,3 +1,5 @@
+import { monthsFromToday } from "./dates";
+
 export interface DatedValue {
   date: string;
   value: number;
@@ -7,14 +9,6 @@ export interface DatedValue {
 export interface CountrySeries {
   inflation: number;
   series: DatedValue[];
-}
-
-/** Whole calendar months from today's month to `date`'s month (D10);
- * negative for the past. */
-function monthsFromToday(date: string, today: string): number {
-  const [year, month] = date.split("-").map(Number);
-  const [todayYear, todayMonth] = today.split("-").map(Number);
-  return (year - todayYear) * 12 + (month - todayMonth);
 }
 
 /** `value` on `date` restated in Today's dollars: the past rises, the

@@ -1,3 +1,4 @@
+import { MS_PER_DAY, parseIso, toDay } from "./dates";
 import { lookupFxRate, toUsd, type FxRate } from "./fx";
 import type { Country } from "./types";
 
@@ -24,13 +25,7 @@ export interface TwelveMonthChange {
   percent: number | null;
 }
 
-const MS_PER_DAY = 86_400_000;
-
 // --- ISO date helpers (UTC, no time of day) ---
-
-function toDay(iso: string): number {
-  return Math.round(Date.parse(`${iso}T00:00:00Z`) / MS_PER_DAY);
-}
 
 function fromDay(day: number): string {
   return new Date(day * MS_PER_DAY).toISOString().slice(0, 10);
@@ -42,7 +37,7 @@ function monthEnd(year: number, monthIndex: number): string {
 
 /** The same calendar day 12 months earlier, clamped (Feb 29 -> Feb 28). */
 function twelveMonthsBefore(iso: string): string {
-  const [year, month, day] = iso.split("-").map(Number);
+  const [year, month, day] = parseIso(iso);
   const lastDay = new Date(Date.UTC(year - 1, month, 0)).getUTCDate();
   return fromDay(
     Date.UTC(year - 1, month - 1, Math.min(day, lastDay)) / MS_PER_DAY,
@@ -95,7 +90,7 @@ export function sampleDates(
   const start = rangeStart > earliestValuation ? rangeStart : earliestValuation;
   if (start >= today) return [today];
   const dates = [start];
-  const [startYear, startMonth] = start.split("-").map(Number);
+  const [startYear, startMonth] = parseIso(start);
   for (let monthIndex = startMonth - 1, year = startYear; ; monthIndex++) {
     if (monthIndex === 12) {
       monthIndex = 0;
@@ -110,6 +105,11 @@ export function sampleDates(
 }
 
 // --- Past Net Worth (D8) ---
+
+/** +1 for a Holding, -1 for a Liability: its sign in Net Worth. */
+export function netWorthSign(item: HistoryItem): 1 | -1 {
+  return item.kind === "liability" ? -1 : 1;
+}
 
 function usdOn(
   item: HistoryItem,
@@ -133,8 +133,7 @@ export function netWorthOn(
 ): number {
   return items.reduce(
     (sum, item) =>
-      sum +
-      (item.kind === "liability" ? -1 : 1) * usdOn(item, rates, date, today),
+      sum + netWorthSign(item) * usdOn(item, rates, date, today),
     0,
   );
 }
@@ -160,7 +159,7 @@ export function twelveMonthChange(
   for (const item of established) {
     const then = usdOn(item, rates, start, today);
     const now = usdOn(item, rates, today, today);
-    amount += item.kind === "liability" ? then - now : now - then;
+    amount += netWorthSign(item) * (now - then);
     startTotal += then;
   }
   return { amount, percent: startTotal === 0 ? null : amount / startTotal };
