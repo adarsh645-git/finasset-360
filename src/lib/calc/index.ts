@@ -5,3 +5,6 @@ export * from "./fx";
 export * from "./history";
 export * from "./goal-status";
 export * from "./projection";
+export * from "./equity";
+export * from "./todays-dollars";
+export * from "./attribution";

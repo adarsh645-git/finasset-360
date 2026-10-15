@@ -64,21 +64,21 @@ Any Holding's or Liability's value on any date, by interpolation between Valuati
 Blocked by: 5
 Any series restated in Today's dollars, each Country at its own inflation (D10). A range's Net Worth change split into asset growth, debt paid down and Currency effect, which sum exactly, for any Country scope (D11).
 
-- [ ] 6.1 Tests named NH-11, NH-12, NH-13, NH-14, NH-15, NH-16, NH-17 written and failing (red)
-- [ ] 6.2 Deflation uses whole calendar months, restating the past upward and the future downward, and Countries are deflated before summing (NH-11, NH-12)
-- [ ] 6.3 The three attribution terms sum to the Net Worth change within $0.01, with the right Currency effect signs for India assets and Liabilities (NH-13, NH-14, NH-15)
-- [ ] 6.4 Country scope filters items, and a Holding added mid-range counts fully as asset growth (NH-16, NH-17)
-- [ ] 6.5 Tests named NH-11, NH-12, NH-13, NH-14, NH-15, NH-16, NH-17 pass in CI suites; npm run spec:coverage passes
+- [x] 6.1 Tests named NH-11, NH-12, NH-13, NH-14, NH-15, NH-16, NH-17 written and failing (red)
+- [x] 6.2 Deflation uses whole calendar months, restating the past upward and the future downward, and Countries are deflated before summing (NH-11, NH-12)
+- [x] 6.3 The three attribution terms sum to the Net Worth change within $0.01, with the right Currency effect signs for India assets and Liabilities (NH-13, NH-14, NH-15)
+- [x] 6.4 Country scope filters items, and a Holding added mid-range counts fully as asset growth (NH-16, NH-17)
+- [x] 6.5 Tests named NH-11, NH-12, NH-13, NH-14, NH-15, NH-16, NH-17 pass in CI suites; npm run spec:coverage passes
 
 ## 7. Equity
 
 Blocked by: 3
 Equity, % owned and Equity built for Holdings linked to a Liability, for recorded values and for projected series point by point (D12).
 
-- [ ] 7.1 Tests named EQ-01, EQ-02, EQ-03, EQ-04, EQ-05, EQ-06 written and failing (red)
-- [ ] 7.2 Equity is value minus balance in USD, and follows a projected pair month by month, equalling the value after payoff (EQ-01, EQ-02, EQ-03)
-- [ ] 7.3 % owned is clamped to 0–1, with a value of 0 giving 0, and Equity built sums every link or is 0 with none (EQ-04, EQ-05, EQ-06)
-- [ ] 7.4 Tests named EQ-01, EQ-02, EQ-03, EQ-04, EQ-05, EQ-06 pass in CI suites; npm run spec:coverage passes
+- [x] 7.1 Tests named EQ-01, EQ-02, EQ-03, EQ-04, EQ-05, EQ-06 written and failing (red)
+- [x] 7.2 Equity is value minus balance in USD, and follows a projected pair month by month, equalling the value after payoff (EQ-01, EQ-02, EQ-03)
+- [x] 7.3 % owned is clamped to 0–1, with a value of 0 giving 0, and Equity built sums every link or is 0 with none (EQ-04, EQ-05, EQ-06)
+- [x] 7.4 Tests named EQ-01, EQ-02, EQ-03, EQ-04, EQ-05, EQ-06 pass in CI suites; npm run spec:coverage passes
 
 ## 8. Goal status
 
