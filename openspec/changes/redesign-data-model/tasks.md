@@ -27,12 +27,12 @@ One migration drops every old table and creates the new schema with RLS (D1, D2 
 Blocked by: 2
 A User can create, edit, update the value of and archive a Cash, Crypto, Metals, Real estate or Vehicles & other Holding. Each save records today's Valuation, even when unchanged, with class-specific fields checked (D3, D4, D7, D10).
 
-- [ ] 3.1 Tests named DM-06, DM-07, DM-08, DM-09, DM-10, DM-11, DM-12, DM-13, DM-14, DM-15, DM-16, DM-17, DM-27 written and failing (red)
-- [ ] 3.2 `POST /api/holdings` validates name, Country, Asset Class, value, Cost Basis, Description and the class-specific fields, and stores the Holding and today's Valuation (DM-06…DM-12)
-- [ ] 3.3 `POST /api/holdings/[id]/valuations` upserts today's Valuation, including unchanged values and same-day overwrites, and refuses Stocks (DM-13, DM-14, DM-15)
-- [ ] 3.4 `PATCH /api/holdings/[id]` replaces the editable fields, upserts today's Valuation, and refuses a Country or Asset Class change (DM-16, DM-17)
-- [ ] 3.5 `POST /api/holdings/[id]/archive` sets the archive date; an archived Holding refuses edits and Update value with 409 (DM-27)
-- [ ] 3.6 Tests named DM-06, DM-07, DM-08, DM-09, DM-10, DM-11, DM-12, DM-13, DM-14, DM-15, DM-16, DM-17, DM-27 pass in CI suites; npm run spec:coverage passes
+- [x] 3.1 Tests named DM-06, DM-07, DM-08, DM-09, DM-10, DM-11, DM-12, DM-13, DM-14, DM-15, DM-16, DM-17, DM-27 written and failing (red)
+- [x] 3.2 `POST /api/holdings` validates name, Country, Asset Class, value, Cost Basis, Description and the class-specific fields, and stores the Holding and today's Valuation (DM-06…DM-12)
+- [x] 3.3 `POST /api/holdings/[id]/valuations` upserts today's Valuation, including unchanged values and same-day overwrites, and refuses Stocks (DM-13, DM-14, DM-15)
+- [x] 3.4 `PATCH /api/holdings/[id]` replaces the editable fields, upserts today's Valuation, and refuses a Country or Asset Class change (DM-16, DM-17)
+- [x] 3.5 `POST /api/holdings/[id]/archive` sets the archive date; an archived Holding refuses edits and Update value with 409 (DM-27)
+- [x] 3.6 Tests named DM-06, DM-07, DM-08, DM-09, DM-10, DM-11, DM-12, DM-13, DM-14, DM-15, DM-16, DM-17, DM-27 pass in CI suites; npm run spec:coverage passes
 
 ## 4. Ticker data, Sectors and ticker lookup
 
@@ -75,10 +75,10 @@ A User can record a loan, edit it, update its balance and archive it, and link i
 Blocked by: 2
 A User can add and remove Goals and set or clear any Projection Assumption, Monthly savings, savings growth and horizon. A blank means the default (D11, D12).
 
-- [ ] 7.1 Tests named DM-34, DM-35, DM-36, DM-37, DM-38 written and failing (red)
-- [ ] 7.2 `POST /api/goals` stores an optional name and `target_usd > 0`; `DELETE /api/goals/[id]` really deletes it (DM-34, DM-35)
-- [ ] 7.3 `PATCH /api/projection-assumptions` updates only the fields sent, treats null as blank, upserts `country_assumption` rows and enforces the ranges (DM-36, DM-37, DM-38)
-- [ ] 7.4 Tests named DM-34, DM-35, DM-36, DM-37, DM-38 pass in CI suites; npm run spec:coverage passes
+- [x] 7.1 Tests named DM-34, DM-35, DM-36, DM-37, DM-38 written and failing (red)
+- [x] 7.2 `POST /api/goals` stores an optional name and `target_usd > 0`; `DELETE /api/goals/[id]` really deletes it (DM-34, DM-35)
+- [x] 7.3 `PATCH /api/projection-assumptions` updates only the fields sent, treats null as blank, upserts `country_assumption` rows and enforces the ranges (DM-36, DM-37, DM-38)
+- [x] 7.4 Tests named DM-34, DM-35, DM-36, DM-37, DM-38 pass in CI suites; npm run spec:coverage passes
 
 ## 8. The daily job: FX, prices and Stocks snapshots
 
