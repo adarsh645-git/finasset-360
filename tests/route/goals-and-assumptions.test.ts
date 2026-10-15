@@ -70,7 +70,8 @@ describe("Goals", () => {
     const goals = await goalsOf(user);
     if (status === 201) {
       expect(goals).toHaveLength(before + 1);
-      const created = goals.find((g) => g.id === (await response.json()).id)!;
+      const { id } = await response.json();
+      const created = goals.find((g) => g.id === id)!;
       expect(created.name).toBe(stored);
       expect(Number(created.target_usd)).toBe(target);
     } else {
