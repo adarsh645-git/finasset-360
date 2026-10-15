@@ -1,3 +1,5 @@
+import type { AssetClassId } from "./defaults";
+
 // Plain input types for the calculations module, in CONTEXT.md vocabulary.
 // Rates are fractions (0.07 = 7%). Dates are `YYYY-MM-DD`. A blank
 // Projection Assumption is `undefined` or `null`.
@@ -61,4 +63,27 @@ export type Staleness = {
   /** Whole UTC calendar days since the user-entered figure; null when there is none. */
   ageDays: number | null;
   stale: boolean;
+};
+
+/** A Holding as the Projection sees it: its native current value. */
+export type ProjectionHolding = {
+  id: string;
+  country: Country;
+  assetClass: AssetClassId;
+  currentValue: number;
+};
+
+export type ProjectionInput = {
+  holdings: readonly ProjectionHolding[];
+  assumptions: ProjectionAssumptionsInput;
+  /** Today's FX Rate: INR per USD. Held flat for the whole Projection. */
+  fxRate: number;
+};
+
+/** Monthly series, index k = month k, month 0 being today. */
+export type HoldingSeries = { id: string; native: number[]; usd: number[] };
+
+export type Projection = {
+  holdings: HoldingSeries[];
+  totalHoldingsUsd: number[];
 };
