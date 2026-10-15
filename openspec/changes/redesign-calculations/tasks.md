@@ -16,11 +16,11 @@ The new calculations module exists beside the old helpers, with its own plain in
 Blocked by: 1
 The Projection returns monthly series from today over the User's horizon. Each Holding compounds at its Asset Class rate for its Country, with FX held flat at today's rate (D2, D3).
 
-- [ ] 2.1 Tests named PR-02, PR-03, PR-05, PR-06, PR-07 written and failing (red)
-- [ ] 2.2 Series run from month 0 to horizon × 12 inclusive, and month 0 equals current values (PR-03, PR-05)
-- [ ] 2.3 Native values follow v × (1+r)^(k/12), with r chosen by class and Country, checked against the closed form (PR-02, PR-06)
-- [ ] 2.4 India figures convert at today's FX Rate at every month (PR-07)
-- [ ] 2.5 Tests named PR-02, PR-03, PR-05, PR-06, PR-07 pass in CI suites; npm run spec:coverage passes
+- [x] 2.1 Tests named PR-02, PR-03, PR-05, PR-06, PR-07 written and failing (red)
+- [x] 2.2 Series run from month 0 to horizon × 12 inclusive, and month 0 equals current values (PR-03, PR-05)
+- [x] 2.3 Native values follow v × (1+r)^(k/12), with r chosen by class and Country, checked against the closed form (PR-02, PR-06)
+- [x] 2.4 India figures convert at today's FX Rate at every month (PR-07)
+- [x] 2.5 Tests named PR-02, PR-03, PR-05, PR-06, PR-07 pass in CI suites; npm run spec:coverage passes
 
 ## 3. Projection: Liabilities amortize
 
