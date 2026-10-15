@@ -185,3 +185,10 @@ export type FxRateLookup = { rate: number; asOf: string };
 
 /** USD change; `percent` is a fraction, absent when the base is 0. */
 export type TwelveMonthChange = { amount: number; percent: number | undefined };
+
+/** A change in Net Worth split into three terms that sum to it. */
+export type ChangeAttribution = {
+  assetGrowth: number;
+  debtPaidDown: number;
+  currencyEffect: number;
+};
