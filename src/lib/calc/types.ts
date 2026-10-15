@@ -62,3 +62,28 @@ export type Staleness = {
   ageDays: number | null;
   stale: boolean;
 };
+
+/** A dated amount in the item's own currency (a Valuation, or a Liability balance). */
+export type AmountValuation = { date: string; amount: number };
+
+/** A Holding or Liability, as the history rule sees it. `currentValue` acts as
+ * a Valuation dated today; `archivedOn` is the last day it counts. */
+export type HistoryItem = {
+  country: Country;
+  valuations: readonly AmountValuation[];
+  currentValue?: number;
+  archivedOn?: string;
+};
+
+export type HistoryPortfolio = {
+  holdings: readonly HistoryItem[];
+  liabilities: readonly HistoryItem[];
+};
+
+/** INR per USD, stored on `date`. */
+export type FxRate = { date: string; rate: number };
+
+export type FxRateLookup = { rate: number; asOf: string };
+
+/** USD change; `percent` is a fraction, absent when the base is 0. */
+export type TwelveMonthChange = { amount: number; percent: number | undefined };
