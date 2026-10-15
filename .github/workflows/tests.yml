@@ -43,5 +43,6 @@ jobs:
             echo "NEXT_PUBLIC_SUPABASE_ANON_KEY=$ANON_KEY"
             echo "SUPABASE_SERVICE_ROLE_KEY=$SERVICE_ROLE_KEY"
             echo "CRON_SECRET=ci-test-cron-secret"
+            echo "FINNHUB_API_KEY=ci-test-finnhub-key"
           } > .env.test.local
       - run: npx vitest run tests/route
