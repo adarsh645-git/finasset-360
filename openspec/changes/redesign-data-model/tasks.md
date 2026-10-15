@@ -6,8 +6,8 @@ Blocked by: none
 Every pull request runs the Vitest unit tests and the route tests against a real local Supabase stack in GitHub Actions, so "pass in CI suites" means real CI from here on (D21). This is infrastructure only, with no scenarios of its own, and the existing suites are what prove it works.
 
 - [ ] 1.1 A `unit` job runs `npm ci`, `npm run typecheck` and the `tests/unit` suite; it fails the PR on a failing test (checked by pushing a deliberately failing test on a throwaway branch, then removing it)
-- [ ] 1.2 A `route` job installs the Supabase CLI, runs `supabase start` and `supabase db reset`, writes `.env.test.local` from `supabase status -o env` with a test `CRON_SECRET`, and runs the `tests/route` suite
-- [ ] 1.3 Both jobs pass on the current `main` code, alongside the existing spec-coverage job
+- [x] 1.2 A `route` job installs the Supabase CLI, runs `supabase start` and `supabase db reset`, writes `.env.test.local` from `supabase status -o env` with a test `CRON_SECRET`, and runs the `tests/route` suite
+- [x] 1.3 Both jobs pass on the current `main` code, alongside the existing spec-coverage job
 
 ## 2. Cutover: new schema, isolation and the interim home page
 
