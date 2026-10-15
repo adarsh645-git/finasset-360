@@ -17,12 +17,12 @@ function sessionFor(user: TestUser): SupabaseClient {
   );
 }
 
-async function must<T>(
-  result: PromiseLike<{ data: T | null; error: { message: string } | null }>,
-): Promise<T> {
+async function insertedId(
+  result: PromiseLike<{ data: { id: string } | null; error: { message: string } | null }>,
+): Promise<string> {
   const { data, error } = await result;
-  if (error || data === null) throw new Error(error?.message ?? "no row returned");
-  return data;
+  if (error || !data) throw new Error(error?.message ?? "no row returned");
+  return data.id;
 }
 
 type Seeded = { holdingId: string; liabilityId: string };
@@ -31,19 +31,19 @@ type Seeded = { holdingId: string; liabilityId: string };
 // through the User's own session so the policies are what let it in.
 async function seedRecords(user: TestUser): Promise<Seeded> {
   const db = sessionFor(user);
-  const holding = await must(
+  const holdingId = await insertedId(
     db
       .from("holding")
       .insert({ user_id: user.id, country: "US", asset_class: "stocks", name: "Brokerage" })
       .select("id")
       .single(),
   );
-  await must(
+  await insertedId(
     db
       .from("position")
       .insert({
         user_id: user.id,
-        holding_id: holding.id,
+        holding_id: holdingId,
         ticker: "AAPL",
         shares: 2,
         avg_cost: 100,
@@ -53,14 +53,14 @@ async function seedRecords(user: TestUser): Promise<Seeded> {
       .select("id")
       .single(),
   );
-  await must(
+  await insertedId(
     db
       .from("holding_valuation")
-      .insert({ user_id: user.id, holding_id: holding.id, valued_on: "2026-01-01", value: 200, source: "user" })
+      .insert({ user_id: user.id, holding_id: holdingId, valued_on: "2026-01-01", value: 200, source: "user" })
       .select("id")
       .single(),
   );
-  const liability = await must(
+  const liabilityId = await insertedId(
     db
       .from("liability")
       .insert({
@@ -75,17 +75,17 @@ async function seedRecords(user: TestUser): Promise<Seeded> {
       .select("id")
       .single(),
   );
-  await must(
+  await insertedId(
     db
       .from("liability_valuation")
-      .insert({ user_id: user.id, liability_id: liability.id, valued_on: "2026-01-01", balance: 5000 })
+      .insert({ user_id: user.id, liability_id: liabilityId, valued_on: "2026-01-01", balance: 5000 })
       .select("id")
       .single(),
   );
-  await must(
+  await insertedId(
     db.from("goal").insert({ user_id: user.id, name: "Retire", target_usd: 1_000_000 }).select("id").single(),
   );
-  return { holdingId: holding.id, liabilityId: liability.id };
+  return { holdingId, liabilityId };
 }
 
 describe("portfolio records isolation", () => {
