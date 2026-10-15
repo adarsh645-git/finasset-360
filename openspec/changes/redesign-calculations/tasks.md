@@ -51,13 +51,13 @@ Each Country's Monthly savings are invested at its Stocks rate, step up once a y
 Blocked by: 1
 Any Holding's or Liability's value on any date, by interpolation between Valuations (D7). Also: history sample dates, the FX Rate for a date with its as-of date (D8), past Net Worth in USD at each date's rate, and 12-month change for an item and for a set (D9).
 
-- [ ] 5.1 Tests named NH-01, NH-02, NH-03, NH-04, NH-05, NH-06, NH-07, NH-08, NH-09, NH-10 written and failing (red)
-- [ ] 5.2 The value on a date: 0 before the first Valuation, linear by day, flat after the last, 0 after archive, with the current value acting as today's Valuation (NH-01, NH-02, NH-03)
-- [ ] 5.3 Sample dates are start, month-ends and today, with the start clamped to the earliest Valuation (NH-04)
-- [ ] 5.4 FX lookup takes the latest rate on or before the date, falls back to the earliest, and reports its as-of date (NH-05)
-- [ ] 5.5 Past Net Worth converts each date at that date's FX Rate (NH-06)
-- [ ] 5.6 12-month change is absent for an item with no Valuation by the start, and a set counts only items present at the start (NH-07…NH-10)
-- [ ] 5.7 Tests named NH-01, NH-02, NH-03, NH-04, NH-05, NH-06, NH-07, NH-08, NH-09, NH-10 pass in CI suites; npm run spec:coverage passes
+- [x] 5.1 Tests named NH-01, NH-02, NH-03, NH-04, NH-05, NH-06, NH-07, NH-08, NH-09, NH-10 written and failing (red)
+- [x] 5.2 The value on a date: 0 before the first Valuation, linear by day, flat after the last, 0 after archive, with the current value acting as today's Valuation (NH-01, NH-02, NH-03)
+- [x] 5.3 Sample dates are start, month-ends and today, with the start clamped to the earliest Valuation (NH-04)
+- [x] 5.4 FX lookup takes the latest rate on or before the date, falls back to the earliest, and reports its as-of date (NH-05)
+- [x] 5.5 Past Net Worth converts each date at that date's FX Rate (NH-06)
+- [x] 5.6 12-month change is absent for an item with no Valuation by the start, and a set counts only items present at the start (NH-07…NH-10)
+- [x] 5.7 Tests named NH-01, NH-02, NH-03, NH-04, NH-05, NH-06, NH-07, NH-08, NH-09, NH-10 pass in CI suites; npm run spec:coverage passes
 
 ## 6. Today's dollars and change attribution
 
@@ -85,10 +85,10 @@ Equity, % owned and Equity built for Holdings linked to a Liability, for recorde
 Blocked by: 1
 A Goal's derived status (Reached, Projected or Beyond the N-year projection), with its month, months from today and progress, from one nominal Net Worth series. It returns data, not copy (D13).
 
-- [ ] 8.1 Tests named GS-01, GS-02, GS-03, GS-04, GS-05 written and failing (red)
-- [ ] 8.2 The status comes from the first point at or above the target, with today counting as Reached and Reached sticking after a dip (GS-01, GS-02, GS-03)
-- [ ] 8.3 Progress is clamped to 0–1, including negative Net Worth (GS-04, GS-05)
-- [ ] 8.4 Tests named GS-01, GS-02, GS-03, GS-04, GS-05 pass in CI suites; npm run spec:coverage passes
+- [x] 8.1 Tests named GS-01, GS-02, GS-03, GS-04, GS-05 written and failing (red)
+- [x] 8.2 The status comes from the first point at or above the target, with today counting as Reached and Reached sticking after a dip (GS-01, GS-02, GS-03)
+- [x] 8.3 Progress is clamped to 0–1, including negative Net Worth (GS-04, GS-05)
+- [x] 8.4 Tests named GS-01, GS-02, GS-03, GS-04, GS-05 pass in CI suites; npm run spec:coverage passes
 
 ## Workflow follow-up
 

@@ -59,6 +59,30 @@ export type StocksHolding = {
 
 export type StalenessInput = ManualItem | StocksHolding;
 
+/** One month of the nominal USD Net Worth series. `month` is `YYYY-MM`. */
+export type NetWorthPoint = { month: string; netWorth: number };
+
+export type GoalStatusInput = {
+  /** Recorded history, then the Projection over the horizon. */
+  series: readonly NetWorthPoint[];
+  /** Index of today's month in `series`. */
+  todayIndex: number;
+  target: number;
+  horizonYears: number;
+};
+
+export type GoalStatus = {
+  status: "reached" | "projected" | "beyond";
+  /** `YYYY-MM` of the first point at or above the target; absent when beyond. */
+  month?: string;
+  /** Negative when reached in the past; absent when beyond. */
+  monthsFromToday?: number;
+  /** The horizon N, set when beyond. */
+  horizonYears?: number;
+  /** Today's Net Worth over the target, clamped to 0 to 1. */
+  progress: number;
+};
+
 export type Staleness = {
   /** Whole UTC calendar days since the user-entered figure; null when there is none. */
   ageDays: number | null;
@@ -110,3 +134,28 @@ export type Projection = {
   totalLiabilitiesUsd: number[];
   netWorthUsd: number[];
 };
+
+/** A dated amount in the item's own currency (a Valuation, or a Liability balance). */
+export type AmountValuation = { date: string; amount: number };
+
+/** A Holding or Liability, as the history rule sees it. `currentValue` acts as
+ * a Valuation dated today; `archivedOn` is the last day it counts. */
+export type HistoryItem = {
+  country: Country;
+  valuations: readonly AmountValuation[];
+  currentValue?: number;
+  archivedOn?: string;
+};
+
+export type HistoryPortfolio = {
+  holdings: readonly HistoryItem[];
+  liabilities: readonly HistoryItem[];
+};
+
+/** INR per USD, stored on `date`. */
+export type FxRate = { date: string; rate: number };
+
+export type FxRateLookup = { rate: number; asOf: string };
+
+/** USD change; `percent` is a fraction, absent when the base is 0. */
+export type TwelveMonthChange = { amount: number; percent: number | undefined };
