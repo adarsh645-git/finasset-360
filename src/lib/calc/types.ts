@@ -34,6 +34,14 @@ export interface ProjectionAssumptionsInput {
   horizonYears?: number;
 }
 
+/** A Holding: a native-currency current value in one Country and Asset Class. */
+export interface Holding {
+  id: string;
+  country: Country;
+  assetClass: AssetClassId;
+  value: number;
+}
+
 /** A Stocks Position; the date is set only when its price is a Hand Price. */
 export interface Position {
   handPriceDate: string | null;
