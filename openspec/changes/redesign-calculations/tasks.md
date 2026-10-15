@@ -39,12 +39,12 @@ Each Liability amortizes by its APR and Monthly payment. The Projection reports 
 Blocked by: 3
 Each Country's Monthly savings are invested at its Stocks rate, step up once a year, and are joined by freed Monthly payments at a flat amount. The Projection rolls everything up by Asset Class, Country and total, with savings in the Stocks class and never in a Holding (D5).
 
-- [ ] 4.1 Tests named PR-15, PR-16, PR-17, PR-18, PR-19, PR-20, PR-21 written and failing (red)
-- [ ] 4.2 The savings pool matches the annuity future-value formula and steps yearly by the savings growth rate (PR-15, PR-16)
-- [ ] 4.3 Blank savings reproduce the no-savings Projection (PR-17)
-- [ ] 4.4 Freed payments start the month after payoff and don't escalate (PR-18, PR-19)
-- [ ] 4.5 Roll-ups reconcile at every month, and savings appear in Stocks and Country assets but in no Holding (PR-20, PR-21)
-- [ ] 4.6 Tests named PR-15, PR-16, PR-17, PR-18, PR-19, PR-20, PR-21 pass in CI suites; npm run spec:coverage passes
+- [x] 4.1 Tests named PR-15, PR-16, PR-17, PR-18, PR-19, PR-20, PR-21 written and failing (red)
+- [x] 4.2 The savings pool matches the annuity future-value formula and steps yearly by the savings growth rate (PR-15, PR-16)
+- [x] 4.3 Blank savings reproduce the no-savings Projection (PR-17)
+- [x] 4.4 Freed payments start the month after payoff and don't escalate (PR-18, PR-19)
+- [x] 4.5 Roll-ups reconcile at every month, and savings appear in Stocks and Country assets but in no Holding (PR-20, PR-21)
+- [x] 4.6 Tests named PR-15, PR-16, PR-17, PR-18, PR-19, PR-20, PR-21 pass in CI suites; npm run spec:coverage passes
 
 ## 5. History: values, FX and 12-month change
 
