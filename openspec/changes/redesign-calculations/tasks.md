@@ -75,10 +75,10 @@ Any series restated in Today's dollars, each Country at its own inflation (D10).
 Blocked by: 3
 Equity, % owned and Equity built for Holdings linked to a Liability, for recorded values and for projected series point by point (D12).
 
-- [ ] 7.1 Tests named EQ-01, EQ-02, EQ-03, EQ-04, EQ-05, EQ-06 written and failing (red)
-- [ ] 7.2 Equity is value minus balance in USD, and follows a projected pair month by month, equalling the value after payoff (EQ-01, EQ-02, EQ-03)
-- [ ] 7.3 % owned is clamped to 0–1, with a value of 0 giving 0, and Equity built sums every link or is 0 with none (EQ-04, EQ-05, EQ-06)
-- [ ] 7.4 Tests named EQ-01, EQ-02, EQ-03, EQ-04, EQ-05, EQ-06 pass in CI suites; npm run spec:coverage passes
+- [x] 7.1 Tests named EQ-01, EQ-02, EQ-03, EQ-04, EQ-05, EQ-06 written and failing (red)
+- [x] 7.2 Equity is value minus balance in USD, and follows a projected pair month by month, equalling the value after payoff (EQ-01, EQ-02, EQ-03)
+- [x] 7.3 % owned is clamped to 0–1, with a value of 0 giving 0, and Equity built sums every link or is 0 with none (EQ-04, EQ-05, EQ-06)
+- [x] 7.4 Tests named EQ-01, EQ-02, EQ-03, EQ-04, EQ-05, EQ-06 pass in CI suites; npm run spec:coverage passes
 
 ## 8. Goal status
 
