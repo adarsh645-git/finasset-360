@@ -42,6 +42,16 @@ export interface Holding {
   value: number;
 }
 
+/** A Liability: an amortizing loan in one Country, in native currency. `apr`
+ * is a fraction (0.06 = 6%). */
+export interface Liability {
+  id: string;
+  country: Country;
+  balance: number;
+  apr: number;
+  monthlyPayment: number;
+}
+
 /** A Stocks Position; the date is set only when its price is a Hand Price. */
 export interface Position {
   handPriceDate: string | null;
