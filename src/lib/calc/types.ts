@@ -127,10 +127,36 @@ export type LiabilitySeries = HoldingSeries & {
   notOnTrack: boolean;
 };
 
+/** One Country's savings pool, never a Holding. */
+export type SavingsSeries = {
+  /** The amount added at the end of month k: stepped base plus freed payments. 0 at month 0. */
+  amount: number[];
+  /** The pool's value in native currency. */
+  native: number[];
+  usd: number[];
+};
+
+export type CountryRollup = {
+  assetsUsd: number[];
+  liabilitiesUsd: number[];
+  savingsUsd: number[];
+  netUsd: number[];
+};
+
 export type Projection = {
   holdings: HoldingSeries[];
   liabilities: LiabilitySeries[];
+  savings: Record<Country, SavingsSeries>;
+  /** USD by Asset Class, savings counted in Stocks. */
+  assetClasses: Record<AssetClassId, number[]>;
+  /** USD by Asset Class within each Country, savings counted in Stocks. */
+  countryAssetClasses: Record<Country, Record<AssetClassId, number[]>>;
+  countries: Record<Country, CountryRollup>;
+  /** Holdings only, without savings. */
   totalHoldingsUsd: number[];
+  totalSavingsUsd: number[];
+  /** Holdings plus savings. */
+  totalAssetsUsd: number[];
   totalLiabilitiesUsd: number[];
   netWorthUsd: number[];
 };
