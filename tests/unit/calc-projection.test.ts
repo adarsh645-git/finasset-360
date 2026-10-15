@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { projectHoldings, resolveAssumptions } from "@/lib/calc";
-import type { AssetClassId, Holding } from "@/lib/calc";
+import { projectHoldings, projectLiabilities, projectPortfolio, resolveAssumptions } from "@/lib/calc";
+import type { AssetClassId, Holding, Liability } from "@/lib/calc";
 
 const BLANK = resolveAssumptions({});
 
@@ -96,5 +96,107 @@ describe("projection of Holdings", () => {
   it("PR-07 US figures are already USD", () => {
     const { nativeValues, usdValues } = project([holding("US", "stocks")]).holdings[0];
     expect(usdValues).toEqual(nativeValues);
+  });
+});
+
+describe("projection of Liabilities", () => {
+  const FX = 83.4;
+  const loan = (balance: number, apr: number, monthlyPayment: number, country: "US" | "IN" = "US"): Liability => ({
+    id: "l1",
+    country,
+    balance,
+    apr,
+    monthlyPayment,
+  });
+  const project = (liabilities: Liability[], assumptions = {}) =>
+    projectLiabilities({ liabilities, assumptions, fxRate: FX })[0];
+
+  it("PR-08 payoff month matches the annuity formula and the balance stays 0 after", () => {
+    const result = project([loan(200_000, 0.06, 2_000)], { horizonYears: 20 });
+    expect(result.payoffMonth).toBe(139);
+    expect(result.notOnTrack).toBe(false);
+    expect(result.nativeBalances[138]).toBeGreaterThan(0);
+    expect(result.nativeBalances.slice(139).every((b) => b === 0)).toBe(true);
+  });
+
+  it("PR-09 a Liability at zero balance is already paid off", () => {
+    const result = project([loan(0, 0.06, 500)]);
+    expect(result.payoffMonth).toBe(0);
+    expect(result.interestRemaining).toBe(0);
+    expect(result.notOnTrack).toBe(false);
+    expect(result.nativeBalances.every((b) => b === 0)).toBe(true);
+  });
+
+  it("PR-11 interest remaining equals total paid minus today's balance", () => {
+    const i = 0.005;
+    const balanceAfter = (k: number) => 200_000 * (1 + i) ** k - (2_000 * ((1 + i) ** k - 1)) / i;
+    const lastPayment = balanceAfter(138) * (1 + i);
+    const totalPaid = 138 * 2_000 + lastPayment;
+    const result = project([loan(200_000, 0.06, 2_000)], { horizonYears: 20 });
+    expect(Math.abs(result.interestRemaining! - (totalPaid - 200_000))).toBeLessThan(0.01);
+  });
+
+  it("PR-12 payoff after the horizon is still reported", () => {
+    const result = project([loan(200_000, 0.06, 2_000)], { horizonYears: 5 });
+    expect(result.payoffMonth).toBe(139);
+    expect(result.interestRemaining).toBeGreaterThan(0);
+    expect(result.nativeBalances).toHaveLength(61);
+    expect(result.nativeBalances[60]).toBeGreaterThan(0);
+  });
+
+  it.each([
+    [900, true],
+    [1000, true],
+    [1001, true],
+    [1100, false],
+  ])("PR-13 balance 120000 at 10%% with payment %i is Not on track: %s", (payment, flag) => {
+    expect(project([loan(120_000, 0.1, payment)]).notOnTrack).toBe(flag);
+  });
+
+  it("PR-13 a payment of 1,100 pays off in month 289", () => {
+    expect(project([loan(120_000, 0.1, 1_100)]).payoffMonth).toBe(289);
+  });
+
+  it("PR-14 a Not on track Liability grows and has no payoff", () => {
+    const result = project([loan(120_000, 0.1, 900)]);
+    expect(result.nativeBalances[1]).toBeCloseTo(120_100, 6);
+    result.nativeBalances.slice(1).forEach((b, k) => expect(b).toBeGreaterThan(result.nativeBalances[k]));
+    expect(result.payoffMonth).toBeUndefined();
+    expect(result.interestRemaining).toBeUndefined();
+  });
+
+  it("PR-14 India balances convert at today's FX Rate", () => {
+    const result = project([loan(8_340_000, 0, 100_000, "IN")]);
+    expect(result.usdBalances[0]).toBeCloseTo(100_000, 6);
+  });
+});
+
+describe("Net Worth nets Liabilities against Holdings", () => {
+  const FX = 83.4;
+  const holdings: Holding[] = [
+    { id: "h1", country: "US", assetClass: "stocks", value: 300_000 },
+    { id: "h2", country: "IN", assetClass: "realEstate", value: 16_680_000 },
+  ];
+  const liabilities = (payment: number): Liability[] => [
+    { id: "l1", country: "US", balance: 200_000, apr: 0.06, monthlyPayment: payment },
+    { id: "l2", country: "IN", balance: 4_170_000, apr: 0.09, monthlyPayment: 60_000 },
+  ];
+  const netWorth = (payment: number) =>
+    projectPortfolio({ holdings, liabilities: liabilities(payment), assumptions: {}, fxRate: FX }).netWorthUsd;
+
+  it("PR-04 month 0 equals today's Net Worth", () => {
+    expect(netWorth(2_000)[0]).toBeCloseTo(300_000 + 200_000 - 200_000 - 50_000, 6);
+  });
+
+  it("PR-10 a higher Monthly payment strictly raises Net Worth until the earlier payoff", () => {
+    const low = netWorth(2_000);
+    const high = netWorth(2_500);
+    expect(high[0]).toBe(low[0]);
+    const earlierPayoff = projectLiabilities({
+      liabilities: [liabilities(2_500)[0]],
+      assumptions: {},
+      fxRate: FX,
+    })[0].payoffMonth!;
+    for (let k = 1; k <= earlierPayoff; k++) expect(high[k]).toBeGreaterThan(low[k]);
   });
 });
