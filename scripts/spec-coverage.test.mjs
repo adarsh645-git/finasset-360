@@ -126,6 +126,26 @@ test("a ticked box counts with any case or spacing", () => {
   assert.deepEqual(result.uncovered, [{ change: "add-goals", id: "ZG-02" }]);
 });
 
+test("only scenarios named by a started ticket are required", () => {
+  const result = coverage(
+    repo({
+      ...change("add-audience", "skills-driven", [
+        "ZA-01 owner sees the list",
+        "ZA-02 owner filters the list",
+      ]),
+      "openspec/changes/add-audience/tasks.md": [
+        "## 1. List",
+        "- [x] 1.1 Tests named ZA-01 written and failing (red)",
+        "## 2. Filter",
+        "- [ ] 2.1 Tests named ZA-02 written and failing (red)",
+      ].join("\n"),
+      "frontend/src/audience.test.ts": 'it("ZA-01 shows the list", () => {});\n',
+    }),
+  );
+  assert.equal(result.ok, true);
+  assert.equal(result.total, 1);
+});
+
 test("a scenario without an ID fails the check", () => {
   const result = coverage(
     repo(change("add-audience", "skills-driven", ["owner sees the list"])),

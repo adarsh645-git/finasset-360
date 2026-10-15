@@ -85,6 +85,20 @@ const scenarios = (root, change) =>
       })),
   );
 
+/** The scenario IDs a change's tickets have started: those named in a
+ * `## N.` section of tasks.md with a ticked box. Returns null when tasks.md
+ * names no IDs at all, so every scenario of the started change is required. */
+const startedIds = (root, change) => {
+  const tasks = readText(join(root, "openspec/changes", change, "tasks.md"));
+  const sections = tasks.split(/^(?=##\s)/m);
+  if (!sections.some((section) => section.match(ID_TOKEN))) return null;
+  return new Set(
+    sections
+      .filter((section) => TICKED_BOX.test(section))
+      .flatMap((section) => section.match(ID_TOKEN) ?? []),
+  );
+};
+
 /** Checks every scenario ID in started skills-driven changes against the code. */
 export const coverage = (root) => {
   const found = idsInCode(root);
@@ -92,8 +106,12 @@ export const coverage = (root) => {
   const unidentified = [];
   for (const change of activeChanges(root)) {
     const ids = new Set();
+    const started = startedIds(root, change);
     for (const { id, file, line, heading } of scenarios(root, change)) {
-      if (id) ids.add(id);
+      // Tickets not yet started don't gate CI; their tests come with them.
+      if (id) {
+        if (started === null || started.has(id)) ids.add(id);
+      }
       else unidentified.push({ file, line, heading });
     }
     required.push(...[...ids].map((id) => ({ change, id })));
