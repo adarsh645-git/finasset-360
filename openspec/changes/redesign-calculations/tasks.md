@@ -85,10 +85,10 @@ Equity, % owned and Equity built for Holdings linked to a Liability, for recorde
 Blocked by: 1
 A Goal's derived status (Reached, Projected or Beyond the N-year projection), with its month, months from today and progress, from one nominal Net Worth series. It returns data, not copy (D13).
 
-- [ ] 8.1 Tests named GS-01, GS-02, GS-03, GS-04, GS-05 written and failing (red)
-- [ ] 8.2 The status comes from the first point at or above the target, with today counting as Reached and Reached sticking after a dip (GS-01, GS-02, GS-03)
-- [ ] 8.3 Progress is clamped to 0–1, including negative Net Worth (GS-04, GS-05)
-- [ ] 8.4 Tests named GS-01, GS-02, GS-03, GS-04, GS-05 pass in CI suites; npm run spec:coverage passes
+- [x] 8.1 Tests named GS-01, GS-02, GS-03, GS-04, GS-05 written and failing (red)
+- [x] 8.2 The status comes from the first point at or above the target, with today counting as Reached and Reached sticking after a dip (GS-01, GS-02, GS-03)
+- [x] 8.3 Progress is clamped to 0–1, including negative Net Worth (GS-04, GS-05)
+- [x] 8.4 Tests named GS-01, GS-02, GS-03, GS-04, GS-05 pass in CI suites; npm run spec:coverage passes
 
 ## Workflow follow-up
 
