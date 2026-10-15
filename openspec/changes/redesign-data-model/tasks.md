@@ -14,12 +14,12 @@ Every pull request runs the Vitest unit tests and the route tests against a real
 Blocked by: 1
 One migration drops every old table and creates the new schema with RLS (D1, D2 and the schema sketch). The Miller shell, old routes, helpers and their tests are deleted (D13, D19). `/` becomes the signed-in "Being rebuilt" page (D18), and `docs/SPEC.md` becomes a pointer to `openspec/specs/`. A new User gets a blank Portfolio, Countries are data, and every per-User table is isolated.
 
-- [ ] 2.1 Tests named DM-01, DM-03, DM-04, DM-05, CI-01, CI-02 written and failing (red)
-- [ ] 2.2 The new migration drops every old object and creates `country` (seeded with US and India), `portfolio` (with the trigger), `country_assumption`, `holding`, `position`, `holding_valuation`, `liability`, `liability_valuation`, `goal`, `stock_symbol`, `price_cache` and `fx_rate`, with the checks, composite foreign keys and policies in the design; `supabase db reset` applies it cleanly (DM-01, DM-03, DM-04, DM-05)
-- [ ] 2.3 The files listed in D19 are deleted with their tests, `SignOutButton` and `firstNameOrEmail` survive, and `rg "asset_class_id|liability_class|home_currency|fx_rate_to_home|price_lookup_symbol|target_allocation|check_in|METALS" src tests scripts` finds nothing
-- [ ] 2.4 `/` redirects a signed-out visitor to `/login` and shows a signed-in User "Being rebuilt" with their first name and Sign out, and no figures (CI-01, CI-02)
+- [x] 2.1 Tests named DM-01, DM-03, DM-04, DM-05, CI-01, CI-02 written and failing (red)
+- [x] 2.2 The new migration drops every old object and creates `country` (seeded with US and India), `portfolio` (with the trigger), `country_assumption`, `holding`, `position`, `holding_valuation`, `liability`, `liability_valuation`, `goal`, `stock_symbol`, `price_cache` and `fx_rate`, with the checks, composite foreign keys and policies in the design; `supabase db reset` applies it cleanly (DM-01, DM-03, DM-04, DM-05)
+- [x] 2.3 The files listed in D19 are deleted with their tests, `SignOutButton` and `firstNameOrEmail` survive, and `rg "asset_class_id|liability_class|home_currency|fx_rate_to_home|price_lookup_symbol|target_allocation|check_in|METALS" src tests scripts` finds nothing
+- [x] 2.4 `/` redirects a signed-out visitor to `/login` and shows a signed-in User "Being rebuilt" with their first name and Sign out, and no figures (CI-01, CI-02)
 - [ ] 2.5 `docs/SPEC.md` keeps its title, Problem Statement and session-rhythm facts (today's lines 8–20) under a note pointing to `openspec/specs/`, CONTEXT.md and `docs/adr/`; `.env.example` loses the two metals keys
-- [ ] 2.6 Tests named DM-01, DM-03, DM-04, DM-05, CI-01, CI-02 pass in CI suites; npm run spec:coverage passes
+- [x] 2.6 Tests named DM-01, DM-03, DM-04, DM-05, CI-01, CI-02 pass in CI suites; npm run spec:coverage passes
 - [ ] 2.7 Interim page checked by hand at 2000px, 800px and 390px: readable, with no horizontal scroll, and Sign out works
 
 ## 3. Manually valued Holdings: create, edit, Update value and archive
