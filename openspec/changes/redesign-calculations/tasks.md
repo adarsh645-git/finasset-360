@@ -16,11 +16,11 @@ The new calculations module exists beside the old helpers, with its own plain in
 Blocked by: 1
 The Projection returns monthly series from today over the User's horizon. Each Holding compounds at its Asset Class rate for its Country, with FX held flat at today's rate (D2, D3).
 
-- [ ] 2.1 Tests named PR-02, PR-03, PR-05, PR-06, PR-07 written and failing (red)
-- [ ] 2.2 Series run from month 0 to horizon × 12 inclusive, and month 0 equals current values (PR-03, PR-05)
-- [ ] 2.3 Native values follow v × (1+r)^(k/12), with r chosen by class and Country, checked against the closed form (PR-02, PR-06)
-- [ ] 2.4 India figures convert at today's FX Rate at every month (PR-07)
-- [ ] 2.5 Tests named PR-02, PR-03, PR-05, PR-06, PR-07 pass in CI suites; npm run spec:coverage passes
+- [x] 2.1 Tests named PR-02, PR-03, PR-05, PR-06, PR-07 written and failing (red)
+- [x] 2.2 Series run from month 0 to horizon × 12 inclusive, and month 0 equals current values (PR-03, PR-05)
+- [x] 2.3 Native values follow v × (1+r)^(k/12), with r chosen by class and Country, checked against the closed form (PR-02, PR-06)
+- [x] 2.4 India figures convert at today's FX Rate at every month (PR-07)
+- [x] 2.5 Tests named PR-02, PR-03, PR-05, PR-06, PR-07 pass in CI suites; npm run spec:coverage passes
 
 ## 3. Projection: Liabilities amortize
 
@@ -85,10 +85,10 @@ Equity, % owned and Equity built for Holdings linked to a Liability, for recorde
 Blocked by: 1
 A Goal's derived status (Reached, Projected or Beyond the N-year projection), with its month, months from today and progress, from one nominal Net Worth series. It returns data, not copy (D13).
 
-- [ ] 8.1 Tests named GS-01, GS-02, GS-03, GS-04, GS-05 written and failing (red)
-- [ ] 8.2 The status comes from the first point at or above the target, with today counting as Reached and Reached sticking after a dip (GS-01, GS-02, GS-03)
-- [ ] 8.3 Progress is clamped to 0–1, including negative Net Worth (GS-04, GS-05)
-- [ ] 8.4 Tests named GS-01, GS-02, GS-03, GS-04, GS-05 pass in CI suites; npm run spec:coverage passes
+- [x] 8.1 Tests named GS-01, GS-02, GS-03, GS-04, GS-05 written and failing (red)
+- [x] 8.2 The status comes from the first point at or above the target, with today counting as Reached and Reached sticking after a dip (GS-01, GS-02, GS-03)
+- [x] 8.3 Progress is clamped to 0–1, including negative Net Worth (GS-04, GS-05)
+- [x] 8.4 Tests named GS-01, GS-02, GS-03, GS-04, GS-05 pass in CI suites; npm run spec:coverage passes
 
 ## Workflow follow-up
 
