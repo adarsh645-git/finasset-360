@@ -39,12 +39,12 @@ A User can create, edit, update the value of and archive a Cash, Crypto, Metals,
 Blocked by: 2
 Shared ticker data keeps each US symbol's exchange, provider industries map onto the 12 Sectors, and a User can look up a ticker for a Country. The lookup previews name, Sector, exchange and price, or reports "unknown" with a name from search (D15).
 
-- [ ] 4.1 Tests named MD-01, MD-02, MD-03, MD-04, MD-05, MD-06, MD-07, MD-08 written and failing (red)
-- [ ] 4.2 Shared tables are readable by any signed-in User and writable by none (MD-01)
-- [ ] 4.3 The weekly symbol refresh stores `mic` and keeps resolved Sectors; both cron routes refuse a missing or wrong secret (MD-02, MD-03)
-- [ ] 4.4 The industry-to-Sector map covers the 12 Sectors with Other as the fallback (MD-04)
-- [ ] 4.5 `GET /api/tickers/lookup` normalises the ticker (`.NS` for India), returns known data with an exchange label, fetches and caches a first price, and falls back to Finnhub `/search` for a name (MD-05…MD-08)
-- [ ] 4.6 Tests named MD-01, MD-02, MD-03, MD-04, MD-05, MD-06, MD-07, MD-08 pass in CI suites; npm run spec:coverage passes
+- [x] 4.1 Tests named MD-01, MD-02, MD-03, MD-04, MD-05, MD-06, MD-07, MD-08 written and failing (red)
+- [x] 4.2 Shared tables are readable by any signed-in User and writable by none (MD-01)
+- [x] 4.3 The weekly symbol refresh stores `mic` and keeps resolved Sectors; both cron routes refuse a missing or wrong secret (MD-02, MD-03)
+- [x] 4.4 The industry-to-Sector map covers the 12 Sectors with Other as the fallback (MD-04)
+- [x] 4.5 `GET /api/tickers/lookup` normalises the ticker (`.NS` for India), returns known data with an exchange label, fetches and caches a first price, and falls back to Finnhub `/search` for a name (MD-05…MD-08)
+- [x] 4.6 Tests named MD-01, MD-02, MD-03, MD-04, MD-05, MD-06, MD-07, MD-08 pass in CI suites; npm run spec:coverage passes
 
 ## 5. Stocks Holdings with Positions and Hand Prices
 

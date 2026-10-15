@@ -1,0 +1,71 @@
+export const SECTORS = [
+  "Technology",
+  "Financials",
+  "Healthcare",
+  "Energy",
+  "Consumer Discretionary",
+  "Consumer Staples",
+  "Communication Services",
+  "Industrials",
+  "Utilities",
+  "Materials",
+  "Real Estate",
+  "Other",
+] as const;
+
+export type Sector = (typeof SECTORS)[number];
+
+// Finnhub's `finnhubIndustry` values, lower-cased, onto the 12 Sectors. Anything not listed
+// (including blank) falls back to Other.
+const SECTOR_BY_INDUSTRY: Record<string, Sector> = {
+  technology: "Technology",
+  semiconductors: "Technology",
+  "electrical equipment": "Technology",
+  banking: "Financials",
+  insurance: "Financials",
+  "financial services": "Financials",
+  pharmaceuticals: "Healthcare",
+  biotechnology: "Healthcare",
+  "health care": "Healthcare",
+  "life sciences tools & services": "Healthcare",
+  energy: "Energy",
+  "oil & gas": "Energy",
+  retail: "Consumer Discretionary",
+  automobiles: "Consumer Discretionary",
+  "auto components": "Consumer Discretionary",
+  "hotels, restaurants & leisure": "Consumer Discretionary",
+  "household durables": "Consumer Discretionary",
+  "leisure products": "Consumer Discretionary",
+  "textiles, apparel & luxury goods": "Consumer Discretionary",
+  "diversified consumer services": "Consumer Discretionary",
+  "food products": "Consumer Staples",
+  beverages: "Consumer Staples",
+  tobacco: "Consumer Staples",
+  "consumer products": "Consumer Staples",
+  distributors: "Consumer Staples",
+  media: "Communication Services",
+  communications: "Communication Services",
+  telecommunication: "Communication Services",
+  machinery: "Industrials",
+  "aerospace & defense": "Industrials",
+  airlines: "Industrials",
+  building: "Industrials",
+  construction: "Industrials",
+  "commercial services & supplies": "Industrials",
+  "industrial conglomerates": "Industrials",
+  "logistics & transportation": "Industrials",
+  "professional services": "Industrials",
+  "road & rail": "Industrials",
+  "trading companies & distributors": "Industrials",
+  utilities: "Utilities",
+  "water utilities": "Utilities",
+  chemicals: "Materials",
+  "metals & mining": "Materials",
+  packaging: "Materials",
+  "paper & forest products": "Materials",
+  "real estate": "Real Estate",
+};
+
+export function sectorFromIndustry(industry: string | null | undefined): Sector {
+  return SECTOR_BY_INDUSTRY[(industry ?? "").trim().toLowerCase()] ?? "Other";
+}

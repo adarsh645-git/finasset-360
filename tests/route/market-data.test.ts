@@ -88,7 +88,13 @@ describe("shared market data RLS", () => {
     await deleteTestUser(user.id);
   });
 
-  const tables = [
+  const tables: {
+    table: string;
+    key: string;
+    value: () => string;
+    change: Record<string, unknown>;
+    insert: () => Record<string, unknown>;
+  }[] = [
     { table: "stock_symbol", key: "symbol", value: () => symbol, change: { name: "Hacked" }, insert: () => ({ symbol: `${symbol}B`, name: "B", type: "Common Stock", updated_at: new Date().toISOString() }) },
     { table: "price_cache", key: "symbol", value: () => symbol, change: { price: 1 }, insert: () => ({ symbol: `${symbol}B`, price: 1, currency: "USD", fetched_at: new Date().toISOString() }) },
     { table: "fx_rate", key: "rate_date", value: () => rateDate, change: { inr_per_usd: 1 }, insert: () => ({ rate_date: "1949-01-01", inr_per_usd: 1 }) },

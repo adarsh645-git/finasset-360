@@ -30,7 +30,7 @@ export async function fetchFinnhubPrice(symbol: string): Promise<PriceFetchResul
   return { ok: true, price, priceCurrency: "USD", source: "finnhub" };
 }
 
-export type FinnhubSymbolListing = { symbol: string; name: string; type: string };
+export type FinnhubSymbolListing = { symbol: string; name: string; type: string; mic: string | null };
 
 export type FinnhubSymbolListResult =
   | { ok: true; symbols: FinnhubSymbolListing[] }
@@ -59,7 +59,15 @@ export async function fetchFinnhubSymbolList(): Promise<FinnhubSymbolListResult>
         typeof (entry as { description?: unknown })?.description === "string" &&
         typeof (entry as { type?: unknown })?.type === "string",
     )
-    .map((entry) => ({ symbol: entry.symbol, name: entry.description, type: entry.type }));
+    .map((entry) => {
+      const mic = (entry as { mic?: unknown }).mic;
+      return {
+        symbol: entry.symbol,
+        name: entry.description,
+        type: entry.type,
+        mic: typeof mic === "string" && mic.length > 0 ? mic : null,
+      };
+    });
 
   return { ok: true, symbols };
 }
@@ -84,4 +92,30 @@ export async function fetchFinnhubSector(symbol: string): Promise<FinnhubSectorR
   const industry = (result.body as { finnhubIndustry?: unknown }).finnhubIndustry;
   const sector = typeof industry === "string" && industry.trim().length > 0 ? industry.trim() : null;
   return { ok: true, sector };
+}
+
+const FINNHUB_SEARCH_URL = "https://finnhub.io/api/v1/search";
+
+export type FinnhubNameResult = { ok: true; name: string | null } | { ok: false; error: string };
+
+// Finnhub `/search` (free tier) names an India or otherwise unlisted ticker:
+// the result whose symbol is exactly the ticker, else no name.
+export async function fetchFinnhubName(ticker: string): Promise<FinnhubNameResult> {
+  const apiKey = process.env.FINNHUB_API_KEY;
+  if (!apiKey) return { ok: false, error: "FINNHUB_API_KEY is not configured." };
+
+  const url = `${FINNHUB_SEARCH_URL}?q=${encodeURIComponent(ticker)}&token=${apiKey}`;
+  const result = await fetchJson(url, "Finnhub");
+  if (!result.ok) return result;
+
+  const matches = (result.body as { result?: unknown }).result;
+  if (!Array.isArray(matches)) return { ok: true, name: null };
+  const match = matches.find(
+    (entry): entry is { symbol: string; description: string } =>
+      typeof entry?.symbol === "string" &&
+      entry.symbol.toUpperCase() === ticker &&
+      typeof entry?.description === "string" &&
+      entry.description.trim().length > 0,
+  );
+  return { ok: true, name: match ? match.description.trim() : null };
 }
