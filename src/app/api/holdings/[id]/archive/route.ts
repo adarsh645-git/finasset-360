@@ -1,38 +1,19 @@
 import type { NextRequest } from "next/server";
-import { HOLDING_COLUMNS } from "@/lib/holdings/columns";
+import { loadWritableHolding } from "@/lib/holdings/store";
 import { createRouteClient, jsonWithCookies, requireUser } from "@/lib/supabase/route";
 
-// POST /api/holdings/[id]/archive — the primary "remove" action for a
-// Holding (user story 18): sets `archived_at` instead of deleting the row,
-// so its Valuation History keeps counting toward historical trend and
-// distribution-over-time views (user story 20) even though it now drops
-// out of current Net Worth, current distribution, and the Portfolio tree
-// (user story 19). A true DELETE (DELETE /api/holdings/[id]) still exists
-// separately for correcting a mistaken entry and remains the non-primary
-// path (user story 21). RLS (`user_id = auth.uid()`) means this can never
-// archive another User's Holding regardless of what id is passed.
-export async function POST(request: NextRequest, context: RouteContext<"/api/holdings/[id]/archive">) {
+// POST /api/holdings/[id]/archive — sets the archive date; the Holding and its
+// history stay (ADR 0004).
+export async function POST(request: NextRequest, context: { params: Promise<{ id: string }> }) {
   const { supabase, responseCookies } = createRouteClient(request);
-
   const auth = await requireUser(supabase);
   if ("response" in auth) return auth.response;
 
   const { id } = await context.params;
+  const loaded = await loadWritableHolding(supabase, id);
+  if ("response" in loaded) return loaded.response;
 
-  const { data, error } = await supabase
-    .from("holding")
-    .update({ archived_at: new Date().toISOString() })
-    .eq("id", id)
-    .select(HOLDING_COLUMNS)
-    .maybeSingle();
-
-  if (error) {
-    return jsonWithCookies({ error: error.message }, { status: 500 }, responseCookies);
-  }
-
-  if (!data) {
-    return jsonWithCookies({ error: "Holding not found." }, { status: 404 }, responseCookies);
-  }
-
-  return jsonWithCookies(data, { status: 200 }, responseCookies);
+  const { error } = await supabase.from("holding").update({ archived_at: new Date().toISOString() }).eq("id", id);
+  if (error) throw error;
+  return jsonWithCookies({ id }, { status: 200 }, responseCookies);
 }

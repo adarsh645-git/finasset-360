@@ -6,20 +6,20 @@ Blocked by: none
 Every pull request runs the Vitest unit tests and the route tests against a real local Supabase stack in GitHub Actions, so "pass in CI suites" means real CI from here on (D21). This is infrastructure only, with no scenarios of its own, and the existing suites are what prove it works.
 
 - [ ] 1.1 A `unit` job runs `npm ci`, `npm run typecheck` and the `tests/unit` suite; it fails the PR on a failing test (checked by pushing a deliberately failing test on a throwaway branch, then removing it)
-- [ ] 1.2 A `route` job installs the Supabase CLI, runs `supabase start` and `supabase db reset`, writes `.env.test.local` from `supabase status -o env` with a test `CRON_SECRET`, and runs the `tests/route` suite
-- [ ] 1.3 Both jobs pass on the current `main` code, alongside the existing spec-coverage job
+- [x] 1.2 A `route` job installs the Supabase CLI, runs `supabase start` and `supabase db reset`, writes `.env.test.local` from `supabase status -o env` with a test `CRON_SECRET`, and runs the `tests/route` suite
+- [x] 1.3 Both jobs pass on the current `main` code, alongside the existing spec-coverage job
 
 ## 2. Cutover: new schema, isolation and the interim home page
 
 Blocked by: 1
 One migration drops every old table and creates the new schema with RLS (D1, D2 and the schema sketch). The Miller shell, old routes, helpers and their tests are deleted (D13, D19). `/` becomes the signed-in "Being rebuilt" page (D18), and `docs/SPEC.md` becomes a pointer to `openspec/specs/`. A new User gets a blank Portfolio, Countries are data, and every per-User table is isolated.
 
-- [ ] 2.1 Tests named DM-01, DM-03, DM-04, DM-05, CI-01, CI-02 written and failing (red)
-- [ ] 2.2 The new migration drops every old object and creates `country` (seeded with US and India), `portfolio` (with the trigger), `country_assumption`, `holding`, `position`, `holding_valuation`, `liability`, `liability_valuation`, `goal`, `stock_symbol`, `price_cache` and `fx_rate`, with the checks, composite foreign keys and policies in the design; `supabase db reset` applies it cleanly (DM-01, DM-03, DM-04, DM-05)
-- [ ] 2.3 The files listed in D19 are deleted with their tests, `SignOutButton` and `firstNameOrEmail` survive, and `rg "asset_class_id|liability_class|home_currency|fx_rate_to_home|price_lookup_symbol|target_allocation|check_in|METALS" src tests scripts` finds nothing
-- [ ] 2.4 `/` redirects a signed-out visitor to `/login` and shows a signed-in User "Being rebuilt" with their first name and Sign out, and no figures (CI-01, CI-02)
-- [ ] 2.5 `docs/SPEC.md` keeps its title, Problem Statement and session-rhythm facts (today's lines 8–20) under a note pointing to `openspec/specs/`, CONTEXT.md and `docs/adr/`; `.env.example` loses the two metals keys
-- [ ] 2.6 Tests named DM-01, DM-03, DM-04, DM-05, CI-01, CI-02 pass in CI suites; npm run spec:coverage passes
+- [x] 2.1 Tests named DM-01, DM-03, DM-04, DM-05, CI-01, CI-02 written and failing (red)
+- [x] 2.2 The new migration drops every old object and creates `country` (seeded with US and India), `portfolio` (with the trigger), `country_assumption`, `holding`, `position`, `holding_valuation`, `liability`, `liability_valuation`, `goal`, `stock_symbol`, `price_cache` and `fx_rate`, with the checks, composite foreign keys and policies in the design; `supabase db reset` applies it cleanly (DM-01, DM-03, DM-04, DM-05)
+- [x] 2.3 The files listed in D19 are deleted with their tests, `SignOutButton` and `firstNameOrEmail` survive, and `rg "asset_class_id|liability_class|home_currency|fx_rate_to_home|price_lookup_symbol|target_allocation|check_in|METALS" src tests scripts` finds nothing
+- [x] 2.4 `/` redirects a signed-out visitor to `/login` and shows a signed-in User "Being rebuilt" with their first name and Sign out, and no figures (CI-01, CI-02)
+- [x] 2.5 `docs/SPEC.md` keeps its title, Problem Statement and session-rhythm facts (today's lines 8–20) under a note pointing to `openspec/specs/`, CONTEXT.md and `docs/adr/`; `.env.example` loses the two metals keys
+- [x] 2.6 Tests named DM-01, DM-03, DM-04, DM-05, CI-01, CI-02 pass in CI suites; npm run spec:coverage passes
 - [ ] 2.7 Interim page checked by hand at 2000px, 800px and 390px: readable, with no horizontal scroll, and Sign out works
 
 ## 3. Manually valued Holdings: create, edit, Update value and archive
@@ -27,24 +27,24 @@ One migration drops every old table and creates the new schema with RLS (D1, D2 
 Blocked by: 2
 A User can create, edit, update the value of and archive a Cash, Crypto, Metals, Real estate or Vehicles & other Holding. Each save records today's Valuation, even when unchanged, with class-specific fields checked (D3, D4, D7, D10).
 
-- [ ] 3.1 Tests named DM-06, DM-07, DM-08, DM-09, DM-10, DM-11, DM-12, DM-13, DM-14, DM-15, DM-16, DM-17, DM-27 written and failing (red)
-- [ ] 3.2 `POST /api/holdings` validates name, Country, Asset Class, value, Cost Basis, Description and the class-specific fields, and stores the Holding and today's Valuation (DM-06…DM-12)
-- [ ] 3.3 `POST /api/holdings/[id]/valuations` upserts today's Valuation, including unchanged values and same-day overwrites, and refuses Stocks (DM-13, DM-14, DM-15)
-- [ ] 3.4 `PATCH /api/holdings/[id]` replaces the editable fields, upserts today's Valuation, and refuses a Country or Asset Class change (DM-16, DM-17)
-- [ ] 3.5 `POST /api/holdings/[id]/archive` sets the archive date; an archived Holding refuses edits and Update value with 409 (DM-27)
-- [ ] 3.6 Tests named DM-06, DM-07, DM-08, DM-09, DM-10, DM-11, DM-12, DM-13, DM-14, DM-15, DM-16, DM-17, DM-27 pass in CI suites; npm run spec:coverage passes
+- [x] 3.1 Tests named DM-06, DM-07, DM-08, DM-09, DM-10, DM-11, DM-12, DM-13, DM-14, DM-15, DM-16, DM-17, DM-27 written and failing (red)
+- [x] 3.2 `POST /api/holdings` validates name, Country, Asset Class, value, Cost Basis, Description and the class-specific fields, and stores the Holding and today's Valuation (DM-06…DM-12)
+- [x] 3.3 `POST /api/holdings/[id]/valuations` upserts today's Valuation, including unchanged values and same-day overwrites, and refuses Stocks (DM-13, DM-14, DM-15)
+- [x] 3.4 `PATCH /api/holdings/[id]` replaces the editable fields, upserts today's Valuation, and refuses a Country or Asset Class change (DM-16, DM-17)
+- [x] 3.5 `POST /api/holdings/[id]/archive` sets the archive date; an archived Holding refuses edits and Update value with 409 (DM-27)
+- [x] 3.6 Tests named DM-06, DM-07, DM-08, DM-09, DM-10, DM-11, DM-12, DM-13, DM-14, DM-15, DM-16, DM-17, DM-27 pass in CI suites; npm run spec:coverage passes
 
 ## 4. Ticker data, Sectors and ticker lookup
 
 Blocked by: 2
 Shared ticker data keeps each US symbol's exchange, provider industries map onto the 12 Sectors, and a User can look up a ticker for a Country. The lookup previews name, Sector, exchange and price, or reports "unknown" with a name from search (D15).
 
-- [ ] 4.1 Tests named MD-01, MD-02, MD-03, MD-04, MD-05, MD-06, MD-07, MD-08 written and failing (red)
-- [ ] 4.2 Shared tables are readable by any signed-in User and writable by none (MD-01)
-- [ ] 4.3 The weekly symbol refresh stores `mic` and keeps resolved Sectors; both cron routes refuse a missing or wrong secret (MD-02, MD-03)
-- [ ] 4.4 The industry-to-Sector map covers the 12 Sectors with Other as the fallback (MD-04)
-- [ ] 4.5 `GET /api/tickers/lookup` normalises the ticker (`.NS` for India), returns known data with an exchange label, fetches and caches a first price, and falls back to Finnhub `/search` for a name (MD-05…MD-08)
-- [ ] 4.6 Tests named MD-01, MD-02, MD-03, MD-04, MD-05, MD-06, MD-07, MD-08 pass in CI suites; npm run spec:coverage passes
+- [x] 4.1 Tests named MD-01, MD-02, MD-03, MD-04, MD-05, MD-06, MD-07, MD-08 written and failing (red)
+- [x] 4.2 Shared tables are readable by any signed-in User and writable by none (MD-01)
+- [x] 4.3 The weekly symbol refresh stores `mic` and keeps resolved Sectors; both cron routes refuse a missing or wrong secret (MD-02, MD-03)
+- [x] 4.4 The industry-to-Sector map covers the 12 Sectors with Other as the fallback (MD-04)
+- [x] 4.5 `GET /api/tickers/lookup` normalises the ticker (`.NS` for India), returns known data with an exchange label, fetches and caches a first price, and falls back to Finnhub `/search` for a name (MD-05…MD-08)
+- [x] 4.6 Tests named MD-01, MD-02, MD-03, MD-04, MD-05, MD-06, MD-07, MD-08 pass in CI suites; npm run spec:coverage passes
 
 ## 5. Stocks Holdings with Positions and Hand Prices
 
@@ -75,10 +75,10 @@ A User can record a loan, edit it, update its balance and archive it, and link i
 Blocked by: 2
 A User can add and remove Goals and set or clear any Projection Assumption, Monthly savings, savings growth and horizon. A blank means the default (D11, D12).
 
-- [ ] 7.1 Tests named DM-34, DM-35, DM-36, DM-37, DM-38 written and failing (red)
-- [ ] 7.2 `POST /api/goals` stores an optional name and `target_usd > 0`; `DELETE /api/goals/[id]` really deletes it (DM-34, DM-35)
-- [ ] 7.3 `PATCH /api/projection-assumptions` updates only the fields sent, treats null as blank, upserts `country_assumption` rows and enforces the ranges (DM-36, DM-37, DM-38)
-- [ ] 7.4 Tests named DM-34, DM-35, DM-36, DM-37, DM-38 pass in CI suites; npm run spec:coverage passes
+- [x] 7.1 Tests named DM-34, DM-35, DM-36, DM-37, DM-38 written and failing (red)
+- [x] 7.2 `POST /api/goals` stores an optional name and `target_usd > 0`; `DELETE /api/goals/[id]` really deletes it (DM-34, DM-35)
+- [x] 7.3 `PATCH /api/projection-assumptions` updates only the fields sent, treats null as blank, upserts `country_assumption` rows and enforces the ranges (DM-36, DM-37, DM-38)
+- [x] 7.4 Tests named DM-34, DM-35, DM-36, DM-37, DM-38 pass in CI suites; npm run spec:coverage passes
 
 ## 8. The daily job: FX, prices and Stocks snapshots
 

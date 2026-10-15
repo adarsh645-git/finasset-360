@@ -1,154 +1,46 @@
-import type { SupabaseClient } from "@supabase/supabase-js";
-import { NextResponse, type NextRequest } from "next/server";
-import { isCashAssetClass } from "@/lib/asset-classes/defaults";
-import { isVisibleAssetClass } from "@/lib/asset-classes/visibility";
-import { isValidCurrencyCode } from "@/lib/currency/iso4217";
-import { HOLDING_COLUMNS } from "@/lib/holdings/columns";
-import { readHeldAtPatch } from "@/lib/holdings/held-at";
-import {
-  CASH_PRICE_LOOKUP_ERROR,
-  readPriceLookupPatch,
-  setsPriceLookup,
-} from "@/lib/holdings/price-lookup";
-import { readSectorPatch } from "@/lib/holdings/sector";
-import { hasKey, readTrimmedString } from "@/lib/http/body";
-import { ensurePriceCached } from "@/lib/market-data/refresh-price";
+import type { NextRequest } from "next/server";
+import { readJsonObject } from "@/lib/http/body";
+import { parseManualHolding } from "@/lib/holdings/manual-holding-input";
+import { errorResponse, loadCountryCodes, loadWritableHolding, recordTodayValuation } from "@/lib/holdings/store";
 import { createRouteClient, jsonWithCookies, requireUser } from "@/lib/supabase/route";
 
-async function readStoredAssetClassId(supabase: SupabaseClient, holdingId: string): Promise<string | null> {
-  const { data } = await supabase.from("holding").select("asset_class_id").eq("id", holdingId).maybeSingle();
-  return data?.asset_class_id ?? null;
-}
-
-// PATCH /api/holdings/[id] — edit a Holding's name, Asset Class, currency,
-// and/or its market symbol and quantity (user story 17; ticket 07 adds the
-// last two), plus its Sector (ticket 18) and Held at (ticket 19). Every
-// field is optional; whatever is present is validated the same way
-// POST /api/holdings validates it — including refusing a market symbol on a
-// Cash Holding (ticket 22).
-export async function PATCH(request: NextRequest, context: RouteContext<"/api/holdings/[id]">) {
+// PATCH /api/holdings/[id] — full replacement of a manually valued Holding's
+// editable fields, plus today's Valuation. Country and Asset Class are fixed
+// after creation (design.md D4).
+export async function PATCH(request: NextRequest, context: { params: Promise<{ id: string }> }) {
   const { supabase, responseCookies } = createRouteClient(request);
-
   const auth = await requireUser(supabase);
   if ("response" in auth) return auth.response;
 
   const { id } = await context.params;
+  const loaded = await loadWritableHolding(supabase, id);
+  if ("response" in loaded) return loaded.response;
+  const { holding } = loaded;
 
-  let body: unknown;
-  try {
-    body = await request.json();
-  } catch {
-    return NextResponse.json({ error: "Invalid JSON body." }, { status: 400 });
+  const body = await readJsonObject(request);
+  if (!body) return errorResponse("Send a JSON object.", 400);
+  const parsed = parseManualHolding(body, await loadCountryCodes(supabase));
+  if (!parsed.ok) return errorResponse(parsed.error, 400);
+  const { input } = parsed;
+
+  if (input.country !== holding.country || input.assetClass !== holding.asset_class) {
+    return errorResponse("A Holding's country and asset class can't change; archive it and add a new one.", 400);
   }
 
-  const update: Record<string, string | number | null> = {};
-
-  const priceLookup = readPriceLookupPatch(body);
-  if (typeof priceLookup === "string") {
-    return NextResponse.json({ error: priceLookup }, { status: 400 });
-  }
-  if (priceLookup) Object.assign(update, priceLookup);
-
-  const sector = readSectorPatch(body);
-  if (!sector.ok) {
-    return NextResponse.json({ error: sector.error }, { status: 400 });
-  }
-  if (sector.value !== undefined) update.sector = sector.value;
-
-  const heldAt = readHeldAtPatch(body);
-  if (!heldAt.ok) {
-    return NextResponse.json({ error: heldAt.error }, { status: 400 });
-  }
-  if (heldAt.value !== undefined) update.held_at = heldAt.value;
-
-  if (hasKey(body, "name")) {
-    const name = readTrimmedString(body, "name");
-    if (name === undefined) {
-      return NextResponse.json({ error: "name must be a non-empty string." }, { status: 400 });
-    }
-    update.name = name;
-  }
-
-  if (hasKey(body, "asset_class_id")) {
-    const assetClassId = readTrimmedString(body, "asset_class_id");
-    if (assetClassId === undefined || !(await isVisibleAssetClass(supabase, assetClassId))) {
-      return NextResponse.json({ error: "Asset Class not found." }, { status: 400 });
-    }
-    update.asset_class_id = assetClassId;
-  }
-
-  if (hasKey(body, "currency")) {
-    const currency = readTrimmedString(body, "currency");
-    if (currency === undefined || !isValidCurrencyCode(currency)) {
-      return NextResponse.json(
-        { error: "currency must be a valid ISO 4217 currency code." },
-        { status: 400 },
-      );
-    }
-    update.currency = currency;
-  }
-
-  // Ticket 22: a Cash Holding can't carry a market symbol. The class it
-  // will have after this write is the body's, else the stored one — only
-  // fetched when the patch actually sets a symbol, the one case that needs it.
-  if (setsPriceLookup(priceLookup)) {
-    const resultingClassId =
-      typeof update.asset_class_id === "string"
-        ? update.asset_class_id
-        : await readStoredAssetClassId(supabase, id);
-    if (resultingClassId !== null && isCashAssetClass(resultingClassId)) {
-      return NextResponse.json({ error: CASH_PRICE_LOOKUP_ERROR }, { status: 400 });
-    }
-  }
-
-  if (Object.keys(update).length === 0) {
-    return NextResponse.json({ error: "Nothing to update." }, { status: 400 });
-  }
-
-  const { data, error } = await supabase
+  const { error } = await supabase
     .from("holding")
-    .update(update)
-    .eq("id", id)
-    .select(HOLDING_COLUMNS)
-    .maybeSingle();
+    .update({
+      name: input.name,
+      description: input.description,
+      cost_basis: input.costBasis,
+      property_type: input.propertyType,
+      city: input.city,
+      quantity: input.quantity,
+      unit: input.unit,
+    })
+    .eq("id", id);
+  if (error) throw error;
 
-  if (error) {
-    return jsonWithCookies({ error: error.message }, { status: 500 }, responseCookies);
-  }
-
-  if (!data) {
-    return jsonWithCookies({ error: "Holding not found." }, { status: 404 }, responseCookies);
-  }
-
-  // Ticket 21: same fill-the-hole fetch as POST when the edit points the
-  // Holding at a symbol nothing has priced yet.
-  await ensurePriceCached(priceLookup?.price_lookup_symbol);
-
-  return jsonWithCookies(data, { status: 200 }, responseCookies);
-}
-
-// DELETE /api/holdings/[id] — a true delete, cascading its Valuations. Not
-// the primary removal path (see POST /api/holdings/[id]/archive for that);
-// this exists for correcting a mistaken entry (user story 21). RLS
-// (`user_id = auth.uid()`) means this can never delete another User's
-// Holding regardless of what id is passed.
-export async function DELETE(request: NextRequest, context: RouteContext<"/api/holdings/[id]">) {
-  const { supabase, responseCookies } = createRouteClient(request);
-
-  const auth = await requireUser(supabase);
-  if ("response" in auth) return auth.response;
-
-  const { id } = await context.params;
-
-  const { data, error } = await supabase.from("holding").delete().eq("id", id).select("id");
-
-  if (error) {
-    return jsonWithCookies({ error: error.message }, { status: 500 }, responseCookies);
-  }
-
-  if (!data || data.length === 0) {
-    return jsonWithCookies({ error: "Holding not found." }, { status: 404 }, responseCookies);
-  }
-
+  await recordTodayValuation(supabase, auth.user.id, id, input.value);
   return jsonWithCookies({ id }, { status: 200 }, responseCookies);
 }

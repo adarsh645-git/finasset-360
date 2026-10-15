@@ -1,423 +1,302 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { NextRequest } from "next/server";
-import { DELETE, PATCH } from "@/app/api/holdings/[id]/route";
-import { GET, POST } from "@/app/api/holdings/route";
-import { POST as POST_ASSET_CLASS } from "@/app/api/asset-classes/route";
-import { createAdminClient } from "@/lib/supabase/admin";
-import { DEFAULT_ASSET_CLASS_ID } from "@/lib/asset-classes/defaults";
-import { createTestUser, deleteTestUser, type TestUser } from "../fixtures/users";
+import { createClient } from "@supabase/supabase-js";
+import { POST as createHolding } from "@/app/api/holdings/route";
+import { PATCH as editHolding } from "@/app/api/holdings/[id]/route";
+import { POST as updateValue } from "@/app/api/holdings/[id]/valuations/route";
+import { POST as archiveHolding } from "@/app/api/holdings/[id]/archive/route";
 import { jsonBody, requestAs } from "../fixtures/http";
+import { createTestUser, deleteTestUser, type TestUser } from "../fixtures/users";
 
-const HOLDINGS_URL = "http://localhost:3000/api/holdings";
-const ASSET_CLASSES_URL = "http://localhost:3000/api/asset-classes";
+// Seam 1 (design.md Testing Decisions): the manually valued Holding routes
+// against the real local Postgres with RLS on. Database state is read back
+// with the service-role client only to see what a route wrote.
 
-async function createHolding(user: TestUser, overrides: Record<string, unknown> = {}) {
-  const response = await POST(
-    requestAs(user, HOLDINGS_URL, {
-      method: "POST",
-      ...jsonBody({
-        name: "10 shares of AAPL",
-        asset_class_id: DEFAULT_ASSET_CLASS_ID.equity,
-        currency: "USD",
-        ...overrides,
-      }),
-    }),
-  );
-  return response;
+const BASE = "http://localhost:3000/api/holdings";
+const today = new Date().toISOString().slice(0, 10);
+
+function daysAgo(days: number): string {
+  return new Date(Date.now() - days * 86_400_000).toISOString().slice(0, 10);
 }
 
-// Seam 2 from docs/SPEC.md: real requests against the real local Postgres,
-// RLS actually enabled, exactly like tests/route/portfolio.test.ts.
-describe("GET/POST /api/holdings, PATCH/DELETE /api/holdings/[id]", () => {
-  let userA: TestUser;
-  let userB: TestUser;
-
-  beforeAll(async () => {
-    [userA, userB] = await Promise.all([createTestUser("holding-a"), createTestUser("holding-b")]);
+function admin() {
+  return createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!, {
+    auth: { persistSession: false },
   });
+}
 
-  afterAll(async () => {
-    await Promise.all([deleteTestUser(userA.id), deleteTestUser(userB.id)]);
+let user: TestUser;
+
+beforeAll(async () => {
+  user = await createTestUser("holdings");
+});
+
+afterAll(async () => {
+  await deleteTestUser(user.id);
+});
+
+type Body = Record<string, unknown>;
+
+async function create(body: Body) {
+  const response = await createHolding(requestAs(user, BASE, { method: "POST", ...jsonBody(body) }));
+  return { status: response.status, json: (await response.json()) as { id?: string; error?: string } };
+}
+
+const cash = (overrides: Body = {}): Body => ({
+  asset_class: "cash",
+  country: "US",
+  name: "Chase Checking",
+  value: 6200,
+  ...overrides,
+});
+
+async function createdId(body: Body): Promise<string> {
+  const { status, json } = await create(body);
+  if (status !== 201 || !json.id) throw new Error(`setup create failed: ${status} ${json.error}`);
+  return json.id;
+}
+
+function ctx(id: string) {
+  return { params: Promise.resolve({ id }) };
+}
+
+async function send(
+  handler: (request: ReturnType<typeof requestAs>, context: ReturnType<typeof ctx>) => Promise<Response>,
+  id: string,
+  suffix: string,
+  method: string,
+  body?: Body,
+) {
+  const response = await handler(
+    requestAs(user, `${BASE}/${id}${suffix}`, { method, ...(body ? jsonBody(body) : {}) }),
+    ctx(id),
+  );
+  return { status: response.status, json: (await response.json()) as { id?: string; error?: string } };
+}
+
+const edit = (id: string, body: Body) => send(editHolding, id, "", "PATCH", body);
+const update = (id: string, value: unknown) => send(updateValue, id, "/valuations", "POST", { value });
+const archive = (id: string) => send(archiveHolding, id, "/archive", "POST");
+
+async function holdingRow(id: string) {
+  const { data, error } = await admin().from("holding").select("*").eq("id", id).single();
+  if (error) throw error;
+  return data;
+}
+
+async function valuations(id: string) {
+  const { data, error } = await admin()
+    .from("holding_valuation")
+    .select("valued_on, value, source")
+    .eq("holding_id", id)
+    .order("valued_on");
+  if (error) throw error;
+  return data.map((row) => ({ valued_on: row.valued_on as string, value: Number(row.value), source: row.source as string }));
+}
+
+async function holdingCount(name: string) {
+  const { count, error } = await admin()
+    .from("holding")
+    .select("id", { count: "exact", head: true })
+    .eq("user_id", user.id)
+    .eq("name", name);
+  if (error) throw error;
+  return count ?? 0;
+}
+
+async function backdateValuations(id: string, days: number) {
+  const { error } = await admin()
+    .from("holding_valuation")
+    .update({ valued_on: daysAgo(days) })
+    .eq("holding_id", id);
+  if (error) throw error;
+}
+
+describe("DM-06 An unknown Country or Asset Class is rejected", () => {
+  it.each([
+    ["US", "cash", 201],
+    ["IN", "realestate", 201],
+    ["UK", "cash", 400],
+    ["US", "equity", 400],
+  ])("DM-06 country %s with class %s answers %i", async (country, assetClass, status) => {
+    const result = await create(cash({ country, asset_class: assetClass, name: `DM-06 ${country} ${assetClass}` }));
+    expect(result.status).toBe(status);
+    if (status === 400) expect(result.json.error).toBeTruthy();
   });
+});
 
-  it("rejects a request with no session", async () => {
-    const response = await GET(new NextRequest(HOLDINGS_URL));
-    expect(response.status).toBe(401);
-  });
-
-  it("adds a Holding under an Asset Class with a name and currency", async () => {
-    const response = await createHolding(userA);
-    expect(response.status).toBe(201);
-    const created = await response.json();
-    expect(created).toMatchObject({
-      asset_class_id: DEFAULT_ASSET_CLASS_ID.equity,
-      name: "10 shares of AAPL",
-      currency: "USD",
+describe("DM-07 Creating a Cash Holding", () => {
+  it("DM-07 stores the Holding and one Valuation of today", async () => {
+    const result = await create(cash({ name: "DM-07 Chase Checking", description: "Everyday account" }));
+    expect(result.status).toBe(201);
+    const row = await holdingRow(result.json.id!);
+    expect(row).toMatchObject({
+      name: "DM-07 Chase Checking",
+      description: "Everyday account",
+      country: "US",
+      asset_class: "cash",
+      cost_basis: null,
     });
-    // The client selects the new Holding by this id (ticket 20).
-    expect(created.id).toEqual(expect.any(String));
+    expect(await valuations(result.json.id!)).toEqual([{ valued_on: today, value: 6200, source: "user" }]);
   });
+});
 
-  it("accepts any ISO currency code, not a hardcoded list", async () => {
-    const response = await createHolding(userA, { name: "Tokyo apartment", currency: "JPY" });
-    expect(response.status).toBe(201);
-    expect((await response.json()).currency).toBe("JPY");
+describe("DM-08 Invalid Holding input is rejected with a reason", () => {
+  async function storedCounts() {
+    const holdings = await admin().from("holding").select("id", { count: "exact", head: true }).eq("user_id", user.id);
+    const valuationRows = await admin()
+      .from("holding_valuation")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", user.id);
+    return [holdings.count, valuationRows.count];
+  }
+
+  it.each<[string, Body]>([
+    ["name blank", { name: "  " }],
+    ["value missing", { value: undefined }],
+    ["value -1", { value: -1 }],
+    ["cost basis -5", { cost_basis: -5 }],
+  ])("DM-08 %s", async (label, overrides) => {
+    const before = await storedCounts();
+    const result = await create(cash({ name: "DM-08 rejected", ...overrides }));
+    expect(result.status).toBe(400);
+    expect(result.json.error).toBeTruthy();
+    expect(await storedCounts()).toEqual(before);
+    expect(label).toBeTruthy();
   });
+});
 
-  it("rejects a currency code that isn't valid ISO 4217", async () => {
-    const response = await createHolding(userA, { currency: "NOTACODE" });
-    expect(response.status).toBe(400);
+describe("DM-09 A blank Description is not stored", () => {
+  it.each(["", "   "])("DM-09 description %j", async (description) => {
+    const result = await create(cash({ name: "DM-09 blank description", description }));
+    expect(result.status).toBe(201);
+    expect((await holdingRow(result.json.id!)).description).toBeNull();
   });
+});
 
-  // Ticket 07: price_lookup_symbol and quantity are populated together
-  // (docs/SPEC.md's schema note) — quantity exists solely to compute the
-  // Live Estimate, so it's meaningless without a symbol and vice versa.
-  it("creates a Holding with a market symbol and quantity together", async () => {
-    const response = await createHolding(userA, { price_lookup_symbol: "aapl", quantity: 10 });
-    expect(response.status).toBe(201);
-    expect(await response.json()).toMatchObject({ price_lookup_symbol: "AAPL", quantity: 10 });
-  });
-
-  it("rejects a market symbol without a quantity", async () => {
-    const response = await createHolding(userA, { price_lookup_symbol: "AAPL" });
-    expect(response.status).toBe(400);
-  });
-
-  it("rejects a quantity without a market symbol", async () => {
-    const response = await createHolding(userA, { quantity: 10 });
-    expect(response.status).toBe(400);
-  });
-
-  it("a Holding created with no market symbol has no quantity either", async () => {
-    const response = await createHolding(userA);
-    expect(await response.json()).toMatchObject({ price_lookup_symbol: null, quantity: null });
-  });
-
-  // Ticket 18: Sector rides along with a market symbol picked from the
-  // stock-picker, but is validated independently of the symbol/quantity
-  // coupling above — a Holding can be created with a symbol and no Sector
-  // yet (the lazy Finnhub lookup hasn't resolved it).
-  it("creates a Holding with a Sector", async () => {
-    const response = await createHolding(userA, {
-      price_lookup_symbol: "aapl",
-      quantity: 10,
-      sector: " Technology ",
+describe("DM-10 Real estate takes a Property type and city", () => {
+  it("DM-10 defaults the Property type to Residential", async () => {
+    const result = await create({
+      asset_class: "realestate",
+      country: "IN",
+      name: "DM-10 Pune apartment",
+      value: 6_200_000,
+      cost_basis: 4_800_000,
+      city: "Pune",
     });
-    expect(response.status).toBe(201);
-    expect(await response.json()).toMatchObject({ sector: "Technology" });
-  });
-
-  it("a Holding created with no Sector has none", async () => {
-    const response = await createHolding(userA);
-    expect(await response.json()).toMatchObject({ sector: null });
-  });
-
-  it("rejects a blank Sector", async () => {
-    const response = await createHolding(userA, { sector: "   " });
-    expect(response.status).toBe(400);
-  });
-
-  // Ticket 19: Held at is independent of Sector and of the symbol/quantity
-  // pair — it applies to every Asset Class, not just market-symbol
-  // Holdings.
-  it("creates a Holding with Held at", async () => {
-    const response = await createHolding(userA, { held_at: " Fidelity 401k " });
-    expect(response.status).toBe(201);
-    expect(await response.json()).toMatchObject({ held_at: "Fidelity 401k" });
-  });
-
-  it("a Holding created with no Held at has none", async () => {
-    const response = await createHolding(userA);
-    expect(await response.json()).toMatchObject({ held_at: null });
-  });
-
-  it("rejects a blank Held at", async () => {
-    const response = await createHolding(userA, { held_at: "   " });
-    expect(response.status).toBe(400);
-  });
-
-  it("rejects an asset_class_id that doesn't exist or isn't visible to the caller", async () => {
-    const response = await createHolding(userA, {
-      asset_class_id: "00000000-0000-0000-0000-000000000000",
-    });
-    expect(response.status).toBe(400);
-  });
-
-  it("rejects creating a Holding under another User's custom Asset Class", async () => {
-    const customClass = await POST_ASSET_CLASS(
-      requestAs(userB, ASSET_CLASSES_URL, { method: "POST", ...jsonBody({ name: "B's Private Class" }) }),
-    );
-    const { id: privateClassId } = await customClass.json();
-
-    const response = await createHolding(userA, { asset_class_id: privateClassId });
-    expect(response.status).toBe(400);
-  });
-
-  it("edits a Holding's name, class, and currency", async () => {
-    const created = await createHolding(userA);
-    const { id } = await created.json();
-
-    const response = await PATCH(
-      requestAs(userA, `${HOLDINGS_URL}/${id}`, {
-        method: "PATCH",
-        ...jsonBody({
-          name: "15 shares of AAPL",
-          asset_class_id: DEFAULT_ASSET_CLASS_ID.cash,
-          currency: "EUR",
-        }),
-      }),
-      { params: Promise.resolve({ id }) },
-    );
-    expect(response.status).toBe(200);
-    const updated = await response.json();
-    expect(updated).toMatchObject({
-      id,
-      name: "15 shares of AAPL",
-      asset_class_id: DEFAULT_ASSET_CLASS_ID.cash,
-      currency: "EUR",
-    });
-  });
-
-  it("adds a market symbol and quantity to a Holding that had none", async () => {
-    const created = await createHolding(userA);
-    const { id } = await created.json();
-
-    const response = await PATCH(
-      requestAs(userA, `${HOLDINGS_URL}/${id}`, {
-        method: "PATCH",
-        ...jsonBody({ price_lookup_symbol: "voo", quantity: 5 }),
-      }),
-      { params: Promise.resolve({ id }) },
-    );
-    expect(response.status).toBe(200);
-    expect(await response.json()).toMatchObject({ price_lookup_symbol: "VOO", quantity: 5 });
-  });
-
-  it("clears a Holding's market symbol and quantity together", async () => {
-    const created = await createHolding(userA, { price_lookup_symbol: "AAPL", quantity: 10 });
-    const { id } = await created.json();
-
-    const response = await PATCH(
-      requestAs(userA, `${HOLDINGS_URL}/${id}`, {
-        method: "PATCH",
-        ...jsonBody({ price_lookup_symbol: null, quantity: null }),
-      }),
-      { params: Promise.resolve({ id }) },
-    );
-    expect(response.status).toBe(200);
-    expect(await response.json()).toMatchObject({ price_lookup_symbol: null, quantity: null });
-  });
-
-  it("rejects setting a market symbol without a quantity via PATCH", async () => {
-    const created = await createHolding(userA);
-    const { id } = await created.json();
-
-    const response = await PATCH(
-      requestAs(userA, `${HOLDINGS_URL}/${id}`, {
-        method: "PATCH",
-        ...jsonBody({ price_lookup_symbol: "AAPL" }),
-      }),
-      { params: Promise.resolve({ id }) },
-    );
-    expect(response.status).toBe(400);
-  });
-
-  it("sets and clears a Holding's Sector via PATCH", async () => {
-    const created = await createHolding(userA);
-    const { id } = await created.json();
-
-    const withSector = await PATCH(
-      requestAs(userA, `${HOLDINGS_URL}/${id}`, { method: "PATCH", ...jsonBody({ sector: "Energy" }) }),
-      { params: Promise.resolve({ id }) },
-    );
-    expect(withSector.status).toBe(200);
-    expect(await withSector.json()).toMatchObject({ sector: "Energy" });
-
-    const cleared = await PATCH(
-      requestAs(userA, `${HOLDINGS_URL}/${id}`, { method: "PATCH", ...jsonBody({ sector: null }) }),
-      { params: Promise.resolve({ id }) },
-    );
-    expect(cleared.status).toBe(200);
-    expect(await cleared.json()).toMatchObject({ sector: null });
-  });
-
-  it("sets and clears a Holding's Held at via PATCH", async () => {
-    const created = await createHolding(userA);
-    const { id } = await created.json();
-
-    const withHeldAt = await PATCH(
-      requestAs(userA, `${HOLDINGS_URL}/${id}`, { method: "PATCH", ...jsonBody({ held_at: "Robinhood" }) }),
-      { params: Promise.resolve({ id }) },
-    );
-    expect(withHeldAt.status).toBe(200);
-    expect(await withHeldAt.json()).toMatchObject({ held_at: "Robinhood" });
-
-    const cleared = await PATCH(
-      requestAs(userA, `${HOLDINGS_URL}/${id}`, { method: "PATCH", ...jsonBody({ held_at: null }) }),
-      { params: Promise.resolve({ id }) },
-    );
-    expect(cleared.status).toBe(200);
-    expect(await cleared.json()).toMatchObject({ held_at: null });
-  });
-
-  // Ticket 22: Cash has no market symbol or quantity. The Cash form never
-  // sends them, and the route refuses them rather than trusting the client.
-  describe("Cash Holdings (ticket 22)", () => {
-    async function patchHolding(user: TestUser, id: string, body: Record<string, unknown>) {
-      return PATCH(requestAs(user, `${HOLDINGS_URL}/${id}`, { method: "PATCH", ...jsonBody(body) }), {
-        params: Promise.resolve({ id }),
-      });
-    }
-
-    it("creates a Cash Holding with no market symbol or quantity", async () => {
-      const response = await createHolding(userA, {
-        name: "Chase Checking",
-        asset_class_id: DEFAULT_ASSET_CLASS_ID.cash,
-        held_at: "Chase",
-      });
-      expect(response.status).toBe(201);
-      expect(await response.json()).toMatchObject({ price_lookup_symbol: null, quantity: null });
-    });
-
-    it("accepts an explicit null symbol/quantity pair on Cash", async () => {
-      const response = await createHolding(userA, {
-        asset_class_id: DEFAULT_ASSET_CLASS_ID.cash,
-        price_lookup_symbol: null,
-        quantity: null,
-      });
-      expect(response.status).toBe(201);
-    });
-
-    it("refuses a market symbol and quantity on a new Cash Holding", async () => {
-      const response = await createHolding(userA, {
-        asset_class_id: DEFAULT_ASSET_CLASS_ID.cash,
-        price_lookup_symbol: "AAPL",
-        quantity: 10,
-      });
-      expect(response.status).toBe(400);
-    });
-
-    it("refuses setting a market symbol on an existing Cash Holding", async () => {
-      const { id } = await (
-        await createHolding(userA, { asset_class_id: DEFAULT_ASSET_CLASS_ID.cash })
-      ).json();
-      const response = await patchHolding(userA, id, { price_lookup_symbol: "AAPL", quantity: 1 });
-      expect(response.status).toBe(400);
-    });
-
-    it("refuses moving a Holding into Cash while setting a market symbol", async () => {
-      const { id } = await (await createHolding(userA)).json();
-      const response = await patchHolding(userA, id, {
-        asset_class_id: DEFAULT_ASSET_CLASS_ID.cash,
-        price_lookup_symbol: "AAPL",
-        quantity: 1,
-      });
-      expect(response.status).toBe(400);
-    });
-
-    it("moving a live-priced Holding into Cash works when the pair is cleared with it", async () => {
-      const { id } = await (
-        await createHolding(userA, { price_lookup_symbol: "AAPL", quantity: 10 })
-      ).json();
-      const response = await patchHolding(userA, id, {
-        asset_class_id: DEFAULT_ASSET_CLASS_ID.cash,
-        price_lookup_symbol: null,
-        quantity: null,
-      });
-      expect(response.status).toBe(200);
-      expect(await response.json()).toMatchObject({
-        asset_class_id: DEFAULT_ASSET_CLASS_ID.cash,
-        price_lookup_symbol: null,
-        quantity: null,
-      });
-    });
-
-    it("leaves a legacy Cash Holding's stored symbol/quantity intact when only its name is edited", async () => {
-      // Reachable only for rows that predate ticket 22 (or via a direct
-      // write), so seed one with the service-role client, past the route.
-      const { data: legacy } = await createAdminClient()
-        .from("holding")
-        .insert({
-          user_id: userA.id,
-          asset_class_id: DEFAULT_ASSET_CLASS_ID.cash,
-          name: "Legacy cash",
-          currency: "USD",
-          price_lookup_symbol: "AAPL",
-          quantity: 3,
-        })
-        .select("id")
-        .single();
-
-      // The edit form's real Save payload for a Cash Holding: every visible
-      // field, including the (unchanged) class, but no symbol/quantity.
-      const response = await patchHolding(userA, legacy!.id, {
-        name: "Renamed legacy cash",
-        asset_class_id: DEFAULT_ASSET_CLASS_ID.cash,
-        currency: "USD",
-        held_at: "Chase",
-      });
-      expect(response.status).toBe(200);
-      expect(await response.json()).toMatchObject({
-        name: "Renamed legacy cash",
-        held_at: "Chase",
-        price_lookup_symbol: "AAPL",
-        quantity: 3,
-      });
+    expect(result.status).toBe(201);
+    expect(await holdingRow(result.json.id!)).toMatchObject({
+      property_type: "Residential",
+      city: "Pune",
+      cost_basis: 4_800_000,
     });
   });
+});
 
-  it("deletes a Holding", async () => {
-    const created = await createHolding(userA);
-    const { id } = await created.json();
-
-    const response = await DELETE(requestAs(userA, `${HOLDINGS_URL}/${id}`, { method: "DELETE" }), {
-      params: Promise.resolve({ id }),
+describe("DM-11 Metals take a quantity and unit", () => {
+  it("DM-11 stores quantity 20 in oz t and value 640", async () => {
+    const result = await create({
+      asset_class: "metals",
+      country: "US",
+      name: "DM-11 Silver Eagles",
+      value: 640,
+      quantity: 20,
+      unit: "oz t",
     });
-    expect(response.status).toBe(200);
-
-    const after = await GET(requestAs(userA, HOLDINGS_URL));
-    const ids = (await after.json()).map((h: { id: string }) => h.id);
-    expect(ids).not.toContain(id);
+    expect(result.status).toBe(201);
+    expect(await holdingRow(result.json.id!)).toMatchObject({ quantity: 20, unit: "oz t" });
+    expect((await valuations(result.json.id!))[0].value).toBe(640);
   });
+});
 
-  it("User A cannot read User B's Holdings", async () => {
-    const created = await createHolding(userB, { name: "B's holding" });
-    const { id } = await created.json();
-
-    const asA = await GET(requestAs(userA, HOLDINGS_URL));
-    const idsVisibleToA = (await asA.json()).map((h: { id: string }) => h.id);
-    expect(idsVisibleToA).not.toContain(id);
+describe("DM-12 Fields of another Asset Class are rejected", () => {
+  it.each<[string, Body]>([
+    ["cash", { property_type: "Land" }],
+    ["crypto", { quantity: 2 }],
+    ["realestate", { property_type: "Castle" }],
+    ["metals", { unit: "kg", quantity: 1 }],
+  ])("DM-12 %s with %j", async (assetClass, extra) => {
+    const result = await create(cash({ asset_class: assetClass, name: `DM-12 ${assetClass}`, ...extra }));
+    expect(result.status).toBe(400);
+    expect(result.json.error).toBeTruthy();
+    expect(await holdingCount(`DM-12 ${assetClass}`)).toBe(0);
   });
+});
 
-  it("User A cannot update User B's Holding", async () => {
-    const created = await createHolding(userB, { name: "B's holding to protect" });
-    const { id } = await created.json();
-
-    const response = await PATCH(
-      requestAs(userA, `${HOLDINGS_URL}/${id}`, {
-        method: "PATCH",
-        ...jsonBody({ name: "Hijacked" }),
-      }),
-      { params: Promise.resolve({ id }) },
-    );
-    expect(response.status).toBe(404);
-
-    const stillB = await GET(requestAs(userB, HOLDINGS_URL));
-    const holding = (await stillB.json()).find((h: { id: string }) => h.id === id);
-    expect(holding.name).toBe("B's holding to protect");
+describe("DM-13 An unchanged value still records today", () => {
+  it("DM-13 adds a second Valuation dated today", async () => {
+    const id = await createdId(cash({ name: "DM-13 cash" }));
+    await backdateValuations(id, 40);
+    const result = await update(id, 6200);
+    expect(result.status).toBe(200);
+    expect(await valuations(id)).toEqual([
+      { valued_on: daysAgo(40), value: 6200, source: "user" },
+      { valued_on: today, value: 6200, source: "user" },
+    ]);
   });
+});
 
-  it("User A cannot delete User B's Holding", async () => {
-    const created = await createHolding(userB, { name: "B's holding to keep" });
-    const { id } = await created.json();
+describe("DM-14 A same-day save overwrites", () => {
+  it("DM-14 keeps exactly one Valuation dated today, of 6,500", async () => {
+    const id = await createdId(cash({ name: "DM-14 cash" }));
+    expect((await update(id, 6000)).status).toBe(200);
+    expect((await update(id, 6500)).status).toBe(200);
+    expect(await valuations(id)).toEqual([{ valued_on: today, value: 6500, source: "user" }]);
+  });
+});
 
-    const response = await DELETE(requestAs(userA, `${HOLDINGS_URL}/${id}`, { method: "DELETE" }), {
-      params: Promise.resolve({ id }),
-    });
-    expect(response.status).toBe(404);
+describe("DM-15 A Stocks Holding has no Update value", () => {
+  it("DM-15 rejects Update value for Stocks", async () => {
+    const { data, error } = await admin()
+      .from("holding")
+      .insert({ user_id: user.id, country: "US", asset_class: "stocks", name: "DM-15 brokerage" })
+      .select("id")
+      .single();
+    if (error) throw error;
+    const result = await update(data.id, 10_000);
+    expect(result.status).toBe(400);
+    expect(result.json.error).toBeTruthy();
+    expect(await valuations(data.id)).toEqual([]);
+  });
+});
 
-    const stillB = await GET(requestAs(userB, HOLDINGS_URL));
-    const ids = (await stillB.json()).map((h: { id: string }) => h.id);
-    expect(ids).toContain(id);
+describe("DM-16 Renaming records today's value too", () => {
+  it("DM-16 renames and adds today's Valuation of 8,600", async () => {
+    const id = await createdId({ asset_class: "crypto", country: "US", name: "DM-16 Coinbase", value: 8600 });
+    await backdateValuations(id, 10);
+    const result = await edit(id, { asset_class: "crypto", country: "US", name: "DM-16 Coinbase wallet", value: 8600 });
+    expect(result.status).toBe(200);
+    expect((await holdingRow(id)).name).toBe("DM-16 Coinbase wallet");
+    expect(await valuations(id)).toEqual([
+      { valued_on: daysAgo(10), value: 8600, source: "user" },
+      { valued_on: today, value: 8600, source: "user" },
+    ]);
+  });
+});
+
+describe("DM-17 Country and Asset Class can't change", () => {
+  it.each<[string, Body]>([
+    ["Country India", { country: "IN" }],
+    ["Asset Class Crypto", { asset_class: "crypto" }],
+  ])("DM-17 %s is rejected and the Holding is unchanged", async (_label, change) => {
+    const id = await createdId(cash({ name: `DM-17 ${_label}` }));
+    const before = await holdingRow(id);
+    const result = await edit(id, cash({ name: "DM-17 renamed", ...change }));
+    expect(result.status).toBe(400);
+    expect(result.json.error).toBeTruthy();
+    expect(await holdingRow(id)).toEqual(before);
+    expect(await valuations(id)).toHaveLength(1);
+  });
+});
+
+describe("DM-27 An archived Holding is read-only", () => {
+  it("DM-27 refuses edit and Update value with 409 and records no Valuation", async () => {
+    const id = await createdId(cash({ name: "DM-27 cash" }));
+    expect((await archive(id)).status).toBe(200);
+    expect((await holdingRow(id)).archived_at).not.toBeNull();
+
+    expect((await edit(id, cash({ name: "DM-27 renamed" }))).status).toBe(409);
+    expect((await update(id, 7000)).status).toBe(409);
+    expect(await valuations(id)).toEqual([{ valued_on: today, value: 6200, source: "user" }]);
+    expect((await holdingRow(id)).name).toBe("DM-27 cash");
   });
 });
