@@ -64,11 +64,11 @@ Any Holding's or Liability's value on any date, by interpolation between Valuati
 Blocked by: 5
 Any series restated in Today's dollars, each Country at its own inflation (D10). A range's Net Worth change split into asset growth, debt paid down and Currency effect, which sum exactly, for any Country scope (D11).
 
-- [ ] 6.1 Tests named NH-11, NH-12, NH-13, NH-14, NH-15, NH-16, NH-17 written and failing (red)
-- [ ] 6.2 Deflation uses whole calendar months, restating the past upward and the future downward, and Countries are deflated before summing (NH-11, NH-12)
-- [ ] 6.3 The three attribution terms sum to the Net Worth change within $0.01, with the right Currency effect signs for India assets and Liabilities (NH-13, NH-14, NH-15)
-- [ ] 6.4 Country scope filters items, and a Holding added mid-range counts fully as asset growth (NH-16, NH-17)
-- [ ] 6.5 Tests named NH-11, NH-12, NH-13, NH-14, NH-15, NH-16, NH-17 pass in CI suites; npm run spec:coverage passes
+- [x] 6.1 Tests named NH-11, NH-12, NH-13, NH-14, NH-15, NH-16, NH-17 written and failing (red)
+- [x] 6.2 Deflation uses whole calendar months, restating the past upward and the future downward, and Countries are deflated before summing (NH-11, NH-12)
+- [x] 6.3 The three attribution terms sum to the Net Worth change within $0.01, with the right Currency effect signs for India assets and Liabilities (NH-13, NH-14, NH-15)
+- [x] 6.4 Country scope filters items, and a Holding added mid-range counts fully as asset growth (NH-16, NH-17)
+- [x] 6.5 Tests named NH-11, NH-12, NH-13, NH-14, NH-15, NH-16, NH-17 pass in CI suites; npm run spec:coverage passes
 
 ## 7. Equity
 
