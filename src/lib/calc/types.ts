@@ -73,8 +73,20 @@ export type ProjectionHolding = {
   currentValue: number;
 };
 
+/** A Liability as the Projection sees it: an amortizing loan in its native currency. */
+export type ProjectionLiability = {
+  id: string;
+  country: Country;
+  /** Today's recorded balance. */
+  balance: number;
+  /** Annual percentage rate as a fraction (0.06 = 6%). */
+  apr: number;
+  monthlyPayment: number;
+};
+
 export type ProjectionInput = {
   holdings: readonly ProjectionHolding[];
+  liabilities: readonly ProjectionLiability[];
   assumptions: ProjectionAssumptionsInput;
   /** Today's FX Rate: INR per USD. Held flat for the whole Projection. */
   fxRate: number;
@@ -83,7 +95,18 @@ export type ProjectionInput = {
 /** Monthly series, index k = month k, month 0 being today. */
 export type HoldingSeries = { id: string; native: number[]; usd: number[] };
 
+export type LiabilitySeries = HoldingSeries & {
+  /** First month the balance is 0, even past the horizon; absent when Not on track. */
+  payoffMonth?: number;
+  /** Native interest paid from month 1 to payoff; absent when Not on track. */
+  interestRemaining?: number;
+  notOnTrack: boolean;
+};
+
 export type Projection = {
   holdings: HoldingSeries[];
+  liabilities: LiabilitySeries[];
   totalHoldingsUsd: number[];
+  totalLiabilitiesUsd: number[];
+  netWorthUsd: number[];
 };
