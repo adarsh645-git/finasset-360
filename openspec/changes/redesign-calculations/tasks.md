@@ -5,11 +5,11 @@
 Blocked by: none
 The new calculations module exists beside the old helpers, with its own plain input types (D1). It carries the six Asset Classes and the US/India defaults, resolves blank Projection Assumptions to them (D6), and answers whether a Holding or Liability is Stale and how old its user-entered figure is (D14). This proves the single test seam and the `spec:coverage` wiring end to end.
 
-- [ ] 1.1 Tests named PR-01, ST-01, ST-02, ST-03, ST-04, ST-05 written and failing (red)
-- [ ] 1.2 The module defines its own input types in CONTEXT.md vocabulary and imports nothing from the old portfolio types; no existing file under `src/lib/` changes (`git diff --stat` shows only new files)
-- [ ] 1.3 Blank assumptions resolve to the defaults table, and a filled-in 0 is kept (PR-01)
-- [ ] 1.4 Staleness reports the age in whole UTC calendar days and Stale only above 30. A Stocks Holding with no Hand Price is never Stale (ST-01…ST-05)
-- [ ] 1.5 Tests named PR-01, ST-01, ST-02, ST-03, ST-04, ST-05 pass in CI suites; npm run spec:coverage passes
+- [x] 1.1 Tests named PR-01, ST-01, ST-02, ST-03, ST-04, ST-05 written and failing (red)
+- [x] 1.2 The module defines its own input types in CONTEXT.md vocabulary and imports nothing from the old portfolio types; no existing file under `src/lib/` changes (`git diff --stat` shows only new files)
+- [x] 1.3 Blank assumptions resolve to the defaults table, and a filled-in 0 is kept (PR-01)
+- [x] 1.4 Staleness reports the age in whole UTC calendar days and Stale only above 30. A Stocks Holding with no Hand Price is never Stale (ST-01…ST-05)
+- [x] 1.5 Tests named PR-01, ST-01, ST-02, ST-03, ST-04, ST-05 pass in CI suites; npm run spec:coverage passes
 
 ## 2. Projection: Holdings compound
 
