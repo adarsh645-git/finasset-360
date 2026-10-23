@@ -3,6 +3,7 @@ import {
   attributeChange,
   equity,
   fxRateOn,
+  percentOwned,
   netWorthOn,
   project,
   sampleDates,
@@ -29,6 +30,7 @@ import {
 import type { AssetClassId, PortfolioData } from "@/lib/read-model/types";
 import { CLASS_TOKENS, COUNTRY_TOKENS } from "@/lib/tokens";
 import { EXISTING_ROUTES, hrefFor, type RouteFamily } from "@/lib/views/links";
+import { buildStaleList, type StaleRow } from "@/lib/views/stale-list";
 import { calcClassId, calcCountry, historyItem } from "@/lib/views/shell";
 
 export const RANGES = ["1Y", "3Y", "5Y", "All"] as const;
@@ -79,6 +81,19 @@ export type AllocationRow = {
   href: string | null;
 };
 
+export type EquityRow = {
+  id: string;
+  name: string;
+  equity: string;
+  /** % owned as a 0-100 bar width. */
+  pct: number;
+  /** "45% owned · +$8K in 12 mo". */
+  detail: string;
+  /** "$74.3K value − $41.1K loan". */
+  breakdown: string;
+  href: string | null;
+};
+
 export type CountryBlock = {
   code: "US" | "IN";
   name: string;
@@ -103,8 +118,10 @@ export type Overview = {
   chart: OverviewChart | null;
   stats: { assets: StatCard; liabilities: StatCard; equity: StatCard } | null;
   allocation: { rows: AllocationRow[] } | null;
+  equity: { rows: EquityRow[] } | null;
   countries: CountryBlock[];
   currencyEffect: CurrencyEffect | null;
+  needsUpdating: { title: string; rows: StaleRow[] } | null;
 };
 
 const LABEL = "Net worth · rolled up to USD";
@@ -147,14 +164,22 @@ export function buildOverview(
   if (firstRun) {
     return {
       firstRun,
-      header: { label: LABEL, total: usd(0), change: null, since: null, tone: null },
+      header: {
+        label: LABEL,
+        total: usd(0),
+        change: null,
+        since: null,
+        tone: null,
+      },
       range,
       ranges,
       chart: null,
       stats: null,
       allocation: null,
+      equity: null,
       countries: [],
       currencyEffect: null,
+      needsUpdating: null,
     };
   }
 
@@ -212,6 +237,7 @@ export function buildOverview(
     range,
     ranges,
     ...buildCards(data, { rates, holdings, liabilities, existing }),
+    needsUpdating: needsUpdating(data, existing),
     chart: {
       today,
       height: CHART_HEIGHT,
@@ -227,14 +253,34 @@ export function buildOverview(
           dot: true,
           bold: true,
         },
-        { name: "Assets", color: "var(--pos)", points: pts(all, assets), line: false, scaled: false },
-        { name: "Liabilities", color: "var(--neg)", points: pts(all, debts), line: false, scaled: false },
+        {
+          name: "Assets",
+          color: "var(--pos)",
+          points: pts(all, assets),
+          line: false,
+          scaled: false,
+        },
+        {
+          name: "Liabilities",
+          color: "var(--neg)",
+          points: pts(all, debts),
+          line: false,
+          scaled: false,
+        },
       ],
     },
   };
 }
 
-type Cards = Pick<Overview, "stats" | "allocation" | "countries" | "currencyEffect">;
+type Cards = Pick<Overview, "stats" | "allocation" | "equity" | "countries" | "currencyEffect">;
+
+function needsUpdating(
+  data: PortfolioData,
+  existing: ReadonlySet<RouteFamily>,
+): Overview["needsUpdating"] {
+  const rows = buildStaleList(data, data.today, existing);
+  return rows.length ? { title: `Needs updating (${rows.length})`, rows } : null;
+}
 type Held = PortfolioData["holdings"][number];
 type Owed = PortfolioData["liabilities"][number];
 
@@ -272,8 +318,14 @@ function buildCards(
   const equityOn = (h: Held, l: Owed, date: string) => {
     const fxRate = (country: "US" | "IN") => (country === "US" ? 1 : fxRateOn(rates, date).rate);
     return equity(
-      { native: valueOn(historyItem(h), date, today), fxRate: fxRate(h.country) },
-      { native: valueOn(historyItem(l), date, today), fxRate: fxRate(l.country) },
+      {
+        native: valueOn(historyItem(h), date, today),
+        fxRate: fxRate(h.country),
+      },
+      {
+        native: valueOn(historyItem(l), date, today),
+        fxRate: fxRate(l.country),
+      },
     );
   };
   const equityNow = pairs.reduce((sum, { h, l }) => sum + equityOn(h, l, today), 0);
@@ -312,6 +364,25 @@ function buildCards(
       href: hrefFor({ kind: "growth" }, existing),
     },
   };
+
+  const equityRows: EquityRow[] = pairs.map(({ h, l }) => {
+    const rate = (c: "US" | "IN") => (c === "US" ? 1 : fxRateOn(rates, today).rate);
+    const value = { native: h.currentValue, fxRate: rate(h.country) };
+    const balance = { native: l.currentBalance, fxRate: rate(l.country) };
+    const owned = percentOwned(value, balance);
+    const change = [h, l].every((i) => i.valuations.some((v) => v.date <= start))
+      ? equityOn(h, l, today) - equityOn(h, l, start)
+      : null;
+    return {
+      id: h.id,
+      name: h.name,
+      equity: usd(equityOn(h, l, today)),
+      pct: owned * 100,
+      detail: `${Math.round(owned * 100)}% owned · ${signedCompact(change)} in 12 mo`,
+      breakdown: `${compact(value.native / value.fxRate)} value − ${compact(balance.native / balance.fxRate)} loan`,
+      href: hrefFor({ kind: "holding", id: h.id }, existing),
+    };
+  });
 
   const rows = (Object.keys(CLASS_TOKENS) as AssetClassId[])
     .flatMap((id) => {
@@ -374,7 +445,13 @@ function buildCards(
     };
   }
 
-  return { stats, allocation: rows.length ? { rows } : null, countries, currencyEffect };
+  return {
+    stats,
+    allocation: rows.length ? { rows } : null,
+    equity: equityRows.length ? { rows: equityRows } : null,
+    countries,
+    currencyEffect,
+  };
 }
 
 const fraction = (v: number | null) => (v === null ? null : v / 100);

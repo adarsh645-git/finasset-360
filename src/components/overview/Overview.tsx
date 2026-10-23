@@ -4,12 +4,24 @@ import { ProjectionToggle } from "@/components/chart/ProjectionProvider";
 import { RowLink } from "@/components/overview/RowLink";
 import type { Overview as OverviewView } from "@/lib/views/overview";
 
-const MONO_LABEL = "font-mono text-[11px] font-medium uppercase leading-tight tracking-[0.06em] text-ink3";
+const MONO_LABEL =
+  "font-mono text-[11px] font-medium uppercase leading-tight tracking-[0.06em] text-ink3";
 const CARD = "rounded-[14px] border border-line bg-panel shadow-[var(--shadow)]";
 
 // Renders what buildOverview returns; the later cards join below the chart.
 export function Overview({ overview }: { overview: OverviewView }) {
-  const { header, ranges, chart, firstRun, stats, allocation, countries, currencyEffect } = overview;
+  const {
+    header,
+    ranges,
+    chart,
+    firstRun,
+    stats,
+    allocation,
+    equity,
+    countries,
+    currencyEffect,
+    needsUpdating,
+  } = overview;
   return (
     <div className="flex flex-col gap-4">
       <div className="mb-1 flex flex-wrap items-end justify-between gap-4">
@@ -23,7 +35,11 @@ export function Overview({ overview }: { overview: OverviewView }) {
               <span
                 data-tone={header.tone ?? undefined}
                 className={`font-medium tabular-nums ${
-                  header.tone === "up" ? "text-pos" : header.tone === "down" ? "text-neg" : "text-ink2"
+                  header.tone === "up"
+                    ? "text-pos"
+                    : header.tone === "down"
+                      ? "text-neg"
+                      : "text-ink2"
                 }`}
               >
                 {header.change}
@@ -64,14 +80,23 @@ export function Overview({ overview }: { overview: OverviewView }) {
       ) : (
         chart && (
           <section className={`${CARD} px-5 pb-3 pt-5`}>
-            <Chart series={chart.series} today={chart.today} height={chart.height} goals={chart.goals} />
+            <Chart
+              series={chart.series}
+              today={chart.today}
+              height={chart.height}
+              goals={chart.goals}
+            />
           </section>
         )
       )}
       {stats && (
         <div className="grid gap-4 md:grid-cols-3">
           {[stats.assets, stats.liabilities, stats.equity].map((card) => (
-            <RowLink key={card.label} href={card.href} className={`${CARD} flex flex-col gap-2 p-5`}>
+            <RowLink
+              key={card.label}
+              href={card.href}
+              className={`${CARD} flex flex-col gap-2 p-5`}
+            >
               <span className={MONO_LABEL}>{card.label}</span>
               <span className="text-[26px] font-medium leading-none tracking-[-0.02em] tabular-nums">
                 {card.value}
@@ -81,73 +106,156 @@ export function Overview({ overview }: { overview: OverviewView }) {
           ))}
         </div>
       )}
-      {allocation && (
-        <section className={`${CARD} flex flex-col gap-4 p-5`}>
-          <h2 className="text-[15px] font-semibold">Allocation</h2>
-          <div className="flex h-2.5 gap-0.5 overflow-hidden rounded-full bg-hover" aria-hidden="true">
-            {allocation.rows.map((r) => (
-              <span key={r.id} style={{ width: `${r.pct}%`, background: `var(${r.dot})` }} />
-            ))}
-          </div>
-          <div className="flex flex-col">
-            {allocation.rows.map((r) => (
-              <RowLink
-                key={r.id}
-                href={r.href}
-                className="grid grid-cols-[1fr_auto_auto] items-center gap-x-4 rounded-lg px-2 py-2.5 text-[13.5px] sm:grid-cols-[1fr_auto_auto_auto_auto]"
-              >
-                <span className="flex items-center gap-2">
-                  <span className="size-2.5 rounded-full" style={{ background: `var(${r.dot})` }} />
-                  {r.name}
-                </span>
-                <span className="text-ink3 tabular-nums">{r.count}</span>
-                <span className="text-right tabular-nums">{r.value}</span>
-                <span className="hidden text-right text-ink2 tabular-nums sm:block">{r.share}</span>
-                <span className="hidden text-right text-ink2 tabular-nums sm:block">{r.change}</span>
-              </RowLink>
-            ))}
-          </div>
-        </section>
-      )}
-      {countries.length > 0 && (
-        <section className={`${CARD} flex flex-col gap-4 p-5`}>
-          <h2 className="text-[15px] font-semibold">Where it&apos;s held</h2>
-          {countries.map((c) => (
-            <div key={c.code} className="flex flex-col gap-1.5">
-              <div className="flex items-baseline justify-between gap-3 text-[13.5px]">
-                <span className="font-medium">{c.name}</span>
-                <span className="tabular-nums">{c.net}</span>
-              </div>
-              <div className="h-1.5 overflow-hidden rounded-full bg-hover" aria-hidden="true">
-                <div className="h-full rounded-full" style={{ width: `${c.pct}%`, background: `var(${c.dot})` }} />
-              </div>
-              <div className="flex justify-between gap-3 text-[12px] text-ink3">
-                <span>{c.detail}</span>
-                <span>{c.share}</span>
-              </div>
-            </div>
-          ))}
-          {currencyEffect && (
-            <div className="flex flex-col gap-1 border-t border-line pt-3">
-              <div className="flex items-baseline justify-between gap-3 text-[13.5px]">
-                <span>Currency effect, 12 mo</span>
-                <span
-                  data-tone={currencyEffect.tone ?? undefined}
-                  className={`font-medium tabular-nums ${
-                    currencyEffect.tone === "up"
-                      ? "text-pos"
-                      : currencyEffect.tone === "down"
-                        ? "text-neg"
-                        : "text-ink2"
-                  }`}
+      {!firstRun && (
+        <div className="grid gap-4 @min-[820px]:grid-cols-[minmax(0,1.45fr)_minmax(0,1fr)]">
+          <div className="flex min-w-0 flex-col gap-4">
+            {allocation && (
+              <section className={`${CARD} flex flex-col gap-4 p-5`}>
+                <h2 className="text-[15px] font-semibold">Allocation</h2>
+                <div
+                  className="flex h-2.5 gap-0.5 overflow-hidden rounded-full bg-hover"
+                  aria-hidden="true"
                 >
-                  {currencyEffect.amount}
-                </span>
-              </div>
-              <p className="text-[12px] text-ink3">{currencyEffect.note}</p>
-            </div>
-          )}
-        </section>
+                  {allocation.rows.map((r) => (
+                    <span
+                      key={r.id}
+                      style={{
+                        width: `${r.pct}%`,
+                        background: `var(${r.dot})`,
+                      }}
+                    />
+                  ))}
+                </div>
+                <div className="flex flex-col">
+                  {allocation.rows.map((r) => (
+                    <RowLink
+                      key={r.id}
+                      href={r.href}
+                      className="grid grid-cols-[1fr_auto_auto] items-center gap-x-4 rounded-lg px-2 py-2.5 text-[13.5px] sm:grid-cols-[1fr_auto_auto_auto_auto]"
+                    >
+                      <span className="flex items-center gap-2">
+                        <span
+                          className="size-2.5 rounded-full"
+                          style={{ background: `var(${r.dot})` }}
+                        />
+                        {r.name}
+                      </span>
+                      <span className="text-ink3 tabular-nums">{r.count}</span>
+                      <span className="text-right tabular-nums">{r.value}</span>
+                      <span className="hidden text-right text-ink2 tabular-nums sm:block">
+                        {r.share}
+                      </span>
+                      <span className="hidden text-right text-ink2 tabular-nums sm:block">
+                        {r.change}
+                      </span>
+                    </RowLink>
+                  ))}
+                </div>
+              </section>
+            )}
+            {equity && (
+              <section className={`${CARD} flex flex-col gap-4 p-5`}>
+                <h2 className="text-[15px] font-semibold">Equity in financed assets</h2>
+                <div className="flex flex-col">
+                  {equity.rows.map((r) => (
+                    <RowLink
+                      key={r.id}
+                      href={r.href}
+                      className="flex flex-col gap-1.5 rounded-lg px-2 py-2.5"
+                    >
+                      <div className="flex items-baseline justify-between gap-3 text-[13.5px]">
+                        <span className="font-medium">{r.name}</span>
+                        <span className="tabular-nums">{r.equity}</span>
+                      </div>
+                      <div
+                        className="h-1.5 overflow-hidden rounded-full bg-hover"
+                        aria-hidden="true"
+                      >
+                        <div
+                          className="h-full rounded-full bg-pos"
+                          style={{ width: `${r.pct}%` }}
+                        />
+                      </div>
+                      <div className="flex justify-between gap-3 text-[12px] text-ink3">
+                        <span>{r.detail}</span>
+                        <span>{r.breakdown}</span>
+                      </div>
+                    </RowLink>
+                  ))}
+                </div>
+              </section>
+            )}
+            {countries.length > 0 && (
+              <section className={`${CARD} flex flex-col gap-4 p-5`}>
+                <h2 className="text-[15px] font-semibold">Where it&apos;s held</h2>
+                {countries.map((c) => (
+                  <div key={c.code} className="flex flex-col gap-1.5">
+                    <div className="flex items-baseline justify-between gap-3 text-[13.5px]">
+                      <span className="font-medium">{c.name}</span>
+                      <span className="tabular-nums">{c.net}</span>
+                    </div>
+                    <div className="h-1.5 overflow-hidden rounded-full bg-hover" aria-hidden="true">
+                      <div
+                        className="h-full rounded-full"
+                        style={{
+                          width: `${c.pct}%`,
+                          background: `var(${c.dot})`,
+                        }}
+                      />
+                    </div>
+                    <div className="flex justify-between gap-3 text-[12px] text-ink3">
+                      <span>{c.detail}</span>
+                      <span>{c.share}</span>
+                    </div>
+                  </div>
+                ))}
+                {currencyEffect && (
+                  <div className="flex flex-col gap-1 border-t border-line pt-3">
+                    <div className="flex items-baseline justify-between gap-3 text-[13.5px]">
+                      <span>Currency effect, 12 mo</span>
+                      <span
+                        data-tone={currencyEffect.tone ?? undefined}
+                        className={`font-medium tabular-nums ${
+                          currencyEffect.tone === "up"
+                            ? "text-pos"
+                            : currencyEffect.tone === "down"
+                              ? "text-neg"
+                              : "text-ink2"
+                        }`}
+                      >
+                        {currencyEffect.amount}
+                      </span>
+                    </div>
+                    <p className="text-[12px] text-ink3">{currencyEffect.note}</p>
+                  </div>
+                )}
+              </section>
+            )}
+          </div>
+          <div className="flex min-w-0 flex-col gap-4">
+            {needsUpdating && (
+              <section className={`${CARD} flex flex-col gap-3 p-5`}>
+                <div className="flex items-center justify-between gap-3">
+                  <h2 className="text-[15px] font-semibold">{needsUpdating.title}</h2>
+                  <span data-slot="needs-updating-action" className="empty:hidden" />
+                </div>
+                <div className="flex flex-col">
+                  {needsUpdating.rows.map((r) => (
+                    <RowLink
+                      key={`${r.kind}-${r.id}`}
+                      href={r.href}
+                      className="flex items-baseline justify-between gap-3 rounded-lg px-2 py-2.5 text-[13.5px]"
+                    >
+                      <span>{r.name}</span>
+                      <span className="text-ink3 tabular-nums">{r.age}</span>
+                    </RowLink>
+                  ))}
+                </div>
+              </section>
+            )}
+            <div data-slot="goals" className="empty:hidden" />
+          </div>
+        </div>
       )}
     </div>
   );
