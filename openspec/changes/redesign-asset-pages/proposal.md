@@ -45,7 +45,9 @@ Two new pages, built on the shell, chart primitive, formatting helpers, modal an
 
 ### Modified Capabilities
 
-None (`openspec/specs/` is empty).
+- `app-shell`: "The shell links only to pages that exist" now lists the Assets page and class pages; SH-08 expects the Assets and class-row links.
+- `overview`: Total assets links to `/assets` (OV-08), and Allocation rows link to `/assets/<id>` (OV-10).
+- `holding-detail`: Delete returns to the Holding's class page, not the Overview (HD-07).
 
 ## Impact
 

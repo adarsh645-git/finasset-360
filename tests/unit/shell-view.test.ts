@@ -19,7 +19,7 @@ describe("shell view", () => {
     expect(shell.items.filter((i) => i.active).map((i) => i.label)).toEqual([item]);
   });
 
-  it("SH-10 the registry has the Overview, Holding detail and Goals on, adding on, and the shell knows the first name", () => {
+  it("SH-09 the registry lists every built page with adding on, and the shell knows the first name", () => {
     expect([...EXISTING_ROUTES]).toEqual([
       "overview",
       "assets",
