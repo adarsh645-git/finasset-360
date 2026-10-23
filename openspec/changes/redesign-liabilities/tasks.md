@@ -51,10 +51,10 @@ The shared modal gains the Asset | Liability toggle and the loan form, with defa
 Blocked by: 3
 Loan detail's Update balance opens a one-input modal that records today's balance, even when unchanged, clearing the stale cue. Delete (click twice) archives the loan and returns to `/liabilities`, with its history kept (D6, D16).
 
-- [ ] 5.1 Tests named LE-08, LD-10 written and failing (red)
-- [ ] 5.2 Update balance shows "Current balance of ⟨name⟩" and the "Was … · logged as today’s value" line, validates the balance, and refreshes (LE-08)
-- [ ] 5.3 Delete reads "Confirm delete" on the first click, archives on the second, and resets on navigation (LD-10)
-- [ ] 5.4 Tests named LE-08, LD-10 pass in CI suites; npm run spec:coverage passes
+- [x] 5.1 Tests named LE-08, LD-10 written and failing (red)
+- [x] 5.2 Update balance shows "Current balance of ⟨name⟩" and the "Was … · logged as today’s value" line, validates the balance, and refreshes (LE-08)
+- [x] 5.3 Delete reads "Confirm delete" on the first click, archives on the second, and resets on navigation (LD-10)
+- [x] 5.4 Tests named LE-08, LD-10 pass in CI suites; npm run spec:coverage passes
 - [ ] 5.5 Checked by hand on Loan detail at 2000px, 800px and 390px
 
 ## 6. Equity on Holding detail
@@ -62,10 +62,10 @@ Loan detail's Update balance opens a one-input modal that records today's balanc
 Blocked by: 3
 A Holding secured by a loan shows the Linked loan card (linking to its Loan detail), the "Your equity" stat, and the "Value vs. loan" chart with the shaded Equity gap (D18).
 
-- [ ] 6.1 Tests named LD-12, LD-13, LD-14 written and failing (red)
-- [ ] 6.2 `holding-equity.ts` returns null for an unlinked Holding, otherwise the card, the stat and the chart series, all from calc's Equity (LD-12…LD-14)
-- [ ] 6.3 Holding detail renders them in holding-entry's slots, and an unlinked Holding's page is unchanged
-- [ ] 6.4 Tests named LD-12, LD-13, LD-14 pass in CI suites; npm run spec:coverage passes
+- [x] 6.1 Tests named LD-12, LD-13, LD-14 written and failing (red)
+- [x] 6.2 `holding-equity.ts` returns null for an unlinked Holding, otherwise the card, the stat and the chart series, all from calc's Equity (LD-12…LD-14)
+- [x] 6.3 Holding detail renders them in holding-entry's slots, and an unlinked Holding's page is unchanged
+- [x] 6.4 Tests named LD-12, LD-13, LD-14 pass in CI suites; npm run spec:coverage passes
 - [ ] 6.5 Checked by hand against the mockup's financed property detail at 2000px, 800px and 390px
 
 ## Workflow follow-up

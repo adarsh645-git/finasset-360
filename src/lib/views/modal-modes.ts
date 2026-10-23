@@ -5,8 +5,7 @@ import type { AssetClassId, HoldingData, LiabilityData, PortfolioData } from "@/
 // combination no row claims opens nothing.
 
 /** Identifies one open modal; a different key means a different modal instance. */
-export const modalKey = (match: ModalMatch) =>
-  `${match.mode}:${match.holding?.id ?? ""}:${match.classId ?? ""}${match.liability ? `:${match.liability.id}` : ""}`;
+export const modalKey = (match: ModalMatch) => `${match.mode}:${match.holding?.id ?? ""}:${match.classId ?? ""}:${match.liability?.id ?? ""}`;
 
 /** The footer error stored for `key`'s modal, or null once another modal (or none) is open. */
 export const errorFor = (stored: { key: string; message: string } | null, key: string | null) =>
@@ -24,7 +23,7 @@ export type ModalMatch = {
   holding: HoldingData | null;
   /** add-asset only. */
   classId?: AssetClassId;
-  /** The Liability the mode targets (edit-liability); null or absent otherwise. */
+  /** The Liability a loan mode targets. */
   liability?: LiabilityData | null;
 };
 
@@ -114,7 +113,19 @@ const editLiability: ModeRow = {
   },
 };
 
-export const BUILTIN_MODES: readonly ModeRow[] = [addAsset, edit, update, addLiability, editLiability];
+const updateBalance: ModeRow = {
+  id: "update-balance",
+  match(params, data) {
+    if (params.get("modal") !== "update-balance") return null;
+    const id = params.get("liability");
+    const liability = (id && data.liabilities.find((l) => l.id === id && l.archivedAt === null)) || null;
+    if (!liability) return null;
+    return { mode: "update-balance", title: "Update balance", saveLabel: "Save", holding: null, liability };
+  },
+};
+
+
+export const BUILTIN_MODES: readonly ModeRow[] = [addAsset, edit, update, addLiability, editLiability, updateBalance];
 
 /** The current URL with the add modal switched to the other side (LE-01); other params stay. */
 export function swapAddHref(pathname: string, search: string, to: "add-asset" | "add-liability"): string {

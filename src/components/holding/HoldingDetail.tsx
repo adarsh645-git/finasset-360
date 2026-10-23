@@ -9,6 +9,18 @@ import type { HoldingDetail as HoldingDetailView } from "@/lib/views/holding-det
 const CARD = "rounded-[14px] border border-line bg-panel shadow-[var(--shadow)]";
 const BUTTON = "flex h-10 items-center rounded-lg border border-line px-3.5 text-[13.5px] font-medium hover:bg-hover";
 
+function LinkedLoanText({ loan }: { loan: NonNullable<HoldingDetailView["linkedLoan"]> }) {
+  return (
+    <>
+      <span className="flex flex-col gap-0.5">
+        <span className="text-[14.5px] font-medium">{loan.name}</span>
+        <span className="text-[12.5px] text-ink2">{loan.line}</span>
+      </span>
+      <span className="text-[16px] font-medium tabular-nums">{loan.balance}</span>
+    </>
+  );
+}
+
 // Renders what buildHoldingDetail returns; later tickets add the Positions, chart and Value log below the stats.
 export function HoldingDetail({ detail }: { detail: HoldingDetailView }) {
   return (
@@ -64,6 +76,20 @@ export function HoldingDetail({ detail }: { detail: HoldingDetailView }) {
           </div>
         ))}
       </div>
+      {detail.linkedLoan && (
+        <section className={`${CARD} p-4`} aria-label={detail.linkedLoan.label}>
+          <span className={MONO_LABEL}>{detail.linkedLoan.label}</span>
+          {detail.linkedLoan.href ? (
+            <Link href={detail.linkedLoan.href} className="mt-2 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 hover:text-ink">
+              <LinkedLoanText loan={detail.linkedLoan} />
+            </Link>
+          ) : (
+            <div className="mt-2 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+              <LinkedLoanText loan={detail.linkedLoan} />
+            </div>
+          )}
+        </section>
+      )}
       {detail.stocks && <StocksSections stocks={detail.stocks} />}
       <section className={`${CARD} px-5 pb-3 pt-5`} aria-labelledby="value-chart">
         <div className="mb-3 flex flex-wrap items-start justify-between gap-2">
@@ -75,7 +101,7 @@ export function HoldingDetail({ detail }: { detail: HoldingDetailView }) {
           </div>
           <ProjectionToggle />
         </div>
-        <Chart series={detail.chart.series} today={detail.chart.today} height={detail.chart.height} />
+        <Chart series={detail.chart.series} today={detail.chart.today} height={detail.chart.height} zero={detail.chart.zero} />
       </section>
       <section className={`${CARD} p-5`} aria-labelledby="value-log">
         <h2 id="value-log" className="mb-3 text-[15px] font-semibold">

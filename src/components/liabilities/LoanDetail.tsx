@@ -1,12 +1,14 @@
 import Link from "next/link";
+import { ConfirmDeleteButton } from "@/components/holding/ConfirmDeleteButton";
 import { Chart } from "@/components/chart/Chart";
 import { ProjectionToggle } from "@/components/chart/ProjectionProvider";
 import { MONO_LABEL } from "@/components/holding/style";
 import type { LoanDetail as LoanDetailView } from "@/lib/views/loan-detail";
 
+const BUTTON = "flex h-10 items-center rounded-lg border border-line px-3.5 text-[13.5px] font-medium hover:bg-hover";
 const CARD = "rounded-[14px] border border-line bg-panel shadow-[var(--shadow)]";
 
-// Renders what buildLoanDetail returns. Edit is here (ticket 4); Update balance and Delete arrive with ticket 5.
+// Renders what buildLoanDetail returns.
 export function LoanDetail({ detail }: { detail: LoanDetailView }) {
   const card = detail.securedAgainst;
   return (
@@ -25,26 +27,29 @@ export function LoanDetail({ detail }: { detail: LoanDetailView }) {
           </span>
         ))}
       </nav>
-      <header className="flex flex-col gap-2.5">
-        <div className="flex flex-wrap items-center gap-2">
-          <h1 className="text-[22px] font-semibold tracking-[-0.02em]">{detail.name}</h1>
-          {detail.badges.map((badge) => (
-            <span key={badge} className="rounded-md border border-line px-2 py-0.5 text-[12px] text-ink2">
-              {badge}
-            </span>
-          ))}
+      <header className="flex flex-wrap items-start justify-between gap-4">
+        <div className="flex min-w-0 flex-col gap-2.5">
+          <div className="flex flex-wrap items-center gap-2">
+            <h1 className="text-[22px] font-semibold tracking-[-0.02em]">{detail.name}</h1>
+            {detail.badges.map((badge) => (
+              <span key={badge} className="rounded-md border border-line px-2 py-0.5 text-[12px] text-ink2">
+                {badge}
+              </span>
+            ))}
+          </div>
+          <span className="text-[clamp(36px,6vw,48px)] font-medium leading-none tracking-[-0.035em] tabular-nums">
+            {detail.usd}
+          </span>
+          <span className="text-[13.5px] text-ink2">{detail.nativeLine}</span>
         </div>
-        <span className="text-[clamp(36px,6vw,48px)] font-medium leading-none tracking-[-0.035em] tabular-nums">
-          {detail.usd}
-        </span>
-        <span className="text-[13.5px] text-ink2">{detail.nativeLine}</span>
         <div className="flex flex-wrap gap-2">
-          <Link
-            href={`/liabilities/${detail.id}?modal=edit&liability=${detail.id}`}
-            className="flex h-10 items-center rounded-lg border border-line px-3.5 text-[13.5px] font-medium hover:bg-hover"
-          >
+          <Link href={detail.actions.updateBalance.href} className={BUTTON}>
+            Update balance
+          </Link>
+          <Link href={`/liabilities/${detail.id}?modal=edit&liability=${detail.id}`} className={BUTTON}>
             Edit
           </Link>
+          <ConfirmDeleteButton url={`/api/liabilities/${detail.id}/archive`} to={detail.afterArchive} className={BUTTON} />
         </div>
       </header>
 

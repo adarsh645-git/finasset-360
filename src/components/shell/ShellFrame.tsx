@@ -72,7 +72,7 @@ function NetWorth({ shell }: { shell: Shell }) {
   );
 }
 
-// Plain text until the class page exists, like every other row.
+// A link when the class page exists (row.href), plain text otherwise.
 function ClassEntry({ row }: { row: ClassRow }) {
   const className = `flex h-9 items-center gap-2.5 rounded-lg px-2.5 text-[13px] ${
     row.selected ? "bg-sel font-medium" : ""
