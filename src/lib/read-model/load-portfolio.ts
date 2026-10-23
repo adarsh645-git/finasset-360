@@ -32,6 +32,25 @@ async function readAll(page: (from: number, to: number) => Page): Promise<Row[]>
   }
 }
 
+type CountedPage = PromiseLike<{ data: Row[] | null; error: { message: string } | null; count: number | null }>;
+
+/** Like readAll, but the first page also returns the row count, so the remaining pages
+ * are requested together instead of one after another (the FX history runs to thousands of rows). */
+async function readAllParallel(page: (from: number, to: number, counted: boolean) => CountedPage): Promise<Row[]> {
+  const first = await page(0, PAGE - 1, true);
+  if (first.error) throw new Error(first.error.message);
+  const rows: Row[] = [...(first.data ?? [])];
+  const pages = Math.ceil((first.count ?? rows.length) / PAGE);
+  const rest = await Promise.all(
+    Array.from({ length: Math.max(0, pages - 1) }, (_, i) => page((i + 1) * PAGE, (i + 2) * PAGE - 1, false)),
+  );
+  for (const { data, error } of rest) {
+    if (error) throw new Error(error.message);
+    rows.push(...(data ?? []));
+  }
+  return rows;
+}
+
 const num = (value: unknown): number => Number(value);
 const numOrNull = (value: unknown): number | null => (value === null || value === undefined ? null : Number(value));
 const str = (value: unknown): string => String(value);
@@ -92,7 +111,7 @@ function buildPosition(
 }
 
 export async function loadPortfolio(supabase: SupabaseClient, today: string): Promise<PortfolioData> {
-  const [countryRows, portfolioRow, assumptionRows, holdingRows, positionRows, holdingValuationRows, liabilityRows, liabilityValuationRows, goalRows] =
+  const [countryRows, portfolioRow, assumptionRows, holdingRows, positionRows, holdingValuationRows, liabilityRows, liabilityValuationRows, goalRows, fxToday] =
     await Promise.all([
       readAll((from, to) => supabase.from("country").select("*").order("code").range(from, to)),
       supabase.from("portfolio").select("*").maybeSingle(),
@@ -109,13 +128,20 @@ export async function loadPortfolio(supabase: SupabaseClient, today: string): Pr
       readAll((from, to) =>
         supabase.from("goal").select("*").order("target_usd").order("created_at").order("id").range(from, to),
       ),
+      loadFxToday(supabase, today),
     ]);
   if (portfolioRow.error) throw new Error(portfolioRow.error.message);
 
   const currencyOf = new Map(countryRows.map((c) => [str(c.code), str(c.currency)]));
   const currency = (country: unknown) => currencyOf.get(str(country)) as "USD" | "INR";
 
-  const market = await loadMarketData(supabase, [...new Set(positionRows.map((p) => str(p.ticker)))]);
+  const earliest = [...holdingValuationRows.map((v) => str(v.valued_on)), ...liabilityValuationRows.map((v) => str(v.valued_on))]
+    .sort()[0];
+  // Market data and the FX history only depend on the first round, so they share the second.
+  const [market, fxHistory] = await Promise.all([
+    loadMarketData(supabase, [...new Set(positionRows.map((p) => str(p.ticker)))]),
+    loadFxHistory(supabase, today, earliest),
+  ]);
   const positionsByHolding = groupBy(positionRows, "holding_id");
   const valuationsByHolding = groupBy(holdingValuationRows, "holding_id");
   const balancesByLiability = groupBy(liabilityValuationRows, "liability_id");
@@ -186,9 +212,6 @@ export async function loadPortfolio(supabase: SupabaseClient, today: string): Pr
     };
   });
 
-  const earliest = [...holdingValuationRows.map((v) => str(v.valued_on)), ...liabilityValuationRows.map((v) => str(v.valued_on))]
-    .sort()[0];
-
   return {
     today,
     countries: countryRows.map((c) => ({
@@ -202,7 +225,7 @@ export async function loadPortfolio(supabase: SupabaseClient, today: string): Pr
         cash: num(c.default_cash),
       },
     })),
-    fx: await loadFx(supabase, today, earliest),
+    fx: { today: fxToday, history: fxHistory },
     holdings,
     liabilities,
     assumptions: buildAssumptions(portfolioRow.data, assumptionRows),
@@ -242,8 +265,8 @@ function buildAssumptions(portfolio: Row | null, countryRows: Row[]): PortfolioD
   };
 }
 
-/** Today's rate is the latest stored one on or before `today`; the history runs from the latest rate on or before the earliest Valuation. */
-async function loadFx(supabase: SupabaseClient, today: string, earliestValuation: string | undefined) {
+/** Today's rate is the latest stored one on or before `today`. */
+async function loadFxToday(supabase: SupabaseClient, today: string) {
   const latest = await supabase
     .from("fx_rate")
     .select("rate_date, inr_per_usd")
@@ -251,11 +274,12 @@ async function loadFx(supabase: SupabaseClient, today: string, earliestValuation
     .order("rate_date", { ascending: false })
     .limit(1);
   if (latest.error) throw new Error(latest.error.message);
-  const todayRate = latest.data[0]
-    ? { rate: num(latest.data[0].inr_per_usd), asOf: str(latest.data[0].rate_date) }
-    : null;
+  return latest.data[0] ? { rate: num(latest.data[0].inr_per_usd), asOf: str(latest.data[0].rate_date) } : null;
+}
 
-  if (earliestValuation === undefined) return { today: todayRate, history: [] };
+/** The history runs from the latest rate on or before the earliest Valuation. */
+async function loadFxHistory(supabase: SupabaseClient, today: string, earliestValuation: string | undefined) {
+  if (earliestValuation === undefined) return [];
 
   const start = await supabase
     .from("fx_rate")
@@ -267,15 +291,12 @@ async function loadFx(supabase: SupabaseClient, today: string, earliestValuation
   // No rate on or before the earliest Valuation: the history starts at the first rate stored.
   const from = start.data[0] ? str(start.data[0].rate_date) : null;
 
-  const rows = await readAll((a, b) => {
-    const query = supabase.from("fx_rate").select("rate_date, inr_per_usd");
+  const rows = await readAllParallel((a, b, counted) => {
+    const query = supabase.from("fx_rate").select("rate_date, inr_per_usd", counted ? { count: "exact" } : undefined);
     return (from === null ? query : query.gte("rate_date", from))
       .lte("rate_date", today)
       .order("rate_date")
       .range(a, b);
   });
-  return {
-    today: todayRate,
-    history: rows.map((r) => ({ date: str(r.rate_date), rate: num(r.inr_per_usd) })),
-  };
+  return rows.map((r) => ({ date: str(r.rate_date), rate: num(r.inr_per_usd) }));
 }
