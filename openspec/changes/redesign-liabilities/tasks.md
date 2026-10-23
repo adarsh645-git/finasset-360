@@ -62,10 +62,10 @@ Loan detail's Update balance opens a one-input modal that records today's balanc
 Blocked by: 3
 A Holding secured by a loan shows the Linked loan card (linking to its Loan detail), the "Your equity" stat, and the "Value vs. loan" chart with the shaded Equity gap (D18).
 
-- [ ] 6.1 Tests named LD-12, LD-13, LD-14 written and failing (red)
-- [ ] 6.2 `holding-equity.ts` returns null for an unlinked Holding, otherwise the card, the stat and the chart series, all from calc's Equity (LD-12…LD-14)
-- [ ] 6.3 Holding detail renders them in holding-entry's slots, and an unlinked Holding's page is unchanged
-- [ ] 6.4 Tests named LD-12, LD-13, LD-14 pass in CI suites; npm run spec:coverage passes
+- [x] 6.1 Tests named LD-12, LD-13, LD-14 written and failing (red)
+- [x] 6.2 `holding-equity.ts` returns null for an unlinked Holding, otherwise the card, the stat and the chart series, all from calc's Equity (LD-12…LD-14)
+- [x] 6.3 Holding detail renders them in holding-entry's slots, and an unlinked Holding's page is unchanged
+- [x] 6.4 Tests named LD-12, LD-13, LD-14 pass in CI suites; npm run spec:coverage passes
 - [ ] 6.5 Checked by hand against the mockup's financed property detail at 2000px, 800px and 390px
 
 ## Workflow follow-up
