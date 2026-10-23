@@ -51,12 +51,12 @@ Shared ticker data keeps each US symbol's exchange, provider industries map onto
 Blocked by: 3, 4
 A User can create and edit a Stocks Holding with its full Positions list. Tickers are normalised, average cost defaults to the price, unknown tickers carry a Hand Price, Sector and name, dated today when new or changed (or when `confirm_prices: true` confirms them all), and each save records today's Valuation at Σ shares × price (D5, D6).
 
-- [ ] 5.1 Tests named DM-18, DM-19, DM-20, DM-21, DM-22, DM-23, DM-24, DM-25, DM-39, DM-40 written and failing (red)
-- [ ] 5.2 Stocks create and edit validate the Positions list (at least one, shares > 0, unique tickers, `.NS` for India) and replace it in one database call, so a failed save keeps the old list (DM-18…DM-21)
-- [ ] 5.3 A ticker with no cached price needs a Hand Price; Sector defaults to Other and the name to the ticker (DM-22, DM-23, DM-25)
-- [ ] 5.4 `price as of` becomes today only for a new or changed Hand Price; `confirm_prices: true` re-dates every Hand Price on the Holding; an unchanged price otherwise keeps its date (DM-24, DM-39, DM-40)
-- [ ] 5.5 Each Stocks save upserts today's Valuation at Σ shares × price, market price first (DM-18)
-- [ ] 5.6 Tests named DM-18, DM-19, DM-20, DM-21, DM-22, DM-23, DM-24, DM-25, DM-39, DM-40 pass in CI suites; npm run spec:coverage passes
+- [x] 5.1 Tests named DM-18, DM-19, DM-20, DM-21, DM-22, DM-23, DM-24, DM-25, DM-39, DM-40 written and failing (red)
+- [x] 5.2 Stocks create and edit validate the Positions list (at least one, shares > 0, unique tickers, `.NS` for India) and replace it in one database call, so a failed save keeps the old list (DM-18…DM-21)
+- [x] 5.3 A ticker with no cached price needs a Hand Price; Sector defaults to Other and the name to the ticker (DM-22, DM-23, DM-25)
+- [x] 5.4 `price as of` becomes today only for a new or changed Hand Price; `confirm_prices: true` re-dates every Hand Price on the Holding; an unchanged price otherwise keeps its date (DM-24, DM-39, DM-40)
+- [x] 5.5 Each Stocks save upserts today's Valuation at Σ shares × price, market price first (DM-18)
+- [x] 5.6 Tests named DM-18, DM-19, DM-20, DM-21, DM-22, DM-23, DM-24, DM-25, DM-39, DM-40 pass in CI suites; npm run spec:coverage passes
 
 ## 6. Liabilities: create, edit, balance edit, link and archive
 
