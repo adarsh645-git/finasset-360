@@ -97,12 +97,12 @@ One daily cron route stores today's FX Rate and fills any gap (from 2018-01-01 o
 Blocked by: 5, 6, 7, 8
 `loadPortfolio(supabase, today)` returns one User's whole Portfolio in one load: Holdings with Positions, price sources, Hand Price dates, current values and Cost Basis; Liabilities with current balances and links; every Valuation with who recorded it; archived items; today's FX Rate with its date and the FX history; assumptions with blanks kept; and Goals. It's served as `GET /api/portfolio` (D17).
 
-- [ ] 9.1 Tests named RM-01, RM-02, RM-03, RM-04, RM-05, RM-06, RM-07, RM-08, RM-09, RM-10, RM-11, RM-12, MD-09, DM-02 written and failing (red)
-- [ ] 9.2 `loadPortfolio` is a plain async function in `src/lib/read-model/` returning the `PortfolioData` shape in the design, under the User's session (RM-01, RM-02, RM-03, DM-02)
-- [ ] 9.3 Current value and Cost Basis follow the price precedence (market data beats a Hand Price), and liabilities show their recorded balance (RM-04, RM-05, RM-06, MD-09)
-- [ ] 9.4 Archived items, Valuation sources, FX today with its as-of date, and the FX history from the earliest Valuation are included (RM-07, RM-08, RM-09, RM-12)
-- [ ] 9.5 Assumptions come back as stored with the Country defaults beside them, and Goals sorted by target (RM-10, RM-11)
-- [ ] 9.6 Tests named RM-01, RM-02, RM-03, RM-04, RM-05, RM-06, RM-07, RM-08, RM-09, RM-10, RM-11, RM-12, MD-09, DM-02 pass in CI suites; npm run spec:coverage passes
+- [x] 9.1 Tests named RM-01, RM-02, RM-03, RM-04, RM-05, RM-06, RM-07, RM-08, RM-09, RM-10, RM-11, RM-12, MD-09, DM-02 written and failing (red)
+- [x] 9.2 `loadPortfolio` is a plain async function in `src/lib/read-model/` returning the `PortfolioData` shape in the design, under the User's session (RM-01, RM-02, RM-03, DM-02)
+- [x] 9.3 Current value and Cost Basis follow the price precedence (market data beats a Hand Price), and liabilities show their recorded balance (RM-04, RM-05, RM-06, MD-09)
+- [x] 9.4 Archived items, Valuation sources, FX today with its as-of date, and the FX history from the earliest Valuation are included (RM-07, RM-08, RM-09, RM-12)
+- [x] 9.5 Assumptions come back as stored with the Country defaults beside them, and Goals sorted by target (RM-10, RM-11)
+- [x] 9.6 Tests named RM-01, RM-02, RM-03, RM-04, RM-05, RM-06, RM-07, RM-08, RM-09, RM-10, RM-11, RM-12, MD-09, DM-02 pass in CI suites; npm run spec:coverage passes
 
 ## 10. Seed data close to the prototype
 
