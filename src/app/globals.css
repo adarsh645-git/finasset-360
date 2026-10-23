@@ -1,47 +1,124 @@
 @import "tailwindcss";
 
+/* Design tokens from docs/design/portfolio-tracker/README.md. Light values on
+   :root, dark values under [data-theme="dark"] (set on <html> from the theme
+   cookie). */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-  /* Visual system (ticket 03): near-monochrome, one desaturated slate
-     accent reserved for selection — never used for icons, links, or
-     anything else — and no red/green anywhere in the interface. */
-  --hairline: #e4e4e7;
-  --accent: #64748b;
-  --accent-soft: rgba(100, 116, 139, 0.12);
+  --bg: #f6f5f1;
+  --panel: #ffffff;
+  --ink: #1b1b19;
+  --ink2: #5c5b56;
+  --ink3: #76756f;
+  --line: rgba(27, 27, 25, 0.08);
+  --line2: rgba(27, 27, 25, 0.16);
+  --hover: rgba(27, 27, 25, 0.045);
+  --sel: rgba(27, 27, 25, 0.07);
+  --pos: oklch(0.55 0.13 150);
+  --neg: oklch(0.56 0.16 28);
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+
+  /* Asset Class and Country colours (same in both themes). */
+  --cls-realestate: oklch(0.7 0.11 65);
+  --cls-stocks: oklch(0.62 0.12 255);
+  --cls-cash: oklch(0.68 0.1 175);
+  --cls-crypto: oklch(0.62 0.12 305);
+  --cls-metals: oklch(0.78 0.11 95);
+  --cls-other: oklch(0.66 0.04 250);
+  --country-us: oklch(0.62 0.1 250);
+  --country-in: oklch(0.72 0.12 60);
+
+  --radius-card: 14px;
+  --radius-inner: 12px;
+  --radius-btn: 9px;
+  --radius-chip: 999px;
 }
+
+:root[data-theme="dark"] {
+  --bg: #121211;
+  --panel: #1a1a18;
+  --ink: #edece7;
+  --ink2: #acaba5;
+  --ink3: #8d8c86;
+  --line: rgba(237, 236, 231, 0.08);
+  --line2: rgba(237, 236, 231, 0.16);
+  --hover: rgba(237, 236, 231, 0.05);
+  --sel: rgba(237, 236, 231, 0.09);
+  --pos: oklch(0.74 0.14 150);
+  --neg: oklch(0.71 0.15 28);
+  --shadow: none;
+}
+
+@custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *));
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --color-hairline: var(--hairline);
-  --color-accent: var(--accent);
-  --color-accent-soft: var(--accent-soft);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-bg: var(--bg);
+  --color-panel: var(--panel);
+  --color-ink: var(--ink);
+  --color-ink2: var(--ink2);
+  --color-ink3: var(--ink3);
+  --color-line: var(--line);
+  --color-line2: var(--line2);
+  --color-hover: var(--hover);
+  --color-sel: var(--sel);
+  --color-pos: var(--pos);
+  --color-neg: var(--neg);
+  --color-cls-realestate: var(--cls-realestate);
+  --color-cls-stocks: var(--cls-stocks);
+  --color-cls-cash: var(--cls-cash);
+  --color-cls-crypto: var(--cls-crypto);
+  --color-cls-metals: var(--cls-metals);
+  --color-cls-other: var(--cls-other);
+  --color-country-us: var(--country-us);
+  --color-country-in: var(--country-in);
+  --shadow-card: var(--shadow);
+  --radius-card: 14px;
+  --radius-inner: 12px;
+  --radius-btn: 9px;
+  --radius-chip: 999px;
+  --font-sans: var(--font-geist-sans), system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-    --hairline: #27272a;
-    --accent: #94a3b8;
-    --accent-soft: rgba(148, 163, 184, 0.16);
-  }
+html,
+body {
+  background: var(--bg);
+  color: var(--ink);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
-  font-size: 15px;
+  font-family: var(--font-sans);
+  font-size: 13.5px;
   font-variant-numeric: tabular-nums;
 }
 
-/* Reduced-motion aware, per this ticket's checklist — nothing in this app
-   loops, but hover/selection transitions still get suppressed outright for
-   a User who has asked for that. */
+/* Mono uppercase label (10.5-11px, .06em tracking) used for card and section labels. */
+.label-mono {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.2;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink3);
+}
+
+/* Touch targets: 40px on coarse pointers or phone widths; 16px inputs on
+   phones so iOS doesn't zoom. */
+@media (pointer: coarse), (max-width: 639px) {
+  button:not([data-tile]),
+  select {
+    min-height: 40px;
+  }
+}
+@media (max-width: 639px) {
+  input,
+  select {
+    font-size: 16px;
+  }
+}
+
+/* Reduced-motion aware: hover/selection transitions get suppressed outright
+   for a User who has asked for that. */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

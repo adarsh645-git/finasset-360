@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 
-export function SignOutButton() {
+export function SignOutButton({ className }: { className?: string }) {
   const router = useRouter();
   const [isSigningOut, setIsSigningOut] = useState(false);
 
@@ -21,7 +21,10 @@ export function SignOutButton() {
       type="button"
       onClick={signOut}
       disabled={isSigningOut}
-      className="rounded-full border border-zinc-300 px-4 py-2 text-sm font-medium transition-colors hover:bg-zinc-50 disabled:opacity-60 dark:border-zinc-700 dark:hover:bg-zinc-900"
+      className={
+        className ??
+        "h-[34px] rounded-btn border border-line2 px-3 text-[12.5px] text-ink2 transition-colors hover:bg-hover hover:text-ink disabled:opacity-60"
+      }
     >
       {isSigningOut ? "Signing out…" : "Sign out"}
     </button>
