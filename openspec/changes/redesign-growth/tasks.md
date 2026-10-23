@@ -68,12 +68,12 @@ The Projection assumptions card shows the US/India tab (Inflation, Real estate, 
 Blocked by: 5
 The horizon input sits in the card header beside Reset defaults, which blanks every field in one request. The footer shows Net Worth by the horizon's end month, nominal and in Today's dollars, and the amount lost to inflation, for the scope. A saved horizon relabels the projection toggle everywhere (D9, D10, D11).
 
-- [ ] 6.1 Tests named PA-06, PA-11, PA-12, PA-13, PA-14 written and failing (red)
-- [ ] 6.2 The horizon field validates whole years from 1 to 40 and saves through the same plan (PA-06)
-- [ ] 6.3 Reset defaults saves every field as blank in one request (PA-11)
-- [ ] 6.4 The footer per scope, including Monthly savings with nothing held (PA-12, PA-13)
-- [ ] 6.5 A horizon of 15 gives "15-yr projection on" and "Net worth by Oct 2041" (PA-14)
-- [ ] 6.6 Tests named PA-06, PA-11, PA-12, PA-13, PA-14 pass in CI suites; npm run spec:coverage passes
+- [x] 6.1 Tests named PA-06, PA-11, PA-12, PA-13, PA-14 written and failing (red)
+- [x] 6.2 The horizon field validates whole years from 1 to 40 and saves through the same plan (PA-06)
+- [x] 6.3 Reset defaults saves every field as blank in one request (PA-11)
+- [x] 6.4 The footer per scope, including Monthly savings with nothing held (PA-12, PA-13)
+- [x] 6.5 A horizon of 15 gives "15-yr projection on" and "Net worth by Oct 2041" (PA-14)
+- [x] 6.6 Tests named PA-06, PA-11, PA-12, PA-13, PA-14 pass in CI suites; npm run spec:coverage passes
 - [ ] 6.7 Checked by hand against the mockup's card header and footer at 2000px, 800px and 390px, and the toggle label on Overview after changing the horizon
 
 ## Workflow follow-up
