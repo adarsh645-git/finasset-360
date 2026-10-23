@@ -49,7 +49,7 @@ describe("shell render", () => {
 
   it("SH-08 only the Overview and Goals are links; Stocks is plain text and nothing offers adding", () => {
     expect(html).toMatch(/<a [^>]*href="\/"[^>]*data-label="Overview"|<a [^>]*data-label="Overview"[^>]*href="\/"/);
-    expect(html.match(/<a /g)?.length).toBe(6); // Overview and Goals in the sidebar, tabs and bottom bar
+    expect(html.match(/<a /g)?.length).toBe(9); // Overview, Growth and Goals in the sidebar, tabs and bottom bar
     expect(html).toMatch(/<span data-class="stocks"/);
     expect(html).toContain("Stocks");
     expect(html).not.toContain("+ Add");
