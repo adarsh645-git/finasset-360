@@ -12,6 +12,7 @@ import type { AssetClassId, PortfolioData } from "@/lib/read-model/types";
 import { EXISTING_ROUTES, hrefFor, type RouteFamily } from "@/lib/views/links";
 import { updatedCue } from "@/lib/views/age-cue";
 import { calcClassId, calcCountry, historyItem } from "@/lib/views/shell";
+import { buildChart, buildValueLog, type HoldingChart, type ValueLog } from "@/lib/views/holding-history";
 
 export type Crumb = { label: string; href: string | null };
 export type DetailStat = { label: string; value: string; sub: string };
@@ -34,6 +35,9 @@ export type HoldingDetail = {
   stats: DetailStat[];
   /** Slot for redesign-liabilities; always empty here. */
   linkedLoan: null;
+  // Value over time and the Value log (ticket 2).
+  chart: HoldingChart;
+  valueLog: ValueLog;
 };
 
 const KIND: Record<AssetClassId, string> = {
@@ -188,5 +192,7 @@ export function buildHoldingDetail(
     },
     stats,
     linkedLoan: null,
+    chart: buildChart(data, holding, rates, hasRate),
+    valueLog: buildValueLog(holding, today),
   };
 }

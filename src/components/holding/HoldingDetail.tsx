@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { Chart } from "@/components/chart/Chart";
+import { ProjectionToggle } from "@/components/chart/ProjectionProvider";
 import type { HoldingDetail as HoldingDetailView } from "@/lib/views/holding-detail";
 
 const MONO_LABEL = "font-mono text-[11px] font-medium uppercase leading-tight tracking-[0.06em] text-ink3";
@@ -59,6 +61,34 @@ export function HoldingDetail({ detail }: { detail: HoldingDetailView }) {
           </div>
         ))}
       </div>
+      <section className={`${CARD} px-5 pb-3 pt-5`} aria-labelledby="value-chart">
+        <div className="mb-3 flex flex-wrap items-start justify-between gap-2">
+          <div className="flex flex-col gap-1">
+            <h2 id="value-chart" className="text-[15px] font-semibold">
+              {detail.chart.title}
+            </h2>
+            <span className="text-[12.5px] text-ink2">{detail.chart.sub}</span>
+          </div>
+          <ProjectionToggle />
+        </div>
+        <Chart series={detail.chart.series} today={detail.chart.today} height={detail.chart.height} />
+      </section>
+      <section className={`${CARD} p-5`} aria-labelledby="value-log">
+        <h2 id="value-log" className="mb-3 text-[15px] font-semibold">
+          {detail.valueLog.title}
+        </h2>
+        <ul className="flex flex-col divide-y divide-line">
+          {detail.valueLog.rows.map((row, i) => (
+            <li key={i} className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 py-2.5 text-[13.5px]">
+              <span className="text-ink2">{row.date}</span>
+              <span className="flex items-baseline gap-4">
+                <span className="tabular-nums font-medium">{row.value}</span>
+                <span className="min-w-[8ch] text-right text-[12.5px] tabular-nums text-ink2">{row.change}</span>
+              </span>
+            </li>
+          ))}
+        </ul>
+      </section>
     </div>
   );
 }
