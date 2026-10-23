@@ -101,7 +101,7 @@ describe("shell totals", () => {
     const hrefs = Object.fromEntries(shell.items.map((i) => [i.label, i.href]));
     expect(hrefs).toEqual({
       Overview: "/",
-      Assets: null,
+      Assets: "/assets",
       Liabilities: null,
       Growth: "/growth",
       Goals: "/goals",

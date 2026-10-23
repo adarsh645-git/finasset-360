@@ -212,7 +212,7 @@ describe("holding detail render", () => {
     const h = chase();
     const plain = render(h);
     expect(plain).toContain("Chase Checking");
-    expect(plain).not.toMatch(/<a [^>]*href="\/assets/);
+    expect(plain).not.toMatch(/<a [^>]*href="\/assets\//);
     const linked = render(h, new Set(["assets", "assetClass"]));
     expect(linked).toMatch(/<a [^>]*href="\/assets"[^>]*>Assets</);
     expect(linked).toMatch(/<a [^>]*href="\/assets\/cash"[^>]*>Cash</);
