@@ -29,6 +29,7 @@ import {
 } from "@/lib/format";
 import type { AssetClassId, PortfolioData } from "@/lib/read-model/types";
 import { CLASS_TOKENS, COUNTRY_TOKENS } from "@/lib/tokens";
+import { fxRatesOf, usableItems } from "@/lib/views/fx";
 import { ADDING, EXISTING_ROUTES, hrefFor, type RouteFamily } from "@/lib/views/links";
 import { buildStaleList, type StaleRow } from "@/lib/views/stale-list";
 import { calcClassId, calcCountry, historyItem } from "@/lib/views/shell";
@@ -190,18 +191,9 @@ export function buildOverview(
     };
   }
 
-  // Today's stored rate joins the history when the history doesn't hold its day yet.
-  const rates: FxRate[] = [
-    ...data.fx.history,
-    ...(data.fx.today && !data.fx.history.some((r) => r.date === data.fx.today!.asOf)
-      ? [{ date: data.fx.today.asOf, rate: data.fx.today.rate }]
-      : []),
-  ];
-  // Without any FX Rate an INR item can't be valued in USD; it is left out rather than guessed.
-  const usable = <T extends { country: "US" | "IN" }>(items: T[]): T[] =>
-    rates.length ? items : items.filter((i) => i.country === "US");
-  const holdings = usable(data.holdings);
-  const liabilities = usable(data.liabilities);
+  const rates = fxRatesOf(data);
+  const holdings = usableItems(data.holdings, rates);
+  const liabilities = usableItems(data.liabilities, rates);
   const held = holdings.map(historyItem);
   const owed = liabilities.map(historyItem);
   const worth = (h: typeof held, l: typeof owed, date: string) =>

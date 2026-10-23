@@ -177,7 +177,7 @@ export function Overview({ overview }: { overview: OverviewView }) {
                         <span className="tabular-nums">{r.equity}</span>
                       </div>
                       <div
-                        className="h-1.5 overflow-hidden rounded-full bg-hover"
+                        className="h-1.5 overflow-hidden rounded-full bg-neg"
                         aria-hidden="true"
                       >
                         <div

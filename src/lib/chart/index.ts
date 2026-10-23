@@ -155,9 +155,10 @@ export function layoutChart(raw: ChartInput): ChartLayout {
   }
   if (!Number.isFinite(mn)) {
     mn = 0;
-    mx = 1;
+    mx = 4;
   }
-  if (mn === mx) mx = mn + 1;
+  // A flat series gets a whole-dollar band so the ticks don't repeat one label.
+  if (mn === mx) mx = mn + Math.max(4, Math.abs(mn) * 0.2);
   const goals = (raw.goals ?? []).filter((g) => g.value >= mn && g.value <= mx * 1.15);
   for (const g of goals) mx = Math.max(mx, g.value);
 
