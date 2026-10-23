@@ -51,10 +51,10 @@ The shared modal gains the Asset | Liability toggle and the loan form, with defa
 Blocked by: 3
 Loan detail's Update balance opens a one-input modal that records today's balance, even when unchanged, clearing the stale cue. Delete (click twice) archives the loan and returns to `/liabilities`, with its history kept (D6, D16).
 
-- [ ] 5.1 Tests named LE-08, LD-10 written and failing (red)
-- [ ] 5.2 Update balance shows "Current balance of ⟨name⟩" and the "Was … · logged as today’s value" line, validates the balance, and refreshes (LE-08)
-- [ ] 5.3 Delete reads "Confirm delete" on the first click, archives on the second, and resets on navigation (LD-10)
-- [ ] 5.4 Tests named LE-08, LD-10 pass in CI suites; npm run spec:coverage passes
+- [x] 5.1 Tests named LE-08, LD-10 written and failing (red)
+- [x] 5.2 Update balance shows "Current balance of ⟨name⟩" and the "Was … · logged as today’s value" line, validates the balance, and refreshes (LE-08)
+- [x] 5.3 Delete reads "Confirm delete" on the first click, archives on the second, and resets on navigation (LD-10)
+- [x] 5.4 Tests named LE-08, LD-10 pass in CI suites; npm run spec:coverage passes
 - [ ] 5.5 Checked by hand on Loan detail at 2000px, 800px and 390px
 
 ## 6. Equity on Holding detail

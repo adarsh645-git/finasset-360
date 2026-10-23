@@ -4,6 +4,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useState, type ComponentType } from "react";
 import { AssetForm } from "@/components/modal/AssetForm";
 import { ModalFrame } from "@/components/modal/ModalFrame";
+import { UpdateBalanceForm } from "@/components/modal/UpdateBalanceForm";
 import { UpdateValueForm } from "@/components/modal/UpdateValueForm";
 import type { PortfolioData } from "@/lib/read-model/types";
 import { defaultAfterSave } from "@/lib/views/holding-entry";
@@ -29,6 +30,7 @@ const BUILTIN_FORMS: Record<string, ModalForm> = {
   edit: AssetForm,
   "edit-positions": AssetForm,
   "update-value": UpdateValueForm,
+  "update-balance": UpdateBalanceForm,
 };
 
 // Mounted once in the (app) layout. Which modal is open is the URL's business:
