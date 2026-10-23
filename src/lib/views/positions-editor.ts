@@ -1,7 +1,7 @@
 import { staleness } from "@/lib/calc";
 import { native } from "@/lib/format";
 import type { CountryCode, PositionData } from "@/lib/read-model/types";
-import { normalizeTicker } from "@/lib/market-data/ticker";
+import { normalizeTicker, shortTicker } from "@/lib/market-data/ticker";
 import { ageCue } from "@/lib/views/age-cue";
 import { parseAmount } from "@/lib/views/holding-writes";
 import { calcCountry } from "@/lib/views/shell";
@@ -64,8 +64,7 @@ const EMPTY_ENTRY: Entry = { ticker: "", shares: "", avgCost: "", price: "", sec
 export const tickerKey = (raw: string, country: CountryCode): string =>
   raw.trim() === "" ? "" : normalizeTicker(raw, country);
 
-/** The display form: no `.NS` / `.BO`. */
-export const shortTicker = (ticker: string): string => ticker.replace(/\.(NS|BO)$/i, "");
+export { shortTicker };
 
 const toRow = (p: PositionData): PositionRow => ({
   ticker: p.ticker,
@@ -177,11 +176,9 @@ function tryAdd(state: EditorState): EditorState {
       name: state.entry.name.trim(),
     };
   }
-  if (state.entry.avgCost.trim() !== "") {
-    const cost = parseAmount(state.entry.avgCost);
-    if (cost === null || cost <= 0) return fail(`Enter an average cost above 0 for ${shown}`);
-    row.avgCost = cost;
-  }
+  // A blank avg cost defaults to the price; the spec adds no other check.
+  const cost = parseAmount(state.entry.avgCost);
+  if (cost !== null) row.avgCost = cost;
   return { ...state, positions: [...withoutRow(state.positions, key), row], entry: EMPTY_ENTRY, addQueued: false, error: null };
 }
 
