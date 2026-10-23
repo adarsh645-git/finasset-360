@@ -1,11 +1,11 @@
 import Link from "next/link";
+import { MONO_LABEL } from "@/components/holding/style";
 import { ConfirmDeleteButton } from "@/components/holding/ConfirmDeleteButton";
 import { StocksSections } from "@/components/holding/StocksSections";
 import { Chart } from "@/components/chart/Chart";
 import { ProjectionToggle } from "@/components/chart/ProjectionProvider";
 import type { HoldingDetail as HoldingDetailView } from "@/lib/views/holding-detail";
 
-const MONO_LABEL = "font-mono text-[11px] font-medium uppercase leading-tight tracking-[0.06em] text-ink3";
 const CARD = "rounded-[14px] border border-line bg-panel shadow-[var(--shadow)]";
 const BUTTON = "flex h-10 items-center rounded-lg border border-line px-3.5 text-[13.5px] font-medium hover:bg-hover";
 

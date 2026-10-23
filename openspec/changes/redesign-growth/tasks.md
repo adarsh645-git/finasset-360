@@ -31,11 +31,11 @@ The chart switches between Simple, By asset class and By country, and between No
 Blocked by: 1
 The waterfall card splits the header's change into asset growth & savings, debt paid down and (with India in scope) the Currency effect, from the calculations module's attribution, with bars on one shared scale (D4).
 
-- [ ] 3.1 Tests named GR-11, GR-12, GR-13 written and failing (red)
-- [ ] 3.2 Rows per scope, with the Currency row only when India is in scope, sum exactly to the header's change (GR-11)
-- [ ] 3.3 The subtitle names the exchange-rate month and a single scope (GR-12)
-- [ ] 3.4 Bars span their running totals on a scale that includes 0, coloured by kind and sign (GR-13)
-- [ ] 3.5 Tests named GR-11, GR-12, GR-13 pass in CI suites; npm run spec:coverage passes
+- [x] 3.1 Tests named GR-11, GR-12, GR-13 written and failing (red)
+- [x] 3.2 Rows per scope, with the Currency row only when India is in scope, sum exactly to the header's change (GR-11)
+- [x] 3.3 The subtitle names the exchange-rate month and a single scope (GR-12)
+- [x] 3.4 Bars span their running totals on a scale that includes 0, coloured by kind and sign (GR-13)
+- [x] 3.5 Tests named GR-11, GR-12, GR-13 pass in CI suites; npm run spec:coverage passes
 - [ ] 3.6 Checked by hand against the mockup's "Where the change came from" card at 2000px, 800px and 390px
 
 ## 4. Year by year
@@ -55,12 +55,12 @@ The Year by year card lists Net Worth, debt and % change at each year end from t
 Blocked by: 1
 The Projection assumptions card shows the US/India tab (Inflation, Real estate, Stocks, Cash, Monthly savings) and the shared section (Crypto, Metals, Vehicles & other, Savings growth), with saved values, default placeholders and amount-held hints. Each valid edit is saved on commit through `PATCH /api/projection-assumptions`, and the page recomputes (D6, D7, D8, D14).
 
-- [ ] 5.1 Tests named PA-01, PA-02, PA-03, PA-04, PA-05, PA-07, PA-08, PA-09, PA-10 written and failing (red)
-- [ ] 5.2 `buildAssumptions` returns each field's value, placeholder and hint, with the tab from the URL or the scope (PA-01, PA-02, PA-03); the scope links carry the tab (PA-04)
-- [ ] 5.3 `parseField` validates rates and Monthly savings with the route's ranges and messages (PA-05, PA-07)
-- [ ] 5.4 `planSave` saves only a changed, valid field as a one-field patch, blank as null, and nothing otherwise. The card sends it on blur or Enter, refreshes, and shows a failed save inline (PA-08, PA-09, PA-10)
-- [ ] 5.5 The card is shown and editable on the empty Growth page too
-- [ ] 5.6 Tests named PA-01, PA-02, PA-03, PA-04, PA-05, PA-07, PA-08, PA-09, PA-10 pass in CI suites; npm run spec:coverage passes
+- [x] 5.1 Tests named PA-01, PA-02, PA-03, PA-04, PA-05, PA-07, PA-08, PA-09, PA-10 written and failing (red)
+- [x] 5.2 `buildAssumptions` returns each field's value, placeholder and hint, with the tab from the URL or the scope (PA-01, PA-02, PA-03); the scope links carry the tab (PA-04)
+- [x] 5.3 `parseField` validates rates and Monthly savings with the route's ranges and messages (PA-05, PA-07)
+- [x] 5.4 `planSave` saves only a changed, valid field as a one-field patch, blank as null, and nothing otherwise. The card sends it on blur or Enter, refreshes, and shows a failed save inline (PA-08, PA-09, PA-10)
+- [x] 5.5 The card is shown and editable on the empty Growth page too
+- [x] 5.6 Tests named PA-01, PA-02, PA-03, PA-04, PA-05, PA-07, PA-08, PA-09, PA-10 pass in CI suites; npm run spec:coverage passes
 - [ ] 5.7 Checked by hand against the mockup's Projection assumptions card (typing, blur, Enter, the chart updating after a save) at 2000px, 800px and 390px
 
 ## 6. Horizon, Reset defaults and the end-of-horizon footer
