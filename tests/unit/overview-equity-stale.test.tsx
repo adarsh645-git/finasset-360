@@ -192,10 +192,10 @@ describe("overview needs updating", () => {
 });
 
 describe("overview right column", () => {
-  it("OV-20 the Goals slot is empty", () => {
+  it("OV-20 with no Goals the right column has no Goals card", () => {
     const html = render(stalePortfolio());
 
-    expect(html).toContain('data-slot="goals"');
+    expect(html).not.toContain('data-slot="goals"');
     expect(html).not.toContain("All goals");
     expect(html).not.toMatch(/>Goals</);
   });

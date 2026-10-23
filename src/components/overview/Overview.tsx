@@ -22,6 +22,7 @@ export function Overview({ overview }: { overview: OverviewView }) {
     countries,
     currencyEffect,
     needsUpdating,
+    goals,
   } = overview;
   return (
     <div className="flex flex-col gap-4">
@@ -262,7 +263,40 @@ export function Overview({ overview }: { overview: OverviewView }) {
                 </div>
               </section>
             )}
-            <div data-slot="goals" className="empty:hidden" />
+            {goals && (
+              <section data-slot="goals" className={`${CARD} flex flex-col gap-3 p-5`}>
+                <div className="flex items-center justify-between gap-3">
+                  <h2 className="text-[15px] font-semibold">Goals</h2>
+                  {goals.allHref && (
+                    <Link href={goals.allHref} className="text-[12.5px] text-ink2">
+                      All goals →
+                    </Link>
+                  )}
+                </div>
+                <div className="flex flex-col gap-3.5">
+                  {goals.rows.map((r) => (
+                    <div key={r.id} className="flex flex-col gap-1.5">
+                      <div className="flex items-baseline justify-between gap-3 text-[13.5px]">
+                        <span className="font-medium">{r.name}</span>
+                        <span
+                          data-colour={r.status.colour}
+                          className={`text-[12px] ${r.status.colour === "positive" ? "text-pos" : "text-ink2"}`}
+                        >
+                          {r.status.label}
+                        </span>
+                      </div>
+                      <div className="h-1.5 overflow-hidden rounded-full bg-hover" aria-hidden="true">
+                        <div
+                          data-percent={r.barPercent}
+                          className={`h-full rounded-full ${r.barColour === "positive" ? "bg-pos" : "bg-ink"}`}
+                          style={{ width: `${r.barPercent}%` }}
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            )}
           </div>
         </div>
       )}
