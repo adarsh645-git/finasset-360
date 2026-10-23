@@ -47,10 +47,10 @@ describe("shell render", () => {
     expect(html).toContain("Sign out");
   });
 
-  it("SH-08 the five nav items are links; Stocks is plain text and nothing offers adding", () => {
+  it("SH-08 the five nav items and the class rows are links and nothing offers adding", () => {
     expect(html).toMatch(/<a [^>]*href="\/"[^>]*data-label="Overview"|<a [^>]*data-label="Overview"[^>]*href="\/"/);
-    expect(html.match(/<a /g)?.length).toBe(15); // Overview, Assets, Liabilities, Growth and Goals in the sidebar, tabs and bottom bar
-    expect(html).toMatch(/<span data-class="stocks"/);
+    expect(html.match(/<a /g)?.length).toBe(16); // Overview, Assets, Liabilities, Growth and Goals in the sidebar, tabs and bottom bar, plus the Stocks row
+    expect(html).toMatch(/<a [^>]*data-class="stocks"/);
     expect(html).toContain("Stocks");
     expect(html).not.toContain("+ Add");
     expect(html).not.toContain("Add account");

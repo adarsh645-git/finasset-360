@@ -97,7 +97,10 @@ describe("shell totals", () => {
   });
 
   it("SH-08 pages that don't exist yet are plain text", () => {
-    const shell = shellOf(portfolio({ holdings: [holding({ currentValue: 1_000 })] }));
+    const shell = shellOf(
+      portfolio({ holdings: [holding({ currentValue: 1_000 })] }),
+      new Set<RouteFamily>(["overview", "assets", "holding", "liabilities", "liability", "growth", "goals"]),
+    );
     const hrefs = Object.fromEntries(shell.items.map((i) => [i.label, i.href]));
     expect(hrefs).toEqual({
       Overview: "/",

@@ -111,13 +111,13 @@ describe("holding detail view", () => {
     ]);
   });
 
-  it("HD-04 class crumbs use calc's slugs for Real estate and Vehicles & other", () => {
+  it("HD-04 class crumbs use the read-model ids for Real estate and Vehicles & other", () => {
     const all = new Set<RouteFamily>(["assets", "assetClass"]);
     const re = buildHoldingDetail(data([puneApartment()]), { holdingId: "h1", existing: all })!;
-    expect(re.breadcrumb[1]).toEqual({ label: "Real estate", href: "/assets/real-estate" });
+    expect(re.breadcrumb[1]).toEqual({ label: "Real estate", href: "/assets/realestate" });
     const car = holding({ id: "h1", assetClass: "other", currentValue: 5 });
     const other = buildHoldingDetail(data([car]), { holdingId: "h1", existing: all })!;
-    expect(other.breadcrumb[1]).toEqual({ label: "Vehicles & other", href: "/assets/vehicles-and-other" });
+    expect(other.breadcrumb[1]).toEqual({ label: "Vehicles & other", href: "/assets/other" });
   });
 
   it("HD-05 a Stale Holding's native line ends with the updated cue", () => {
@@ -210,7 +210,7 @@ describe("holding detail render", () => {
 
   it("HD-04 the breadcrumb is plain text while those pages don't exist, links after", () => {
     const h = chase();
-    const plain = render(h);
+    const plain = render(h, new Set(["overview", "holding"]));
     expect(plain).toContain("Chase Checking");
     expect(plain).not.toMatch(/<a [^>]*href="\/assets\//);
     const linked = render(h, new Set(["assets", "assetClass"]));

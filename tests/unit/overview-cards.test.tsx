@@ -95,12 +95,12 @@ describe("overview allocation", () => {
     ]);
   });
 
-  it("OV-10 rows are plain text and the change column is hidden on phones", () => {
+  it("OV-10 rows link to their class page and the change column is hidden on phones", () => {
     const html = render(data());
 
     expect(html).toContain("Allocation");
     expect(html).toContain("Real estate");
-    expect(html).not.toMatch(/href="\/assets\//);
+    expect(html).toMatch(/<a [^>]*href="\/assets\/realestate"/);
     expect(html).toMatch(/hidden[^"]*sm:block[^>]*>\+\$12K/);
   });
 

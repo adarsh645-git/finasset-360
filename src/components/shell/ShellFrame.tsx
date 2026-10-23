@@ -75,8 +75,8 @@ function NetWorth({ shell }: { shell: Shell }) {
 // Plain text until the class page exists, like every other row.
 function ClassEntry({ row }: { row: ClassRow }) {
   const className = `flex h-9 items-center gap-2.5 rounded-lg px-2.5 text-[13px] ${
-    row.href ? "hover:bg-sel" : ""
-  }`;
+    row.selected ? "bg-sel font-medium" : ""
+  } ${row.href ? "hover:bg-sel" : ""}`;
   const content = (
     <>
       <span
@@ -89,7 +89,12 @@ function ClassEntry({ row }: { row: ClassRow }) {
     </>
   );
   return row.href ? (
-    <Link href={row.href} data-class={row.id} className={className}>
+    <Link
+      href={row.href}
+      data-class={row.id}
+      aria-current={row.selected ? "page" : undefined}
+      className={className}
+    >
       {content}
     </Link>
   ) : (

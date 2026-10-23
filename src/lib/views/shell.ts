@@ -30,6 +30,8 @@ export type ClassRow = {
   dot: string;
   value: string;
   href: string | null;
+  /** The class page being viewed. */
+  selected: boolean;
 };
 
 export type NetWorthBlock = {
@@ -80,12 +82,17 @@ export function activeNavKey(pathname: string | null): NavKey | null {
 
 export function markActive(shell: Shell, pathname: string | null): Shell {
   const active = activeNavKey(pathname);
-  return { ...shell, items: shell.items.map((item) => ({ ...item, active: item.key === active })) };
+  const slug = pathname?.match(/^\/assets\/([^/?#]+)/)?.[1];
+  return {
+    ...shell,
+    items: shell.items.map((item) => ({ ...item, active: item.key === active })),
+    classes: shell.classes.map((row) => ({ ...row, selected: row.id === slug })),
+  };
 }
 
 type ShellUser = { email?: string; user_metadata: Record<string, unknown> };
 
-// The read model and calc/ name two classes differently; class pages use calc's ids.
+// The read model and calc/ name two classes differently; slug is calc's id, for calculation only. URLs use the read-model id.
 const CLASS_ORDER: { id: AssetClassId; slug: string }[] = [
   { id: "realestate", slug: "real-estate" },
   { id: "stocks", slug: "stocks" },
@@ -156,11 +163,12 @@ export function buildShell(
     if (inClass.length === 0) return [];
     return [
       {
-        id: slug,
+        id,
         name: ASSET_CLASSES.find((c) => c.id === slug)!.name,
         dot: CLASS_TOKENS[id].cssVar,
         value: compact(worth(inClass.map(historyItem), [])),
-        href: hrefFor({ kind: "assetClass", id: slug }, existing),
+        href: hrefFor({ kind: "assetClass", id }, existing),
+        selected: false,
       },
     ];
   });

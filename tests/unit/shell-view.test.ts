@@ -23,6 +23,7 @@ describe("shell view", () => {
     expect([...EXISTING_ROUTES]).toEqual([
       "overview",
       "assets",
+      "assetClass",
       "holding",
       "liabilities",
       "liability",
@@ -32,7 +33,7 @@ describe("shell view", () => {
     expect(ADDING).toBe(true);
     expect(hrefFor({ kind: "overview" })).toBe("/");
     expect(hrefFor({ kind: "assets" })).toBe("/assets");
-    expect(hrefFor({ kind: "assetClass", id: "cash" })).toBeNull();
+    expect(hrefFor({ kind: "assetClass", id: "cash" })).toBe("/assets/cash");
     expect(buildShell({ user, portfolio: data }, { pathname: "/" }).userName).toBe("Adarsh");
   });
 });
