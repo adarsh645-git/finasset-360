@@ -482,7 +482,7 @@ export function calcAssumptions(data: PortfolioData): ProjectionAssumptionsInput
 }
 
 /** The Projection of current items from month 1 on, in USD. */
-function projectFromToday(data: PortfolioData) {
+export function projectFromToday(data: PortfolioData) {
   const assumptions = calcAssumptions(data);
   const fxRate = data.fx.today?.rate ?? data.fx.history.at(-1)?.rate ?? 1;
   const hasRate = data.fx.today !== null || data.fx.history.length > 0;
