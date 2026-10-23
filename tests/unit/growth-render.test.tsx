@@ -44,3 +44,24 @@ describe("growth waterfall render", () => {
     expect(html.match(/data-waterfall-bar/g)).toHaveLength(5);
   });
 });
+
+describe("growth year by year render", () => {
+  it("GR-14 draws the card beside the waterfall in the two-column row", () => {
+    const data = portfolio({
+      today: "2026-10-13",
+      holdings: [
+        holding({
+          currentValue: 12_000,
+          valuations: [{ date: "2025-12-31", value: 10_000, source: "user" as const }],
+        }),
+      ],
+    });
+    const html = renderToStaticMarkup(<GrowthPage growth={buildGrowth(data, parseGrowthView({}))} />);
+
+    expect(html).toContain("Year by year");
+    expect(html).toContain("2026*");
+    expect(html).toContain("2025");
+    expect(html).toMatch(/@\[820px\]:grid-cols/);
+    expect(html.indexOf("Where the change came from")).toBeLessThan(html.indexOf("Year by year"));
+  });
+});
