@@ -28,7 +28,9 @@ export type Mode = (typeof MODES)[number];
 export const BASES = ["nominal", "today"] as const;
 export type Basis = (typeof BASES)[number];
 
-export type GrowthViewState = { range: Range; scope: Scope; mode: Mode; basis: Basis };
+export type Tab = "us" | "in";
+/** `tab` is the assumptions card's Country tab; absent until chosen. */
+export type GrowthViewState = { range: Range; scope: Scope; mode: Mode; basis: Basis; tab?: Tab };
 
 type Param = string | string[] | null | undefined;
 const first = (p: Param) => (Array.isArray(p) ? p[0] : p);
@@ -37,23 +39,26 @@ const pick = <T extends string>(list: readonly T[], p: Param, fallback: T): T =>
 
 /** The page's view state from its search params; a missing or unknown value is the default. */
 export function parseGrowthView(params: Record<string, Param>): GrowthViewState {
+  const tab = (["us", "in"] as const).find((t) => t === first(params.tab));
   return {
     range: parseRange(params.range),
     scope: pick(SCOPES, params.scope, "all"),
     mode: pick(MODES, params.mode, "simple"),
     basis: pick(BASES, params.basis, "nominal"),
+    ...(tab ? { tab } : {}),
   };
 }
 
-const DEFAULTS: GrowthViewState = { range: "All", scope: "all", mode: "simple", basis: "nominal" };
+const DEFAULTS: Omit<GrowthViewState, "tab"> = { range: "All", scope: "all", mode: "simple", basis: "nominal" };
 
 /** A Growth address that changes some view state and keeps the rest. */
 export function growthHref(view: GrowthViewState, change: Partial<GrowthViewState>): string {
   const next = { ...view, ...change };
   const params = new URLSearchParams();
-  for (const key of Object.keys(DEFAULTS) as (keyof GrowthViewState)[]) {
+  for (const key of Object.keys(DEFAULTS) as (keyof typeof DEFAULTS)[]) {
     if (next[key] !== DEFAULTS[key]) params.set(key.toLowerCase(), next[key]);
   }
+  if (next.tab) params.set("tab", next.tab);
   const query = params.toString();
   return query ? `/growth?${query}` : "/growth";
 }
@@ -134,7 +139,8 @@ export function buildGrowth(
   const scopes = SCOPES.map((value) => ({
     value,
     label: SCOPE_BUTTON[value],
-    href: growthHref(view, { scope: value }),
+    // Choosing a Country also selects its assumptions tab; All leaves the tab as it is.
+    href: growthHref(view, value === "all" ? { scope: value } : { scope: value, tab: value }),
     selected: value === view.scope,
   }));
   const modes = MODES.map((value) => ({

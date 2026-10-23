@@ -1,8 +1,10 @@
 import Link from "next/link";
 import { Chart } from "@/components/chart/Chart";
 import { ProjectionToggle } from "@/components/chart/ProjectionProvider";
+import { AssumptionsCard } from "@/components/growth/AssumptionsCard";
 import { WaterfallCard } from "@/components/growth/WaterfallCard";
 import type { Growth } from "@/lib/views/growth";
+import type { Assumptions } from "@/lib/views/projection-assumptions";
 
 const CARD = "rounded-[14px] border border-line bg-panel shadow-[var(--shadow)]";
 const TONE = { up: "text-pos", down: "text-neg" } as const;
@@ -35,7 +37,14 @@ function Segments({
 }
 
 // Renders what buildGrowth returns.
-export function GrowthPage({ growth }: { growth: Growth }) {
+export function GrowthPage({
+  growth,
+  assumptions,
+}: {
+  growth: Growth;
+  assumptions?: Assumptions;
+}) {
+  const card = assumptions && <AssumptionsCard assumptions={assumptions} />;
   const { header, chart, empty, addHref, ranges, scopes, modes, bases } = growth;
   if (empty || !header || !chart) {
     return (
@@ -55,6 +64,7 @@ export function GrowthPage({ growth }: { growth: Growth }) {
             </Link>
           )}
         </section>
+        {card}
       </div>
     );
   }
@@ -110,6 +120,7 @@ export function GrowthPage({ growth }: { growth: Growth }) {
         />
       </section>
       {growth.waterfall && <WaterfallCard waterfall={growth.waterfall} />}
+      {card}
     </div>
   );
 }
