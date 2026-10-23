@@ -1,23 +1,9 @@
 import Link from "next/link";
+import { MONO_LABEL, SECTOR_COLORS } from "@/components/holding/style";
 import type { StocksSections as StocksSectionsView } from "@/lib/views/holding-detail";
 
 const CARD = "rounded-[14px] border border-line bg-panel shadow-[var(--shadow)]";
-const MONO_LABEL = "font-mono text-[11px] font-medium uppercase leading-tight tracking-[0.06em] text-ink3";
 
-const SECTOR_COLORS: Record<string, string> = {
-  Technology: "#4f7cff",
-  Financials: "#2fa36b",
-  Healthcare: "#e0577d",
-  Energy: "#e08a2f",
-  "Consumer Discretionary": "#a463d9",
-  "Consumer Staples": "#7aa83a",
-  "Communication Services": "#27a5b8",
-  Industrials: "#8a7a5c",
-  Utilities: "#5c6fb0",
-  Materials: "#b8893a",
-  "Real Estate": "#c9524a",
-  Other: "#8b8f98",
-};
 const dot = (sector: string) => ({ backgroundColor: SECTOR_COLORS[sector] ?? SECTOR_COLORS.Other });
 
 // "Positions in this account" beside "By sector"; the two stack under 820px of content (the shell's @container).

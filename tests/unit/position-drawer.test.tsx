@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
 import { PositionDrawerPanel } from "@/components/holding/PositionDrawerPanel";
 import type { HoldingData, PortfolioData, PositionData } from "@/lib/read-model/types";
-import { buildPositionDrawer, drawerCloseHref } from "@/lib/views/position-drawer";
+import { buildPositionDrawer, drawerCloseHref, escClosesDrawer } from "@/lib/views/position-drawer";
 import { holding, portfolio } from "../fixtures/portfolio";
 
 const TODAY = "2026-10-14";
@@ -163,5 +163,13 @@ describe("position drawer", () => {
     const html = renderToStaticMarkup(<PositionDrawerPanel drawer={d} closeHref="/assets/stocks" />);
     expect(html).toContain('href="/holdings/h5"');
     expect(html).toContain("View Fidelity Brokerage");
+  });
+});
+
+describe("drawer Esc", () => {
+  it("PD-02 Esc closes the drawer, but not while a modal is open over it", () => {
+    expect(escClosesDrawer({ key: "Escape", modalOpen: false })).toBe(true);
+    expect(escClosesDrawer({ key: "Escape", modalOpen: true })).toBe(false);
+    expect(escClosesDrawer({ key: "a", modalOpen: false })).toBe(false);
   });
 });
