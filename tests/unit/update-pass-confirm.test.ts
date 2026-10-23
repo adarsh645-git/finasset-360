@@ -48,5 +48,6 @@ describe("the Edit positions step", () => {
     expect(stepFocus("edit-positions", false)).toBe("input");
     expect(stepFocus("update-value", true)).toBe("input");
     expect(stepFocus("update-balance", true)).toBe("input");
+    expect(stepFocus("pass-summary", false)).toBe("save");
   });
 });

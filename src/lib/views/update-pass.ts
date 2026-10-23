@@ -1,4 +1,5 @@
 import { netWorthOn } from "@/lib/calc";
+import { signed, usd } from "@/lib/format";
 import type { PortfolioData } from "@/lib/read-model/types";
 import { fxRatesOf, usableItems } from "@/lib/views/fx";
 import { historyItem } from "@/lib/views/shell";
@@ -110,7 +111,28 @@ export function stepSaveOptions(form: PassForm | string, inPass: boolean): { con
   return { confirmPrices: inPass && form === "edit-positions" };
 }
 
-/** Where focus lands when a step opens (design.md D6): Edit positions on Save & next, the rest on the first input. */
+/** Where focus lands when a step opens (design.md D6): Edit positions on Save & next, the summary on Done (Enter confirms), the rest on the first input. */
 export function stepFocus(form: PassForm | string, inPass: boolean): "save" | "input" {
-  return inPass && form === "edit-positions" ? "save" : "input";
+  return form === "pass-summary" || (inPass && form === "edit-positions") ? "save" : "input";
+}
+
+/**
+ * The summary step (D8), computed and never stored: the Net Worth line from the
+ * starting figure the pass carried to today's, and the live Stale count. X, Y and
+ * Z are whole dollars and Z = Y - X, so they reconcile. Without a valid `from`
+ * the line is just today's Net Worth.
+ */
+export function passSummary(
+  data: PortfolioData,
+  from: number | null,
+  today: string,
+): { line: string; stillStale: string | null } {
+  const now = netWorthNow(data);
+  const line =
+    from === null ? `Net worth ${usd(now)}` : `Net worth ${usd(from)} → ${usd(now)} (${signed(now - from)})`;
+  const n = buildStaleList(data, today).length;
+  return {
+    line,
+    stillStale: n === 0 ? null : n === 1 ? "1 item still needs updating" : `${n} items still need updating`,
+  };
 }

@@ -7,6 +7,7 @@ import { AssetForm } from "@/components/modal/AssetForm";
 import { LoanForm } from "@/components/modal/LoanForm";
 import { ModalFrame } from "@/components/modal/ModalFrame";
 import { PassFooter } from "@/components/modal/PassFooter";
+import { PassSummary } from "@/components/modal/PassSummary";
 import { UpdateBalanceForm } from "@/components/modal/UpdateBalanceForm";
 import { UpdateValueForm } from "@/components/modal/UpdateValueForm";
 import type { PortfolioData } from "@/lib/read-model/types";
@@ -42,6 +43,7 @@ const BUILTIN_FORMS: Record<string, ModalForm> = {
   "add-liability": LoanForm,
   "edit-liability": LoanForm,
   "update-balance": UpdateBalanceForm,
+  "pass-summary": PassSummary,
 };
 
 // Mounted once in the (app) layout. Which modal is open is the URL's business:
@@ -110,7 +112,7 @@ export function ModalHost({
       title={match.title}
       saveLabel={step ? "Save & next" : match.saveLabel}
       footerSlot={step ? <PassFooter counter={step.counter} onSkip={() => goTo(step.skipHref)} /> : undefined}
-      hideCancel={step !== null}
+      hideCancel={step !== null || match.mode === "pass-summary"}
       focusSave={stepFocus(match.mode, step !== null) === "save"}
       error={error}
       saving={busy}

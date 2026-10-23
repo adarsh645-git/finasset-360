@@ -33,7 +33,7 @@ export function ModalFrame({
   footerSlot?: ReactNode;
   /** A pass step leaves through ×, Esc and Back, so it drops Cancel. */
   hideCancel?: boolean;
-  /** Open with focus on Save, for a step with nothing to type (Edit positions in a pass). */
+  /** Open with focus on Save, for a step with nothing to type (Edit positions in a pass, the pass summary). */
   focusSave?: boolean;
   children: ReactNode;
 }) {

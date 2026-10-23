@@ -25,6 +25,8 @@ export type ModalMatch = {
   classId?: AssetClassId;
   /** The Liability a loan mode targets. */
   liability?: LiabilityData | null;
+  /** pass-summary only: the starting Net Worth the pass carried, or null. */
+  from?: number | null;
 };
 
 export type ModeRow = {
@@ -124,8 +126,22 @@ const updateBalance: ModeRow = {
   },
 };
 
+const passSummary: ModeRow = {
+  id: "pass-summary",
+  match(params) {
+    if (params.get("modal") !== "pass-summary") return null;
+    const from = params.get("from");
+    return {
+      mode: "pass-summary",
+      title: "Pass complete",
+      saveLabel: "Done",
+      holding: null,
+      from: from !== null && /^-?\d+$/.test(from) ? Number(from) : null,
+    };
+  },
+};
 
-export const BUILTIN_MODES: readonly ModeRow[] = [addAsset, edit, update, addLiability, editLiability, updateBalance];
+export const BUILTIN_MODES: readonly ModeRow[] = [addAsset, edit, update, addLiability, editLiability, updateBalance, passSummary];
 
 /** The current URL with the add modal switched to the other side (LE-01); other params stay. */
 export function swapAddHref(pathname: string, search: string, to: "add-asset" | "add-liability"): string {
