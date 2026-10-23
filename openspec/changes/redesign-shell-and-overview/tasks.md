@@ -53,12 +53,12 @@ One SVG chart that later pages only pass series to: nice ticks, lines, areas and
 Blocked by: 3, 4
 The Overview replaces the interim page. It has the Net Worth header with its change since the range start, the 1Y/3Y/5Y/All range in the address, the projection toggle, and the Net Worth chart with Assets and Liabilities in the tooltip. An empty Portfolio shows only the $0 header and the "Add your first account or asset" card (D10, D14).
 
-- [ ] 5.1 Tests named OV-01, OV-02, OV-03, OV-04, OV-05, OV-21, OV-22 written and failing (red)
-- [ ] 5.2 `buildOverview()` returns the header from `calc/` history with the range start clamped to the earliest Valuation, and the percent only from a start above 0 (OV-01, OV-02, OV-03)
-- [ ] 5.3 The range is read from `?range=`, with All by default and for unknown values; segments are replace-links (OV-04)
-- [ ] 5.4 The chart gets history plus the Projection over the horizon, Net worth drawn, and Assets and Liabilities as tooltip-only series (OV-05)
-- [ ] 5.5 First run: no current items gives the $0 header and the card, with no chart, controls or cards, and no Add button while `ADDING` is off (OV-21, OV-22)
-- [ ] 5.6 Tests named OV-01, OV-02, OV-03, OV-04, OV-05, OV-21, OV-22 pass in CI suites; npm run spec:coverage passes
+- [x] 5.1 Tests named OV-01, OV-02, OV-03, OV-04, OV-05, OV-21, OV-22 written and failing (red)
+- [x] 5.2 `buildOverview()` returns the header from `calc/` history with the range start clamped to the earliest Valuation, and the percent only from a start above 0 (OV-01, OV-02, OV-03)
+- [x] 5.3 The range is read from `?range=`, with All by default and for unknown values; segments are replace-links (OV-04)
+- [x] 5.4 The chart gets history plus the Projection over the horizon, Net worth drawn, and Assets and Liabilities as tooltip-only series (OV-05)
+- [x] 5.5 First run: no current items gives the $0 header and the card, with no chart, controls or cards, and no Add button while `ADDING` is off (OV-21, OV-22)
+- [x] 5.6 Tests named OV-01, OV-02, OV-03, OV-04, OV-05, OV-21, OV-22 pass in CI suites; npm run spec:coverage passes
 - [ ] 5.7 Checked by hand against the mockup's Overview header and chart at 2000px, 800px and 390px (hover at 2000px, tap and drag at 390px, projection on and off), and the first-run state at 2000px and 390px
 
 ## 6. Stat cards, Allocation, Where it's held and Currency effect
