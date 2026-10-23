@@ -42,11 +42,11 @@ The shell shows the User's real numbers from the read model: Net Worth with its 
 Blocked by: 1
 One SVG chart that later pages only pass series to: nice ticks, lines, areas and stacked bases, the dashed projection with its shaded region and "Today → projected" marker, goal lines, a forced $0 on the axis, per-series tooltip values for stacked layers, x labels by span, non-overlapping end labels, crosshair tooltip with "· projected", tap/drag touch that clears after ~1.8s with `pan-y` scrolling, the phone rules in CSS, a legend slot, and the shared projection toggle with its cookie (D6–D8).
 
-- [ ] 4.1 Tests named CH-01, CH-02, CH-03, CH-04, CH-05, CH-06, CH-07, CH-08, CH-09, CH-10, CH-11, CH-12, CH-13, CH-14, CH-15, CH-16 written and failing (red)
-- [ ] 4.2 `src/lib/chart/` computes the y-domain, ticks, time x-scale, paths split at today, stacked areas, goal filtering, forced zero, per-series tooltip values, x labels, end-label spacing and the nearest point, with no DOM (CH-01 … CH-12, CH-15, CH-16)
-- [ ] 4.3 `src/components/chart/` renders the geometry with the crosshair, dots, tooltip, touch clear-out and phone CSS (CH-13, CH-14)
-- [ ] 4.4 The `projection` cookie seeds a shared provider in the `(app)` layout; the toggle flips every chart at once and is remembered (CH-07)
-- [ ] 4.5 Tests named CH-01, CH-02, CH-03, CH-04, CH-05, CH-06, CH-07, CH-08, CH-09, CH-10, CH-11, CH-12, CH-13, CH-14, CH-15, CH-16 pass in CI suites; npm run spec:coverage passes
+- [x] 4.1 Tests named CH-01, CH-02, CH-03, CH-04, CH-05, CH-06, CH-07, CH-08, CH-09, CH-10, CH-11, CH-12, CH-13, CH-14, CH-15, CH-16 written and failing (red)
+- [x] 4.2 `src/lib/chart/` computes the y-domain, ticks, time x-scale, paths split at today, stacked areas, goal filtering, forced zero, per-series tooltip values, x labels, end-label spacing and the nearest point, with no DOM (CH-01 … CH-12, CH-15, CH-16)
+- [x] 4.3 `src/components/chart/` renders the geometry with the crosshair, dots, tooltip, touch clear-out and phone CSS (CH-13, CH-14)
+- [x] 4.4 The `projection` cookie seeds a shared provider in the `(app)` layout; the toggle flips every chart at once and is remembered (CH-07)
+- [x] 4.5 Tests named CH-01, CH-02, CH-03, CH-04, CH-05, CH-06, CH-07, CH-08, CH-09, CH-10, CH-11, CH-12, CH-13, CH-14, CH-15, CH-16 pass in CI suites; npm run spec:coverage passes
 
 ## 5. Overview header, Net Worth chart and first run
 
