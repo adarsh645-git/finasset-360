@@ -33,6 +33,11 @@ export async function loadWritableHolding(
   return { holding: data as StoredHolding };
 }
 
+/** Removes a just-inserted Holding after a later write failed; its own error is swallowed so the original failure surfaces. */
+export async function rollbackHolding(supabase: SupabaseClient, id: string): Promise<void> {
+  await supabase.from("holding").delete().eq("id", id);
+}
+
 /** Records today's Valuation, replacing any earlier one from the same day (design.md D7). */
 export async function recordTodayValuation(
   supabase: SupabaseClient,

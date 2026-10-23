@@ -182,6 +182,39 @@ describe("Stocks Holdings", () => {
     expect(await valuations(id)).toEqual([{ valued_on: today, value: 40 * 232.1 + 5 * 130 }]);
   });
 
+  it("DM-21 a Positions write that fails in the database also keeps the old name", async () => {
+    const id = await createdId(stocks([{ ticker: AAPL, shares: 10 }], { name: "DM-21 before" }));
+    // A NUL character passes validation but Postgres refuses it in the Positions payload.
+    const bad = stocks([{ ticker: AAPL, shares: 40, name: "bad\u0000name" }], { name: "DM-21 after" });
+    await expect(edit(id, bad)).rejects.toBeDefined();
+
+    const { data } = await admin().from("holding").select("name").eq("id", id).single();
+    expect(data?.name).toBe("DM-21 before");
+    expect((await positions(id)).map((r) => [r.ticker, r.shares])).toEqual([[AAPL, 10]]);
+  });
+
+  it("DM-21 a successful edit renames the Holding and replaces its Positions together", async () => {
+    const id = await createdId(stocks([{ ticker: AAPL, shares: 10 }], { name: "DM-21 old name" }));
+    expect((await edit(id, stocks([{ ticker: MSFT, shares: 2 }], { name: "DM-21 new name" }))).status).toBe(200);
+    const { data } = await admin().from("holding").select("name").eq("id", id).single();
+    expect(data?.name).toBe("DM-21 new name");
+    expect((await positions(id)).map((r) => r.ticker)).toEqual([MSFT]);
+  });
+
+  it.each([
+    ["cost_basis", 100],
+    ["property_type", "Land"],
+    ["city", "Pune"],
+    ["quantity", 2],
+    ["unit", "kg"],
+  ])("DM-12 a Stocks Holding with %s is rejected, not ignored", async (field, value) => {
+    const name = `DM-12 stocks ${field}`;
+    const { status, json } = await create(stocks([{ ticker: AAPL, shares: 1 }], { name, [field]: value }));
+    expect(status).toBe(400);
+    expect(json.error).toMatch(new RegExp(field));
+    expect(await holdingCount(name)).toBe(0);
+  });
+
   it("DM-22 rejects an unknown ticker without a Hand Price", async () => {
     const name = "DM-22 holding";
     const { status, json } = await create(stocks([{ ticker: `TDF${run}`, shares: 100 }], { name }));

@@ -22,6 +22,19 @@ function resolveOk(positions: unknown, c = ctx(), country = "US") {
   return resolved;
 }
 
+describe("stocks holding fields", () => {
+  it.each(["cost_basis", "property_type", "city", "quantity", "unit"])(
+    "DM-12 rejects %s, a field of another Asset Class",
+    (field) => {
+      const result = parseStocksHolding(
+        { asset_class: "stocks", country: "US", name: "B", positions: [{ ticker: "AAPL", shares: 1 }], [field]: 1 },
+        COUNTRIES,
+      );
+      expect(result.ok).toBe(false);
+    },
+  );
+});
+
 describe("stocks positions", () => {
   it("DM-18 defaults average cost to the market price and totals shares x price", () => {
     const c = ctx({

@@ -40,9 +40,10 @@ npm run seed
 ```
 
 is the one command for that: it creates (or reuses) one fixed local dev
-user, wipes and reseeds their Holdings, Liabilities, Target Allocation, and
-Projection with a generous sample Portfolio, and prints a one-time sign-in
-link. Open that link once and you land on the dashboard directly — no
+user, wipes and reseeds their records with the design prototype's Portfolio
+(14 Holdings, 4 loans, 4 Goals, monthly Valuations, US market data,
+Hand-Priced India Positions), fills an empty FX table from 2018-01-01, and
+prints a one-time sign-in link. Open that link once and you land on the dashboard directly — no
 Google button, no `/login` — and the session cookie it sets makes every
 later `localhost:3000` visit skip `/login` on its own, until it's cleared or
 the local Supabase volume is wiped (rerun `npm run seed` in either case).

@@ -3,12 +3,13 @@ import { supabaseUrl } from "./env";
 
 // The service-role key bypasses RLS entirely, so this client must never be
 // reachable from a client-authenticated request path with anything the
-// caller controls. Its two users: the daily cron route
-// (src/app/api/cron/daily/route.ts), gated on CRON_SECRET, and
-// `ensurePriceCached` (src/lib/market-data/refresh-price.ts), which only
-// ever fills a missing `price_cache` row from what the provider returns —
-// the caller's symbol only chooses which provider quote is fetched, and no
-// row exists unless the provider recognises it.
+// caller controls. Its users: the two cron routes
+// (src/app/api/cron/daily/route.ts and
+// src/app/api/cron/refresh-stock-symbols/route.ts), both gated on
+// CRON_SECRET, and the ticker lookup route
+// (src/app/api/tickers/lookup/route.ts), which only fills shared market
+// data (never a User's rows) from what the provider returns for the
+// caller's ticker.
 export function createAdminClient(): SupabaseClient {
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!key) {

@@ -254,6 +254,17 @@ describe("daily job: prices and snapshots", () => {
     expect(await valuationsOf(h)).toEqual([{ value: 2300, source: "cron" }]);
   });
 
+  it("MD-16 a Holding with an unpriced Position gets no snapshot rather than a smaller total", async () => {
+    // Unlisted and with no Hand Price: the routes refuse this, so it is seeded directly.
+    const orphan = `NOPX${unique}`;
+    const h = await seedStocks(userA, "US", [{ ticker: aapl, shares: 10 }, { ticker: orphan, shares: 5 }], [aapl]);
+    stub({ quote: { [aapl]: 100 } });
+
+    await runDaily();
+
+    expect(await valuationsOf(h)).toEqual([]);
+  });
+
   it("MD-18 skips archived and manual Holdings and reruns safely", async () => {
     const archived = await seedStocks(userA, "US", [{ ticker: aapl, shares: 1 }], [aapl], { archived: true });
     const active = await seedStocks(userA, "US", [{ ticker: aapl, shares: 2 }], [aapl]);
