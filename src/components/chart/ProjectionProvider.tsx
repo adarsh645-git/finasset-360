@@ -1,11 +1,14 @@
 "use client";
 
 import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from "react";
+import { DEFAULT_HORIZON_YEARS } from "@/lib/calc/defaults";
 import { projectionCookie, projectionLabel } from "@/lib/chart/projection";
 
 type Ctx = { projection: boolean; horizon: number; setProjection: (on: boolean) => void };
 
-const ProjectionContext = createContext<Ctx>({ projection: true, horizon: 10, setProjection: () => {} });
+const ProjectionContext = createContext<Ctx>({ projection: true, horizon: DEFAULT_HORIZON_YEARS,
+  setProjection: () => {},
+});
 
 export function ProjectionProvider({
   initial,

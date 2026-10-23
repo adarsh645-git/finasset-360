@@ -1,7 +1,14 @@
 "use client";
 
-import { useState } from "react";
-import { themeLabel, themeShortLabel, toggleTheme, type Theme } from "@/lib/theme";
+import { useSyncExternalStore } from "react";
+import {
+  readTheme,
+  subscribeTheme,
+  themeLabel,
+  themeShortLabel,
+  toggleTheme,
+  type Theme,
+} from "@/lib/theme";
 
 // Flips data-theme on <html> at once and writes the cookie; no server round trip.
 export function ThemeToggle({
@@ -11,8 +18,13 @@ export function ThemeToggle({
   theme: Theme;
   short?: boolean;
 }) {
-  const [theme, setTheme] = useState<Theme>(initial);
-  const onClick = () => setTheme(toggleTheme(theme, document));
+  // The page's data-theme is the one source, so the frame's two toggles never disagree.
+  const theme = useSyncExternalStore(
+    subscribeTheme,
+    () => readTheme(document, initial),
+    () => initial,
+  );
+  const onClick = () => toggleTheme(theme, document);
 
   if (short) {
     return (
