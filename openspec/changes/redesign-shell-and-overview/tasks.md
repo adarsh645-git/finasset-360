@@ -16,12 +16,12 @@ Every amount, percentage, date, duration and age the redesign shows can be writt
 Blocked by: none
 A signed-in User sees the new frame around the existing interim page. It is in the mockup's tokens, with a light/dark toggle remembered in a cookie and never flashed. The nav takes three forms (sidebar ≥1024px, top bar + scrolling tabs 640–1023px, top bar + bottom tab bar <640px), with the five items (only Overview a link), the active item, the first name and Sign out, the 820px container rule and 40px touch targets (D1–D5, D9, D11, D12).
 
-- [ ] 2.1 Tests named TH-01, TH-02, TH-03, SH-01, SH-02, SH-03, SH-10 written and failing (red)
-- [ ] 2.2 `globals.css` holds the README tokens for light and dark, the class and Country colours, radii and type, mapped through `@theme inline`, with the `dark:` variant on `data-theme`; Geist replaces Arial (TH-03)
-- [ ] 2.3 The root layout reads the `theme` cookie into `data-theme` on `<html>`; the toggle flips it at once and writes the cookie for a year (TH-01, TH-02)
-- [ ] 2.4 The `(app)` route group's layout guards the session and renders the three nav forms from one `buildShell()` result, with the active item from the path; the interim page moves inside it as `/` (SH-01, SH-02, SH-03)
-- [ ] 2.5 `links.ts` holds the route registry with only `overview` on and the `ADDING` flag off; the sign-in chrome sits in the sidebar footer and the top bar (SH-10)
-- [ ] 2.6 Tests named TH-01, TH-02, TH-03, SH-01, SH-02, SH-03, SH-10 pass in CI suites; npm run spec:coverage passes
+- [x] 2.1 Tests named TH-01, TH-02, TH-03, SH-01, SH-02, SH-03, SH-10 written and failing (red)
+- [x] 2.2 `globals.css` holds the README tokens for light and dark, the class and Country colours, radii and type, mapped through `@theme inline`, with the `dark:` variant on `data-theme`; Geist replaces Arial (TH-03)
+- [x] 2.3 The root layout reads the `theme` cookie into `data-theme` on `<html>`; the toggle flips it at once and writes the cookie for a year (TH-01, TH-02)
+- [x] 2.4 The `(app)` route group's layout guards the session and renders the three nav forms from one `buildShell()` result, with the active item from the path; the interim page moves inside it as `/` (SH-01, SH-02, SH-03)
+- [x] 2.5 `links.ts` holds the route registry with only `overview` on and the `ADDING` flag off; the sign-in chrome sits in the sidebar footer and the top bar (SH-10)
+- [x] 2.6 Tests named TH-01, TH-02, TH-03, SH-01, SH-02, SH-03, SH-10 pass in CI suites; npm run spec:coverage passes
 - [ ] 2.7 Checked by hand against the mockup's shell at 2000px, 800px and 390px: sidebar, scrolling tabs, bottom tab bar with safe-area spacing, 40px targets, and no theme flash on reload in either theme
 
 ## 3. Shell totals from the Portfolio
