@@ -3,6 +3,7 @@ import { Chart } from "@/components/chart/Chart";
 import { ProjectionToggle } from "@/components/chart/ProjectionProvider";
 import { AssumptionsCard } from "@/components/growth/AssumptionsCard";
 import { WaterfallCard } from "@/components/growth/WaterfallCard";
+import { YearsCard } from "@/components/growth/YearsCard";
 import type { Growth } from "@/lib/views/growth";
 import type { Assumptions } from "@/lib/views/projection-assumptions";
 
@@ -119,7 +120,12 @@ export function GrowthPage({
           }
         />
       </section>
-      {growth.waterfall && <WaterfallCard waterfall={growth.waterfall} />}
+      {growth.waterfall && growth.years && (
+        <div className="grid grid-cols-1 items-start gap-4 @[820px]:grid-cols-2">
+          <WaterfallCard waterfall={growth.waterfall} />
+          <YearsCard years={growth.years} />
+        </div>
+      )}
       {card}
     </div>
   );

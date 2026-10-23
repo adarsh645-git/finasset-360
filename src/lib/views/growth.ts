@@ -12,6 +12,7 @@ import { monthLong, signed, usd } from "@/lib/format";
 import type { PortfolioData } from "@/lib/read-model/types";
 import { fxRatesOf, usableItems } from "@/lib/views/fx";
 import { buildWaterfall, type Waterfall } from "@/lib/views/growth-waterfall";
+import { buildYears, type YearRow } from "@/lib/views/growth-years";
 import { ADDING, addAssetHref } from "@/lib/views/links";
 import { RANGES, parseRange, type Range } from "@/lib/views/overview";
 import { addMonths, calcAssumptions, projectFromToday } from "@/lib/views/projection";
@@ -109,6 +110,8 @@ export type Growth = {
   chart: GrowthChart | null;
   /** "Where the change came from"; null on the empty page. */
   waterfall: Waterfall | null;
+  /** "Year by year"; null on the empty page. */
+  years: YearRow[] | null;
 };
 
 const CHART_HEIGHT = 300;
@@ -167,6 +170,7 @@ export function buildGrowth(
       header: null,
       chart: null,
       waterfall: null,
+      years: null,
     };
   }
 
@@ -212,7 +216,9 @@ export function buildGrowth(
     netNow,
   });
 
-  return { view, empty, addHref: null, ranges, scopes, modes, bases, header, chart, waterfall };
+  const years = buildYears({ held, owed, rates, today, earliest: earliest ?? today });
+
+  return { view, empty, addHref: null, ranges, scopes, modes, bases, header, chart, waterfall, years };
 }
 
 const COUNTRY_VIEW: Record<Country, { name: string; short: string; color: string }> = {

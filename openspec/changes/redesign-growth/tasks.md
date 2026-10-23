@@ -43,11 +43,11 @@ The waterfall card splits the header's change into asset growth & savings, debt 
 Blocked by: 1, 3
 The Year by year card lists Net Worth, debt and % change at each year end from the first Valuation's year, newest first, with the current year starred at today. It sits beside the waterfall in the shell's two-column row (D5, D15).
 
-- [ ] 4.1 Tests named GR-14, GR-15, GR-17 written and failing (red)
-- [ ] 4.2 Rows use year-end values at each date's FX Rate, the current year at today, and "—" for the first year or a previous 0 (GR-14)
-- [ ] 4.3 Rows follow the scope and ignore the range and the basis (GR-15)
-- [ ] 4.4 A brand-new item gives a one-point history, zero waterfall steps and a single "2026*" row (GR-17)
-- [ ] 4.5 Tests named GR-14, GR-15, GR-17 pass in CI suites; npm run spec:coverage passes
+- [x] 4.1 Tests named GR-14, GR-15, GR-17 written and failing (red)
+- [x] 4.2 Rows use year-end values at each date's FX Rate, the current year at today, and "—" for the first year or a previous 0 (GR-14)
+- [x] 4.3 Rows follow the scope and ignore the range and the basis (GR-15)
+- [x] 4.4 A brand-new item gives a one-point history, zero waterfall steps and a single "2026*" row (GR-17)
+- [x] 4.5 Tests named GR-14, GR-15, GR-17 pass in CI suites; npm run spec:coverage passes
 - [ ] 4.6 Checked by hand against the mockup's Year by year card and two-column stacking around 820px of content, at 2000px, 800px and 390px
 
 ## 5. Projection assumptions card: rates and Monthly savings, saved live
