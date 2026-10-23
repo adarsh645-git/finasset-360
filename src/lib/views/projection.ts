@@ -43,6 +43,12 @@ export function calcAssumptions(data: PortfolioData): ProjectionAssumptionsInput
   };
 }
 
+const rollup = (c: { assetsUsd: number[]; liabilitiesUsd: number[]; netUsd: number[] }) => ({
+  netWorth: c.netUsd.slice(1),
+  assets: c.assetsUsd.slice(1),
+  liabilities: c.liabilitiesUsd.slice(1),
+});
+
 /** The Projection of current items from month 1 on, in USD. */
 export function projectFromToday(data: PortfolioData) {
   const assumptions = calcAssumptions(data);
@@ -71,5 +77,10 @@ export function projectFromToday(data: PortfolioData) {
     netWorth: result.netWorthUsd.slice(1),
     assets: result.totalAssetsUsd.slice(1),
     liabilities: result.totalLiabilitiesUsd.slice(1),
+    /** Each Country's rollup from month 1 on (savings count as assets). */
+    countries: {
+      US: rollup(result.countries.US),
+      India: rollup(result.countries.India),
+    },
   };
 }

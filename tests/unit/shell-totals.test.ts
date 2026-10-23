@@ -103,7 +103,7 @@ describe("shell totals", () => {
       Overview: "/",
       Assets: null,
       Liabilities: null,
-      Growth: null,
+      Growth: "/growth",
       Goals: "/goals",
     });
     expect(shell.classes.map((c) => c.href)).toEqual([null]);

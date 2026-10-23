@@ -20,7 +20,7 @@ describe("shell view", () => {
   });
 
   it("SH-10 the registry has the Overview, Holding detail and Goals on, adding on, and the shell knows the first name", () => {
-    expect([...EXISTING_ROUTES]).toEqual(["overview", "holding", "goals"]);
+    expect([...EXISTING_ROUTES]).toEqual(["overview", "holding", "growth", "goals"]);
     expect(ADDING).toBe(true);
     expect(hrefFor({ kind: "overview" })).toBe("/");
     expect(hrefFor({ kind: "assets" })).toBeNull();
