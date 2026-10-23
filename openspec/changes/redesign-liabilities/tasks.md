@@ -17,10 +17,10 @@ Blocked by: none
 Blocked by: 1
 The Liabilities page gains the payoff timeline: balances stacked by loan, history then a dashed projection, archived loans counted while held, and trimmed at today when the projection is off (D11).
 
-- [ ] 2.1 Tests named LB-10, LB-11 written and failing (red)
-- [ ] 2.2 The stack's top equals total Liabilities at every sample, and each layer is 0 from its payoff month (LB-10)
-- [ ] 2.3 Archived loans appear only up to their archive date, and the tooltip shows each loan's own balance (LB-11)
-- [ ] 2.4 Tests named LB-10, LB-11 pass in CI suites; npm run spec:coverage passes
+- [x] 2.1 Tests named LB-10, LB-11 written and failing (red)
+- [x] 2.2 The stack's top equals total Liabilities at every sample, and each layer is 0 from its payoff month (LB-10)
+- [x] 2.3 Archived loans appear only up to their archive date, and the tooltip shows each loan's own balance (LB-11)
+- [x] 2.4 Tests named LB-10, LB-11 pass in CI suites; npm run spec:coverage passes
 - [ ] 2.5 Checked by hand against the mockup's payoff timeline at 2000px, 800px and 390px, including touch on phone
 
 ## 3. Loan detail

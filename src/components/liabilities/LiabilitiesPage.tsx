@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { Chart } from "@/components/chart/Chart";
+import { ProjectionToggle } from "@/components/chart/ProjectionProvider";
 import { RowLink } from "@/components/overview/RowLink";
 import type { LiabilitiesView } from "@/lib/views/liabilities";
 
@@ -6,8 +8,7 @@ const CARD = "rounded-[14px] border border-line bg-panel shadow-[var(--shadow)]"
 const BUTTON =
   "flex h-10 items-center rounded-lg border border-line px-3.5 text-[13.5px] font-medium hover:bg-hover";
 
-// The Liabilities page: header, four stats, one row per loan. The payoff
-// timeline arrives with ticket 2.
+// The Liabilities page: header, four stats, the payoff timeline, one row per loan.
 export function LiabilitiesPage({ view }: { view: LiabilitiesView }) {
   return (
     <div className="flex flex-col gap-4">
@@ -37,6 +38,31 @@ export function LiabilitiesPage({ view }: { view: LiabilitiesView }) {
           </div>
         ))}
       </div>
+
+      {view.timeline && (
+        <section className={`${CARD} px-5 pb-3 pt-5`} aria-label="Payoff timeline">
+          <div className="mb-3 flex flex-wrap items-start justify-between gap-3">
+            <h2 className="text-[15px] font-semibold">Payoff timeline</h2>
+            <ProjectionToggle />
+          </div>
+          <Chart
+            series={view.timeline.series}
+            today={view.timeline.today}
+            height={view.timeline.height}
+            zero={view.timeline.zero}
+            legend={
+              <ul className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-[12px] text-ink2">
+                {view.timeline.legend.map((l) => (
+                  <li key={l.name} className="flex items-center gap-1.5">
+                    <span className="size-2.5 rounded-full" style={{ background: l.color }} />
+                    {l.name}
+                  </li>
+                ))}
+              </ul>
+            }
+          />
+        </section>
+      )}
 
       {view.empty ? (
         <section className={`${CARD} flex flex-col gap-2 p-5`}>
