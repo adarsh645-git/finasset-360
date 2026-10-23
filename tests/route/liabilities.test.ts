@@ -1,353 +1,267 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { NextRequest } from "next/server";
-import { DELETE, PATCH } from "@/app/api/liabilities/[id]/route";
-import { GET, POST } from "@/app/api/liabilities/route";
-import { POST as POST_LIABILITY_CLASS } from "@/app/api/liability-classes/route";
-import { POST as POST_HOLDING } from "@/app/api/holdings/route";
-import { DEFAULT_LIABILITY_CLASS_ID } from "@/lib/liability-classes/defaults";
-import { DEFAULT_ASSET_CLASS_ID } from "@/lib/asset-classes/defaults";
-import { createTestUser, deleteTestUser, type TestUser } from "../fixtures/users";
+import { createClient } from "@supabase/supabase-js";
+import { POST as createHolding } from "@/app/api/holdings/route";
+import { POST as archiveHolding } from "@/app/api/holdings/[id]/archive/route";
+import { POST as createLiability } from "@/app/api/liabilities/route";
+import { PATCH as editLiability } from "@/app/api/liabilities/[id]/route";
+import { POST as updateBalance } from "@/app/api/liabilities/[id]/valuations/route";
+import { POST as archiveLiability } from "@/app/api/liabilities/[id]/archive/route";
 import { jsonBody, requestAs } from "../fixtures/http";
+import { createTestUser, deleteTestUser, type TestUser } from "../fixtures/users";
 
-const LIABILITIES_URL = "http://localhost:3000/api/liabilities";
-const LIABILITY_CLASSES_URL = "http://localhost:3000/api/liability-classes";
-const HOLDINGS_URL = "http://localhost:3000/api/holdings";
+// Seam 1 (design.md Testing Decisions): the Liability routes against the real
+// local Postgres with RLS on. Database state is read back with the
+// service-role client only to see what a route wrote.
 
-async function createLiability(user: TestUser, overrides: Record<string, unknown> = {}) {
-  const response = await POST(
-    requestAs(user, LIABILITIES_URL, {
-      method: "POST",
-      ...jsonBody({
-        name: "Mortgage on 123 Main St",
-        liability_class_id: DEFAULT_LIABILITY_CLASS_ID.mortgage,
-        currency: "USD",
-        ...overrides,
-      }),
-    }),
-  );
-  return response;
+const BASE = "http://localhost:3000/api/liabilities";
+const today = new Date().toISOString().slice(0, 10);
+
+function daysAgo(days: number): string {
+  return new Date(Date.now() - days * 86_400_000).toISOString().slice(0, 10);
 }
 
-// Seam 2 from docs/SPEC.md: real requests against the real local Postgres,
-// RLS actually enabled — mirrors tests/route/holdings.test.ts.
-describe("GET/POST /api/liabilities, PATCH/DELETE /api/liabilities/[id]", () => {
-  let userA: TestUser;
-  let userB: TestUser;
+function admin() {
+  return createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!, {
+    auth: { persistSession: false },
+  });
+}
 
-  beforeAll(async () => {
-    [userA, userB] = await Promise.all([
-      createTestUser("liability-a"),
-      createTestUser("liability-b"),
+let user: TestUser;
+let other: TestUser;
+
+beforeAll(async () => {
+  user = await createTestUser("liabilities");
+  other = await createTestUser("liabilities-other");
+});
+
+afterAll(async () => {
+  await deleteTestUser(user.id);
+  await deleteTestUser(other.id);
+});
+
+type Body = Record<string, unknown>;
+type Result = { status: number; json: { id?: string; error?: string } };
+
+function ctx(id: string) {
+  return { params: Promise.resolve({ id }) };
+}
+
+async function asResult(response: Response): Promise<Result> {
+  return { status: response.status, json: (await response.json()) as Result["json"] };
+}
+
+async function create(body: Body, as: TestUser = user) {
+  return asResult(await createLiability(requestAs(as, BASE, { method: "POST", ...jsonBody(body) })));
+}
+
+const loan = (overrides: Body = {}): Body => ({
+  country: "US",
+  name: "Student loan",
+  balance: 13900,
+  principal: 32000,
+  apr: 4.5,
+  monthly_payment: 330,
+  term_years: 10,
+  start_month: "2021-03",
+  ...overrides,
+});
+
+async function createdId(body: Body): Promise<string> {
+  const { status, json } = await create(body);
+  if (status !== 201 || !json.id) throw new Error(`setup create failed: ${status} ${json.error}`);
+  return json.id;
+}
+
+async function createHoldingFor(as: TestUser, name: string): Promise<string> {
+  const response = await createHolding(
+    requestAs(as, "http://localhost:3000/api/holdings", {
+      method: "POST",
+      ...jsonBody({ asset_class: "realestate", country: "US", name, value: 400000 }),
+    }),
+  );
+  const json = (await response.json()) as { id: string };
+  if (response.status !== 201) throw new Error(`holding setup failed: ${response.status}`);
+  return json.id;
+}
+
+const edit = async (id: string, body: Body) =>
+  asResult(await editLiability(requestAs(user, `${BASE}/${id}`, { method: "PATCH", ...jsonBody(body) }), ctx(id)));
+const setBalance = async (id: string, balance: unknown) =>
+  asResult(
+    await updateBalance(requestAs(user, `${BASE}/${id}/valuations`, { method: "POST", ...jsonBody({ balance }) }), ctx(id)),
+  );
+const archive = async (id: string) =>
+  asResult(await archiveLiability(requestAs(user, `${BASE}/${id}/archive`, { method: "POST" }), ctx(id)));
+const archiveHoldingById = async (id: string) =>
+  asResult(
+    await archiveHolding(requestAs(user, `http://localhost:3000/api/holdings/${id}/archive`, { method: "POST" }), ctx(id)),
+  );
+
+async function liabilityRow(id: string) {
+  const { data, error } = await admin().from("liability").select("*").eq("id", id).single();
+  if (error) throw error;
+  return data;
+}
+
+async function balances(id: string) {
+  const { data, error } = await admin()
+    .from("liability_valuation")
+    .select("valued_on, balance")
+    .eq("liability_id", id)
+    .order("valued_on");
+  if (error) throw error;
+  return data.map((row) => ({ valued_on: row.valued_on as string, balance: Number(row.balance) }));
+}
+
+describe("DM-28 Creating a loan", () => {
+  it("DM-28 stores the figures, is not revolving, has no link and one balance Valuation dated today", async () => {
+    const { status, json } = await create(loan());
+    expect(status).toBe(201);
+    const row = await liabilityRow(json.id!);
+    expect(row).toMatchObject({
+      country: "US",
+      name: "Student loan",
+      revolving: false,
+      linked_holding_id: null,
+      start_month: "2021-03-01",
+    });
+    expect(Number(row.apr)).toBe(4.5);
+    expect(Number(row.monthly_payment)).toBe(330);
+    expect(Number(row.term_years)).toBe(10);
+    expect(Number(row.principal)).toBe(32000);
+    expect(await balances(json.id!)).toEqual([{ valued_on: today, balance: 13900 }]);
+  });
+});
+
+describe("DM-29 Liability input rules", () => {
+  it.each([
+    { balance: 1850, principal: undefined, apr: 24.9, payment: 150, status: 201, stored: 1850 },
+    { balance: 9100, principal: 5000, apr: 5.9, payment: 501, status: 201, stored: 9100 },
+    { balance: -1, principal: undefined, apr: 5, payment: 100, status: 400, stored: null },
+    { balance: 1000, principal: undefined, apr: -1, payment: 100, status: 400, stored: null },
+    { balance: 1000, principal: undefined, apr: 5, payment: 0, status: 400, stored: null },
+  ])("DM-29 balance $balance principal $principal apr $apr payment $payment gives $status", async (row) => {
+    const { status, json } = await create(
+      loan({ balance: row.balance, principal: row.principal, apr: row.apr, monthly_payment: row.payment }),
+    );
+    expect(status).toBe(row.status);
+    if (row.stored !== null) expect(Number((await liabilityRow(json.id!)).principal)).toBe(row.stored);
+  });
+});
+
+describe("DM-30 The start month defaults to this month", () => {
+  it("DM-30 stores the first of the current month and defaults revolving to off", async () => {
+    const { json } = await create(loan({ start_month: undefined, term_years: undefined }));
+    const row = await liabilityRow(json.id!);
+    expect(row.start_month).toBe(`${today.slice(0, 7)}-01`);
+    expect(row.revolving).toBe(false);
+    expect(row.term_years).toBeNull();
+  });
+});
+
+describe("DM-31 A balance edit records today's Valuation", () => {
+  it("DM-31 adds today's Valuation then replaces it on a same-day edit", async () => {
+    const id = await createdId(loan({ name: "DM-31 loan", balance: 9100 }));
+    await admin().from("liability_valuation").update({ valued_on: daysAgo(35) }).eq("liability_id", id);
+
+    expect((await setBalance(id, 8650)).status).toBe(200);
+    expect(await balances(id)).toEqual([
+      { valued_on: daysAgo(35), balance: 9100 },
+      { valued_on: today, balance: 8650 },
     ]);
+
+    expect((await setBalance(id, 8600)).status).toBe(200);
+    expect(await balances(id)).toEqual([
+      { valued_on: daysAgo(35), balance: 9100 },
+      { valued_on: today, balance: 8600 },
+    ]);
+    expect((await setBalance(id, -5)).status).toBe(400);
   });
 
-  afterAll(async () => {
-    await Promise.all([deleteTestUser(userA.id), deleteTestUser(userB.id)]);
+  it("DM-31 a PATCH also upserts today's balance Valuation", async () => {
+    const id = await createdId(loan({ name: "DM-31 patch" }));
+    expect((await edit(id, loan({ name: "DM-31 patch", balance: 12000 }))).status).toBe(200);
+    expect(await balances(id)).toEqual([{ valued_on: today, balance: 12000 }]);
   });
+});
 
-  it("rejects a request with no session", async () => {
-    const response = await GET(new NextRequest(LIABILITIES_URL));
-    expect(response.status).toBe(401);
+describe("DM-32 Which Holdings can be linked", () => {
+  it("DM-32 accepts an active Holding and rejects archived, already-linked and other Users' Holdings", async () => {
+    const h = await createHoldingFor(user, "DM-32 H");
+    const archived = await createHoldingFor(user, "DM-32 A");
+    const linked = await createHoldingFor(user, "DM-32 L");
+    const foreign = await createHoldingFor(other, "DM-32 X");
+    expect((await archiveHoldingById(archived)).status).toBe(200);
+    await createdId(loan({ name: "DM-32 existing", linked_holding_id: linked }));
+
+    const ok = await create(loan({ name: "DM-32 ok", linked_holding_id: h }));
+    expect(ok.status).toBe(201);
+    expect((await liabilityRow(ok.json.id!)).linked_holding_id).toBe(h);
+
+    expect((await create(loan({ linked_holding_id: archived }))).status).toBe(400);
+    expect((await create(loan({ linked_holding_id: linked }))).status).toBe(400);
+    expect((await create(loan({ linked_holding_id: foreign }))).status).toBe(400);
   });
+});
 
-  it("adds a Liability under a Liability Class with a name and currency", async () => {
-    const response = await createLiability(userA);
-    expect(response.status).toBe(201);
-    const created = await response.json();
-    expect(created).toMatchObject({
-      liability_class_id: DEFAULT_LIABILITY_CLASS_ID.mortgage,
-      name: "Mortgage on 123 Main St",
-      currency: "USD",
-    });
+describe("DM-26 Archiving a financed Holding", () => {
+  it("DM-26 unlinks the Liability and keeps the Holding's Valuations", async () => {
+    const h = await createHoldingFor(user, "DM-26 house");
+    const id = await createdId(loan({ name: "DM-26 mortgage", linked_holding_id: h }));
+    expect((await archiveHoldingById(h)).status).toBe(200);
+
+    expect((await liabilityRow(id)).linked_holding_id).toBeNull();
+    const { data } = await admin().from("holding").select("archived_at").eq("id", h).single();
+    expect(data!.archived_at).not.toBeNull();
+    const { count } = await admin()
+      .from("holding_valuation")
+      .select("id", { count: "exact", head: true })
+      .eq("holding_id", h);
+    expect(count).toBeGreaterThanOrEqual(1);
   });
+});
 
-  it("accepts any ISO currency code, not a hardcoded list", async () => {
-    const response = await createLiability(userA, { name: "Tokyo apartment loan", currency: "JPY" });
-    expect(response.status).toBe(201);
-    expect((await response.json()).currency).toBe("JPY");
+describe("DM-26 Archive and unlink are one database call", () => {
+  it("DM-26 archive_holding changes nothing when it fails, so a loan is never left linked to an archived Holding", async () => {
+    const h = await createHoldingFor(user, "DM-26 atomic house");
+    const id = await createdId(loan({ name: "DM-26 atomic mortgage", linked_holding_id: h }));
+
+    // RLS hides the Holding from another User: the function raises before touching either table.
+    const asOther = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!, {
+      auth: { persistSession: false },
+      global: { headers: { authorization: `Bearer ${other.accessToken}` } },
+    });
+    const { error } = await asOther.rpc("archive_holding", { p_holding_id: h });
+    expect(error).not.toBeNull();
+
+    const { data } = await admin().from("holding").select("archived_at").eq("id", h).single();
+    expect(data!.archived_at).toBeNull();
+    expect((await liabilityRow(id)).linked_holding_id).toBe(h);
+
+    // The same call as its owner archives and unlinks together.
+    expect((await archiveHoldingById(h)).status).toBe(200);
+    const after = await admin().from("holding").select("archived_at").eq("id", h).single();
+    expect(after.data!.archived_at).not.toBeNull();
+    expect((await liabilityRow(id)).linked_holding_id).toBeNull();
   });
+});
 
-  it("rejects a currency code that isn't valid ISO 4217", async () => {
-    const response = await createLiability(userA, { currency: "NOTACODE" });
-    expect(response.status).toBe(400);
-  });
+describe("DM-33 Archiving a paid-off loan", () => {
+  it("DM-33 keeps Valuations and link, and refuses later edits with 409", async () => {
+    const h = await createHoldingFor(user, "DM-33 house");
+    const id = await createdId(loan({ name: "DM-33 loan", linked_holding_id: h }));
+    await admin().from("liability_valuation").update({ valued_on: daysAgo(40) }).eq("liability_id", id);
+    expect((await setBalance(id, 5000)).status).toBe(200);
 
-  it("rejects a liability_class_id that doesn't exist or isn't visible to the caller", async () => {
-    const response = await createLiability(userA, {
-      liability_class_id: "00000000-0000-0000-0000-000000000000",
-    });
-    expect(response.status).toBe(400);
-  });
+    expect((await archive(id)).status).toBe(200);
+    const row = await liabilityRow(id);
+    expect(row.archived_at).not.toBeNull();
+    expect(row.linked_holding_id).toBe(h);
+    expect(await balances(id)).toHaveLength(2);
 
-  it("rejects creating a Liability under another User's custom Liability Class", async () => {
-    const customClass = await POST_LIABILITY_CLASS(
-      requestAs(userB, LIABILITY_CLASSES_URL, {
-        method: "POST",
-        ...jsonBody({ name: "B's Private Class" }),
-      }),
-    );
-    const { id: privateClassId } = await customClass.json();
-
-    const response = await createLiability(userA, { liability_class_id: privateClassId });
-    expect(response.status).toBe(400);
-  });
-
-  it("edits a Liability's name, class, and currency", async () => {
-    const created = await createLiability(userA);
-    const { id } = await created.json();
-
-    const response = await PATCH(
-      requestAs(userA, `${LIABILITIES_URL}/${id}`, {
-        method: "PATCH",
-        ...jsonBody({
-          name: "Refinanced mortgage",
-          liability_class_id: DEFAULT_LIABILITY_CLASS_ID.autoLoan,
-          currency: "EUR",
-        }),
-      }),
-      { params: Promise.resolve({ id }) },
-    );
-    expect(response.status).toBe(200);
-    const updated = await response.json();
-    expect(updated).toMatchObject({
-      id,
-      name: "Refinanced mortgage",
-      liability_class_id: DEFAULT_LIABILITY_CLASS_ID.autoLoan,
-      currency: "EUR",
-    });
-  });
-
-  it("deletes a Liability", async () => {
-    const created = await createLiability(userA);
-    const { id } = await created.json();
-
-    const response = await DELETE(requestAs(userA, `${LIABILITIES_URL}/${id}`, { method: "DELETE" }), {
-      params: Promise.resolve({ id }),
-    });
-    expect(response.status).toBe(200);
-
-    const after = await GET(requestAs(userA, LIABILITIES_URL));
-    const ids = (await after.json()).map((l: { id: string }) => l.id);
-    expect(ids).not.toContain(id);
-  });
-
-  it("User A cannot read User B's Liabilities", async () => {
-    const created = await createLiability(userB, { name: "B's liability" });
-    const { id } = await created.json();
-
-    const asA = await GET(requestAs(userA, LIABILITIES_URL));
-    const idsVisibleToA = (await asA.json()).map((l: { id: string }) => l.id);
-    expect(idsVisibleToA).not.toContain(id);
-  });
-
-  it("User A cannot update User B's Liability", async () => {
-    const created = await createLiability(userB, { name: "B's liability to protect" });
-    const { id } = await created.json();
-
-    const response = await PATCH(
-      requestAs(userA, `${LIABILITIES_URL}/${id}`, {
-        method: "PATCH",
-        ...jsonBody({ name: "Hijacked" }),
-      }),
-      { params: Promise.resolve({ id }) },
-    );
-    expect(response.status).toBe(404);
-
-    const stillB = await GET(requestAs(userB, LIABILITIES_URL));
-    const liability = (await stillB.json()).find((l: { id: string }) => l.id === id);
-    expect(liability.name).toBe("B's liability to protect");
-  });
-
-  it("User A cannot delete User B's Liability", async () => {
-    const created = await createLiability(userB, { name: "B's liability to keep" });
-    const { id } = await created.json();
-
-    const response = await DELETE(requestAs(userA, `${LIABILITIES_URL}/${id}`, { method: "DELETE" }), {
-      params: Promise.resolve({ id }),
-    });
-    expect(response.status).toBe(404);
-
-    const stillB = await GET(requestAs(userB, LIABILITIES_URL));
-    const ids = (await stillB.json()).map((l: { id: string }) => l.id);
-    expect(ids).toContain(id);
-  });
-
-  // Ticket 11: Amortization Assumptions and payoff.
-  describe("PATCH Amortization Assumptions", () => {
-    async function patchLiability(user: TestUser, id: string, body: Record<string, unknown>) {
-      return PATCH(
-        requestAs(user, `${LIABILITIES_URL}/${id}`, { method: "PATCH", ...jsonBody(body) }),
-        { params: Promise.resolve({ id }) },
-      );
-    }
-
-    it("sets a full set of Amortization Assumptions on a Liability", async () => {
-      const created = await createLiability(userA, { name: "Mortgage to amortize" });
-      const { id } = await created.json();
-
-      const response = await patchLiability(userA, id, {
-        interest_rate: 0.06,
-        original_loan_amount: 300_000,
-        term_months: 360,
-        custom_monthly_payment: 1_800,
-        extra_monthly_payment: 200,
-        escrow_portion: 650,
-        start_date: "2024-05-01",
-      });
-
-      expect(response.status).toBe(200);
-      expect(await response.json()).toMatchObject({
-        interest_rate: 0.06,
-        original_loan_amount: 300_000,
-        term_months: 360,
-        custom_monthly_payment: 1_800,
-        extra_monthly_payment: 200,
-        escrow_portion: 650,
-        start_date: "2024-05-01",
-      });
-    });
-
-    it("any Liability can carry Amortization Assumptions, not only a Mortgage Class one", async () => {
-      const created = await createLiability(userA, {
-        name: "Car loan",
-        liability_class_id: DEFAULT_LIABILITY_CLASS_ID.autoLoan,
-      });
-      const { id } = await created.json();
-
-      const response = await patchLiability(userA, id, {
-        interest_rate: 0.07,
-        original_loan_amount: 20_000,
-        term_months: 60,
-      });
-      expect(response.status).toBe(200);
-      expect((await response.json()).interest_rate).toBe(0.07);
-    });
-
-    it("clears a field back to null with an explicit null", async () => {
-      const created = await createLiability(userA, { name: "Loan to clear" });
-      const { id } = await created.json();
-      await patchLiability(userA, id, { interest_rate: 0.05, custom_monthly_payment: 500 });
-
-      const response = await patchLiability(userA, id, { custom_monthly_payment: null });
-      expect(response.status).toBe(200);
-      const updated = await response.json();
-      expect(updated.custom_monthly_payment).toBeNull();
-      expect(updated.interest_rate).toBe(0.05); // untouched keys are left as-is
-    });
-
-    it("rejects a negative interest_rate", async () => {
-      const created = await createLiability(userA, { name: "Bad rate" });
-      const { id } = await created.json();
-      const response = await patchLiability(userA, id, { interest_rate: -0.01 });
-      expect(response.status).toBe(400);
-    });
-
-    it("rejects a non-positive term_months", async () => {
-      const created = await createLiability(userA, { name: "Bad term" });
-      const { id } = await created.json();
-      const response = await patchLiability(userA, id, { term_months: 0 });
-      expect(response.status).toBe(400);
-    });
-
-    it("rejects a malformed start_date", async () => {
-      const created = await createLiability(userA, { name: "Bad date" });
-      const { id } = await created.json();
-      const response = await patchLiability(userA, id, { start_date: "05/01/2024" });
-      expect(response.status).toBe(400);
-    });
-
-    it("rejects a negative extra_monthly_payment or escrow_portion", async () => {
-      const created = await createLiability(userA, { name: "Bad extras" });
-      const { id } = await created.json();
-      expect((await patchLiability(userA, id, { extra_monthly_payment: -1 })).status).toBe(400);
-      expect((await patchLiability(userA, id, { escrow_portion: -1 })).status).toBe(400);
-    });
-
-    it("User A cannot set Amortization Assumptions on User B's Liability", async () => {
-      const created = await createLiability(userB, { name: "B's loan" });
-      const { id } = await created.json();
-      const response = await patchLiability(userA, id, { interest_rate: 0.05 });
-      expect(response.status).toBe(404);
-    });
-  });
-
-  describe("PATCH linked_holding_id", () => {
-    async function createHolding(user: TestUser) {
-      const response = await POST_HOLDING(
-        requestAs(user, HOLDINGS_URL, {
-          method: "POST",
-          ...jsonBody({ name: "The house it financed", asset_class_id: DEFAULT_ASSET_CLASS_ID.realEstate, currency: "USD" }),
-        }),
-      );
-      return (await response.json()).id as string;
-    }
-
-    it("links a Liability to a Holding the same User owns", async () => {
-      const holdingId = await createHolding(userA);
-      const created = await createLiability(userA, { name: "Mortgage on the house" });
-      const { id } = await created.json();
-
-      const response = await PATCH(
-        requestAs(userA, `${LIABILITIES_URL}/${id}`, {
-          method: "PATCH",
-          ...jsonBody({ linked_holding_id: holdingId }),
-        }),
-        { params: Promise.resolve({ id }) },
-      );
-      expect(response.status).toBe(200);
-      expect((await response.json()).linked_holding_id).toBe(holdingId);
-    });
-
-    it("rejects linking to a Holding the caller doesn't own", async () => {
-      const holdingId = await createHolding(userB);
-      const created = await createLiability(userA, { name: "Mortgage attempt" });
-      const { id } = await created.json();
-
-      const response = await PATCH(
-        requestAs(userA, `${LIABILITIES_URL}/${id}`, {
-          method: "PATCH",
-          ...jsonBody({ linked_holding_id: holdingId }),
-        }),
-        { params: Promise.resolve({ id }) },
-      );
-      expect(response.status).toBe(400);
-    });
-
-    it("rejects a linked_holding_id that doesn't exist", async () => {
-      const created = await createLiability(userA, { name: "Mortgage attempt 2" });
-      const { id } = await created.json();
-
-      const response = await PATCH(
-        requestAs(userA, `${LIABILITIES_URL}/${id}`, {
-          method: "PATCH",
-          ...jsonBody({ linked_holding_id: "00000000-0000-0000-0000-000000000000" }),
-        }),
-        { params: Promise.resolve({ id }) },
-      );
-      expect(response.status).toBe(400);
-    });
-
-    it("unlinks with an explicit null", async () => {
-      const holdingId = await createHolding(userA);
-      const created = await createLiability(userA, { name: "Mortgage to unlink" });
-      const { id } = await created.json();
-      await PATCH(
-        requestAs(userA, `${LIABILITIES_URL}/${id}`, {
-          method: "PATCH",
-          ...jsonBody({ linked_holding_id: holdingId }),
-        }),
-        { params: Promise.resolve({ id }) },
-      );
-
-      const response = await PATCH(
-        requestAs(userA, `${LIABILITIES_URL}/${id}`, {
-          method: "PATCH",
-          ...jsonBody({ linked_holding_id: null }),
-        }),
-        { params: Promise.resolve({ id }) },
-      );
-      expect(response.status).toBe(200);
-      expect((await response.json()).linked_holding_id).toBeNull();
-    });
+    expect((await edit(id, loan({ name: "renamed" }))).status).toBe(409);
+    expect((await setBalance(id, 10)).status).toBe(409);
+    expect((await liabilityRow(id)).name).toBe("DM-33 loan");
+    expect(await balances(id)).toHaveLength(2);
   });
 });
