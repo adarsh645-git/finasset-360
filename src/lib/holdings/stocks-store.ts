@@ -56,6 +56,24 @@ export async function priceStocksPositions(
   return resolvePositions(input.positions, context);
 }
 
+/** Renames the Holding and replaces its Positions in one database call, then records today's Valuation. A failed Positions write leaves the old name. */
+export async function updateStocksHolding(
+  supabase: SupabaseClient,
+  userId: string,
+  holdingId: string,
+  fields: { name: string; description: string | null },
+  priced: { rows: PositionRow[]; total: number },
+): Promise<void> {
+  const { error } = await supabase.rpc("update_stocks_holding", {
+    p_holding_id: holdingId,
+    p_name: fields.name,
+    p_description: fields.description,
+    p_positions: priced.rows,
+  });
+  if (error) throw error;
+  await recordTodayValuation(supabase, userId, holdingId, priced.total);
+}
+
 /** Replaces the Holding's Positions in one database call, then records today's Valuation at Σ shares × price. */
 export async function writeStocksPositions(
   supabase: SupabaseClient,

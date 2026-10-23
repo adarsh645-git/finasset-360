@@ -13,7 +13,8 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
   const { id } = await params;
   const { data, error } = await supabase.from("goal").delete().eq("id", id).select("id");
   if (error && error.code !== INVALID_UUID) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error("DELETE /api/goals/[id] failed", error);
+    return NextResponse.json({ error: "Could not delete." }, { status: 500 });
   }
   if (error || !data?.length) {
     return NextResponse.json({ error: "Goal not found." }, { status: 404 });

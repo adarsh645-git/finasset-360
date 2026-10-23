@@ -221,6 +221,31 @@ describe("DM-26 Archiving a financed Holding", () => {
   });
 });
 
+describe("DM-26 Archive and unlink are one database call", () => {
+  it("DM-26 archive_holding changes nothing when it fails, so a loan is never left linked to an archived Holding", async () => {
+    const h = await createHoldingFor(user, "DM-26 atomic house");
+    const id = await createdId(loan({ name: "DM-26 atomic mortgage", linked_holding_id: h }));
+
+    // RLS hides the Holding from another User: the function raises before touching either table.
+    const asOther = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!, {
+      auth: { persistSession: false },
+      global: { headers: { authorization: `Bearer ${other.accessToken}` } },
+    });
+    const { error } = await asOther.rpc("archive_holding", { p_holding_id: h });
+    expect(error).not.toBeNull();
+
+    const { data } = await admin().from("holding").select("archived_at").eq("id", h).single();
+    expect(data!.archived_at).toBeNull();
+    expect((await liabilityRow(id)).linked_holding_id).toBe(h);
+
+    // The same call as its owner archives and unlinks together.
+    expect((await archiveHoldingById(h)).status).toBe(200);
+    const after = await admin().from("holding").select("archived_at").eq("id", h).single();
+    expect(after.data!.archived_at).not.toBeNull();
+    expect((await liabilityRow(id)).linked_holding_id).toBeNull();
+  });
+});
+
 describe("DM-33 Archiving a paid-off loan", () => {
   it("DM-33 keeps Valuations and link, and refuses later edits with 409", async () => {
     const h = await createHoldingFor(user, "DM-33 house");

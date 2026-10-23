@@ -13,7 +13,7 @@ export async function GET(request: NextRequest) {
   try {
     return jsonWithCookies(await loadPortfolio(supabase, todayIsoDate()), { status: 200 }, responseCookies);
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Could not load the Portfolio.";
-    return NextResponse.json({ error: message }, { status: 500 });
+    console.error("GET /api/portfolio failed", error);
+    return NextResponse.json({ error: "Could not load the Portfolio." }, { status: 500 });
   }
 }

@@ -3,7 +3,7 @@ import { readJsonObject } from "@/lib/http/body";
 import { parseManualHolding } from "@/lib/holdings/manual-holding-input";
 import { parseStocksHolding } from "@/lib/holdings/stocks-input";
 import { priceStocksPositions, writeStocksPositions } from "@/lib/holdings/stocks-store";
-import { errorResponse, loadCountryCodes, recordTodayValuation } from "@/lib/holdings/store";
+import { errorResponse, loadCountryCodes, recordTodayValuation, rollbackHolding } from "@/lib/holdings/store";
 import { createRouteClient, jsonWithCookies, requireUser } from "@/lib/supabase/route";
 
 // POST /api/holdings — creates a Holding and today's Valuation (Stocks carry Positions).
@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
     try {
       await writeStocksPositions(supabase, auth.user.id, created.id, priced);
     } catch (writeError) {
-      await supabase.from("holding").delete().eq("id", created.id);
+      await rollbackHolding(supabase, created.id);
       throw writeError;
     }
     return jsonWithCookies({ id: created.id }, { status: 201 }, responseCookies);
@@ -69,7 +69,7 @@ export async function POST(request: NextRequest) {
   try {
     await recordTodayValuation(supabase, auth.user.id, data.id, input.value);
   } catch (valuationError) {
-    await supabase.from("holding").delete().eq("id", data.id);
+    await rollbackHolding(supabase, data.id);
     throw valuationError;
   }
   return jsonWithCookies({ id: data.id }, { status: 201 }, responseCookies);

@@ -20,7 +20,8 @@ export async function POST(request: NextRequest) {
     .select("id")
     .single();
   if (error || !data) {
-    return NextResponse.json({ error: error?.message ?? "Could not save." }, { status: 500 });
+    console.error("POST /api/goals failed", error);
+    return NextResponse.json({ error: "Could not save." }, { status: 500 });
   }
 
   return jsonWithCookies({ id: data.id }, { status: 201 }, responseCookies);
