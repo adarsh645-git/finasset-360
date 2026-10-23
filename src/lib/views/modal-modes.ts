@@ -11,8 +11,8 @@ export const modalKey = (match: ModalMatch) => `${match.mode}:${match.holding?.i
 export const errorFor = (stored: { key: string; message: string } | null, key: string | null) =>
   stored && stored.key === key ? stored.message : null;
 
-/** The params the modal owns. Closing removes these and nothing else. */
-export const MODAL_PARAMS = ["modal", "holding", "class", "liability"] as const;
+/** The params the modal and the update pass own. Closing removes these and nothing else. */
+export const MODAL_PARAMS = ["modal", "holding", "class", "liability", "pass", "from"] as const;
 
 export type ModalMatch = {
   /** Picks the form: "add-asset", "edit", "update-value", "edit-positions", or a row's own id. */
@@ -122,7 +122,7 @@ export function resolveModal(
 
 /**
  * The current URL without the modal params. Other params stay exactly as they
- * were (`position`, `pass`, `from`, ...); `~` is kept literal because
+ * were (`position`, `range`, ...); `~` is kept literal because
  * URLSearchParams.toString() would write it as %7E.
  */
 export function closeHref(pathname: string, search: string): string {

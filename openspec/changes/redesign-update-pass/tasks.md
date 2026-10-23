@@ -5,13 +5,13 @@
 Blocked by: none
 The Needs updating card offers "Update all (N)". It opens a pass that walks the live Stale list in the card's order (D3, D4). Each step opens the item's own form pre-filled: Update value, Edit positions or the balance edit. The footer shows the "i of N" counter, Skip and Save & next. Save & next records today's figure, even when unchanged, and moves on. Skip moves on without recording. Esc, × or Back leaves and keeps what was saved (D1, D2, D5, D6, D7, D9). After the last item the pass closes, until ticket 2 adds the summary.
 
-- [ ] 1.1 Tests named UP-01, UP-02, UP-03, UP-04, UP-05, UP-06, UP-07, UP-08, UP-09, UP-10, UP-11, UP-12, UP-13 written and failing (red)
-- [ ] 1.2 `updateAllEntry` gives "Update all (N)" with a link to step 1 on the card's first item, carrying `pass=1` and `from`, and nothing when nothing is Stale. The card renders it in its header (UP-01, UP-02)
-- [ ] 1.3 `passStep` picks the form by kind and gives the counter, next and skip targets from the live list with the cursor rule, including the not-Stale fallback (UP-03, UP-04, UP-09, UP-10, UP-12, UP-13)
-- [ ] 1.4 `ModalHost` reads `pass` and `from`, fills the footer slot, and after a successful save calls `router.replace(nextHref)` then `router.refresh()`. A rejected save keeps the step and shows the footer error (UP-05, UP-06, UP-07)
-- [ ] 1.5 Save & next is the form's submit button and Skip is `type="button"`. Esc, × and a backdrop click clear every modal and pass param (UP-08, UP-11)
-- [ ] 1.6 Route test: an unchanged value posted to the Holding and Liability Valuation routes makes the item fresh in `GET /api/portfolio` (UP-05)
-- [ ] 1.7 Tests named UP-01, UP-02, UP-03, UP-04, UP-05, UP-06, UP-07, UP-08, UP-09, UP-10, UP-11, UP-12, UP-13 pass in CI suites; npm run spec:coverage passes
+- [x] 1.1 Tests named UP-01, UP-02, UP-03, UP-04, UP-05, UP-06, UP-07, UP-08, UP-09, UP-10, UP-11, UP-12, UP-13 written and failing (red)
+- [x] 1.2 `updateAllEntry` gives "Update all (N)" with a link to step 1 on the card's first item, carrying `pass=1` and `from`, and nothing when nothing is Stale. The card renders it in its header (UP-01, UP-02)
+- [x] 1.3 `passStep` picks the form by kind and gives the counter, next and skip targets from the live list with the cursor rule, including the not-Stale fallback (UP-03, UP-04, UP-09, UP-10, UP-12, UP-13)
+- [x] 1.4 `ModalHost` reads `pass` and `from`, fills the footer slot, and after a successful save calls `router.replace(nextHref)` then `router.refresh()`. A rejected save keeps the step and shows the footer error (UP-05, UP-06, UP-07)
+- [x] 1.5 Save & next is the form's submit button and Skip is `type="button"`. Esc, × and a backdrop click clear every modal and pass param (UP-08, UP-11)
+- [x] 1.6 Route test: an unchanged value posted to the Holding and Liability Valuation routes makes the item fresh in `GET /api/portfolio` (UP-05)
+- [x] 1.7 Tests named UP-01, UP-02, UP-03, UP-04, UP-05, UP-06, UP-07, UP-08, UP-09, UP-10, UP-11, UP-12, UP-13 pass in CI suites; npm run spec:coverage passes
 - [ ] 1.8 Checked by hand against the mockup's Update value modal and Overview at 2000px, 800px and 390px: Enter confirms, Esc leaves, Back leaves, focus lands in the value input, the phone bottom sheet's footer fits the counter and both buttons at 40px
 
 ## 2. Summary step: how Net Worth moved
