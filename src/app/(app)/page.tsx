@@ -1,8 +1,13 @@
-import { InterimHome } from "@/components/InterimHome";
-import { requireSignedInUser } from "@/lib/auth/require-signed-in-user";
-import { createClient } from "@/lib/supabase/server";
+import { Overview } from "@/components/overview/Overview";
+import { getPortfolio } from "@/lib/read-model/get-portfolio";
+import { buildOverview, parseRange } from "@/lib/views/overview";
 
-export default async function HomePage() {
-  const user = await requireSignedInUser(await createClient());
-  return <InterimHome user={user} />;
+export default async function HomePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ range?: string | string[] }>;
+}) {
+  const { range } = await searchParams;
+  const overview = buildOverview(await getPortfolio(), { range: parseRange(range) });
+  return <Overview overview={overview} />;
 }

@@ -11,7 +11,7 @@ vi.mock("next/headers", () => ({
 const { default: AppLayout } = await import("@/app/(app)/layout");
 
 describe("(app) layout", () => {
-  it("SH-01 a signed-out visitor is redirected to the login page", async () => {
+  it("SH-01/CI-02 a signed-out visitor is redirected to the login page", async () => {
     getUser.mockResolvedValue({ data: { user: null } });
     const error = await AppLayout({ children: null }).then(
       () => null,

@@ -93,9 +93,11 @@ const CLASS_ORDER: { id: AssetClassId; slug: string }[] = [
   { id: "other", slug: "vehicles-and-other" },
 ];
 
-const calcCountry = (code: "US" | "IN"): Country => (code === "US" ? "US" : "India");
+export const calcCountry = (code: "US" | "IN"): Country => (code === "US" ? "US" : "India");
 
-function historyItem(item: HoldingData | LiabilityData): HistoryItem {
+export const calcClassId = (id: AssetClassId) => CLASS_ORDER.find((c) => c.id === id)!.slug;
+
+export function historyItem(item: HoldingData | LiabilityData): HistoryItem {
   const archived = item.archivedAt !== null;
   return {
     country: calcCountry(item.country),
