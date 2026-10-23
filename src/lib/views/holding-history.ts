@@ -18,6 +18,8 @@ export type HoldingChart = {
   sub: string;
   today: string;
   height: number;
+  /** Force $0 onto the y-axis. */
+  zero?: boolean;
   /** A list so redesign-liabilities can replace it (value, loan balance, equity gap). */
   series: ChartSeries[];
 };
