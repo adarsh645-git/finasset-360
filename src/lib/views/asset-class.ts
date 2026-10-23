@@ -39,9 +39,9 @@ export type AssetClassView = {
 
 const IDS = Object.keys(CLASS_TOKENS) as AssetClassId[];
 
-/** The read-model class for a URL slug (calc's id), or null when the slug is not one of the six. */
+/** The read-model class for a URL slug (the read-model id), or null when the slug is not one of the six. */
 export const classIdOfSlug = (slug: string): AssetClassId | null =>
-  IDS.find((id) => calcClassId(id) === slug) ?? null;
+  IDS.find((id) => id === slug) ?? null;
 
 const MINUS = "−";
 /** 0.035 as "3.5%", -0.09 as "−9%". */
@@ -91,7 +91,7 @@ export function buildAssetClassView(
   const assetsTotal = netWorthOn({ holdings: current.map(historyItem), liabilities: [] }, rates, today, today);
   const change = setTwelveMonthChange(items, { fxRates: rates, today }, "holdings");
 
-  const path = `/assets/${slug}`;
+  const path = `/assets/${id}`;
   const addHref = adding ? `${addAssetHref(path)}&class=${id}` : null;
   const plural = CLASS_NOUNS[id].many;
 
@@ -101,7 +101,7 @@ export function buildAssetClassView(
 
   return {
     id,
-    slug,
+    slug: id,
     name,
     dot: CLASS_TOKENS[id].cssVar,
     breadcrumb: [

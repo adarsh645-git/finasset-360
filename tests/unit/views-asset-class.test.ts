@@ -15,12 +15,12 @@ const build = (slug: string, holdings: HoldingData[], over: Partial<PortfolioDat
 
 describe("class slugs", () => {
   it.each([
-    ["real-estate", "Real estate"],
+    ["realestate", "Real estate"],
     ["stocks", "Stocks"],
     ["cash", "Cash"],
     ["crypto", "Crypto"],
     ["metals", "Metals"],
-    ["vehicles-and-other", "Vehicles & other"],
+    ["other", "Vehicles & other"],
   ])("AC-01 /assets/%s is the %s page", (slug, name) => {
     const id = classIdOfSlug(slug);
     expect(id).not.toBeNull();
@@ -30,13 +30,14 @@ describe("class slugs", () => {
 
   it("AC-01 bonds is not found", () => {
     expect(classIdOfSlug("bonds")).toBeNull();
-    expect(classIdOfSlug("realestate")).toBeNull();
+    expect(classIdOfSlug("vehicles-and-other")).toBeNull();
+    expect(classIdOfSlug("real-estate")).toBeNull();
   });
 });
 
 describe("class header", () => {
   it("AC-02 header of a class with history", () => {
-    const v = build("real-estate", [
+    const v = build("realestate", [
       h({ assetClass: "realestate", currentValue: 100_000, valuations: [{ date: YEAR_AGO, value: 88_000, source: "user" }] }),
       h({ assetClass: "stocks", currentValue: 300_000 }),
     ]);
@@ -67,11 +68,11 @@ describe("class header", () => {
   };
   it.each([
     ["stocks", "projected at 8%/yr US · 11%/yr India"],
-    ["real-estate", "projected at 4%/yr US · 6%/yr India"],
+    ["realestate", "projected at 4%/yr US · 6%/yr India"],
     ["cash", "projected at 3.5%/yr US · 6.5%/yr India"],
     ["crypto", "projected at 5%/yr"],
     ["metals", "projected at 4%/yr"],
-    ["vehicles-and-other", "projected at −9%/yr"],
+    ["other", "projected at −9%/yr"],
   ])("AC-04 %s reads %s", (slug, rate) => {
     expect(build(slug, [], rates).line.endsWith(rate)).toBe(true);
   });
@@ -85,12 +86,12 @@ describe("class page actions and empty state", () => {
   });
 
   it.each([
-    ["real-estate", "No properties in Real estate yet"],
+    ["realestate", "No properties in Real estate yet"],
     ["stocks", "No accounts in Stocks yet"],
     ["cash", "No accounts in Cash yet"],
     ["crypto", "No accounts in Crypto yet"],
     ["metals", "No assets in Metals yet"],
-    ["vehicles-and-other", "No assets in Vehicles & other yet"],
+    ["other", "No assets in Vehicles & other yet"],
   ])("AC-08 empty %s reads %s", (slug, message) => {
     const v = build(slug, []);
     expect(v.total).toBe("$0");

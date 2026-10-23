@@ -48,12 +48,12 @@ describe("class links", () => {
   it("AC-20 Allocation rows link to their class page", () => {
     const html = renderToStaticMarkup(<Overview overview={buildOverview(data, { range: "All" })} />);
     expect(html).toMatch(/<a [^>]*href="\/assets\/stocks"[^>]*>(?:(?!<\/a>)[\s\S])*Stocks/);
-    expect(html).toMatch(/<a [^>]*href="\/assets\/real-estate"[^>]*>(?:(?!<\/a>)[\s\S])*Real estate/);
+    expect(html).toMatch(/<a [^>]*href="\/assets\/realestate"[^>]*>(?:(?!<\/a>)[\s\S])*Real estate/);
   });
 
   it("AC-21 Holding detail breadcrumb links Assets and the class", () => {
     const html = renderToStaticMarkup(<HoldingDetail detail={buildHoldingDetail(data, { holdingId: "h3" })!} />);
     expect(html).toMatch(/<a [^>]*href="\/assets"[^>]*>Assets<\/a>/);
-    expect(html).toMatch(/<a [^>]*href="\/assets\/real-estate"[^>]*>Real estate<\/a>/);
+    expect(html).toMatch(/<a [^>]*href="\/assets\/realestate"[^>]*>Real estate<\/a>/);
   });
 });

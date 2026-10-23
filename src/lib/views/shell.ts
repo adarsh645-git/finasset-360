@@ -92,7 +92,7 @@ export function markActive(shell: Shell, pathname: string | null): Shell {
 
 type ShellUser = { email?: string; user_metadata: Record<string, unknown> };
 
-// The read model and calc/ name two classes differently; class pages use calc's ids.
+// The read model and calc/ name two classes differently; slug is calc's id, for calculation only. URLs use the read-model id.
 const CLASS_ORDER: { id: AssetClassId; slug: string }[] = [
   { id: "realestate", slug: "real-estate" },
   { id: "stocks", slug: "stocks" },
@@ -163,11 +163,11 @@ export function buildShell(
     if (inClass.length === 0) return [];
     return [
       {
-        id: slug,
+        id,
         name: ASSET_CLASSES.find((c) => c.id === slug)!.name,
         dot: CLASS_TOKENS[id].cssVar,
         value: compact(worth(inClass.map(historyItem), [])),
-        href: hrefFor({ kind: "assetClass", id: slug }, existing),
+        href: hrefFor({ kind: "assetClass", id }, existing),
         selected: false,
       },
     ];

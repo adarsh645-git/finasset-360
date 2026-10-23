@@ -100,7 +100,7 @@ describe("overview allocation", () => {
 
     expect(html).toContain("Allocation");
     expect(html).toContain("Real estate");
-    expect(html).toMatch(/<a [^>]*href="\/assets\/real-estate"/);
+    expect(html).toMatch(/<a [^>]*href="\/assets\/realestate"/);
     expect(html).toMatch(/hidden[^"]*sm:block[^>]*>\+\$12K/);
   });
 
