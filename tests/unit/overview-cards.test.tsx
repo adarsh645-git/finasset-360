@@ -69,7 +69,7 @@ describe("overview stat cards", () => {
 
     expect(html).toContain("Total assets");
     expect(html).toContain("Equity built");
-    expect(html).not.toMatch(/href="\/(assets|liabilities)/);
+    expect(html).not.toMatch(/href="\/liabilities/);
   });
 });
 
@@ -100,7 +100,7 @@ describe("overview allocation", () => {
 
     expect(html).toContain("Allocation");
     expect(html).toContain("Real estate");
-    expect(html).not.toMatch(/href="\/assets/);
+    expect(html).not.toMatch(/href="\/assets\//);
     expect(html).toMatch(/hidden[^"]*sm:block[^>]*>\+\$12K/);
   });
 

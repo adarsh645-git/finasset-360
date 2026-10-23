@@ -5,13 +5,13 @@
 Blocked by: none
 `/assets` lists every current Holding grouped by Asset Class, with the header, collapsible groups, one-line rows that open Holding detail, "+ Add asset" and the empty state. The `assets` route family joins the link registry, which turns on the Assets nav item and the Total assets stat card (D1, D3, D6, D7, D12, D14).
 
-- [ ] 1.1 Tests named AS-01, AS-02, AS-03, AS-04, AS-05, AS-06, AS-07, AS-08, AS-13, AS-17, AS-18, AS-19, AS-20 written and failing (red)
-- [ ] 1.2 The shared row builder gives the subtitle, Country badge, native, USD, gain and stale cue for each kind of Holding, and archived Holdings never appear (AS-05, AS-06, AS-07, AS-08)
-- [ ] 1.3 The header shows the total, the counts and the set 12-month change, or "—" (AS-01, AS-02)
-- [ ] 1.4 Class groups follow the fixed order, with noun counts, shares of total assets, rows by value, and Collapse/Expand all (AS-03, AS-04, AS-13)
-- [ ] 1.5 With no Holdings, the page shows "No accounts or assets yet", and both Add buttons open the add-asset modal (AS-17, AS-18)
-- [ ] 1.6 `assets` is in `EXISTING_ROUTES`. The Assets nav item is a link and active on `/assets`, `/assets/*` and `/holdings/*`, and the Total assets card links to `/assets` (AS-19, AS-20)
-- [ ] 1.7 Tests named AS-01, AS-02, AS-03, AS-04, AS-05, AS-06, AS-07, AS-08, AS-13, AS-17, AS-18, AS-19, AS-20 pass in CI suites; npm run spec:coverage passes
+- [x] 1.1 Tests named AS-01, AS-02, AS-03, AS-04, AS-05, AS-06, AS-07, AS-08, AS-13, AS-17, AS-18, AS-19, AS-20 written and failing (red)
+- [x] 1.2 The shared row builder gives the subtitle, Country badge, native, USD, gain and stale cue for each kind of Holding, and archived Holdings never appear (AS-05, AS-06, AS-07, AS-08)
+- [x] 1.3 The header shows the total, the counts and the set 12-month change, or "—" (AS-01, AS-02)
+- [x] 1.4 Class groups follow the fixed order, with noun counts, shares of total assets, rows by value, and Collapse/Expand all (AS-03, AS-04, AS-13)
+- [x] 1.5 With no Holdings, the page shows "No accounts or assets yet", and both Add buttons open the add-asset modal (AS-17, AS-18)
+- [x] 1.6 `assets` is in `EXISTING_ROUTES`. The Assets nav item is a link and active on `/assets`, `/assets/*` and `/holdings/*`, and the Total assets card links to `/assets` (AS-19, AS-20)
+- [x] 1.7 Tests named AS-01, AS-02, AS-03, AS-04, AS-05, AS-06, AS-07, AS-08, AS-13, AS-17, AS-18, AS-19, AS-20 pass in CI suites; npm run spec:coverage passes
 - [ ] 1.8 Checked by hand against the mockup's Assets screen at 2000px, 800px and 390px (phone rows show name and USD only)
 
 ## 2. Assets page: tiles, Group by Country | None, search
