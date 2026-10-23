@@ -102,7 +102,7 @@ describe("shell totals", () => {
     expect(hrefs).toEqual({
       Overview: "/",
       Assets: "/assets",
-      Liabilities: null,
+      Liabilities: "/liabilities",
       Growth: "/growth",
       Goals: "/goals",
     });

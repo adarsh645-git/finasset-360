@@ -5,11 +5,11 @@
 Blocked by: none
 `/liabilities` shows the total owed, 12 months of paid down, the four stats, one row per active loan (with stale cue and loan colours), and the empty state. The Liabilities nav item, the Overview Liabilities stat card and "Needs updating" loan rows become links (D7, D8, D10, D17, D19, D20). Data comes from `npm run seed` until ticket 4.
 
-- [ ] 1.1 Tests named LB-01, LB-02, LB-03, LB-04, LB-05, LB-06, LB-07, LB-08, LB-09, LB-12, LB-13 written and failing (red)
-- [ ] 1.2 `liabilities.ts` view-model returns header, stats, rows and empty state from `PortfolioData` and calc, with no math of its own (LB-01…LB-09, LB-12)
-- [ ] 1.3 `liabilities` and `liability(id)` route families added to `EXISTING_ROUTES`, and the nav item is active on `/liabilities` and Loan detail (LB-13)
-- [ ] 1.4 `--loan-1…5` tokens added for light and dark
-- [ ] 1.5 Tests named LB-01, LB-02, LB-03, LB-04, LB-05, LB-06, LB-07, LB-08, LB-09, LB-12, LB-13 pass in CI suites; npm run spec:coverage passes
+- [x] 1.1 Tests named LB-01, LB-02, LB-03, LB-04, LB-05, LB-06, LB-07, LB-08, LB-09, LB-12, LB-13 written and failing (red)
+- [x] 1.2 `liabilities.ts` view-model returns header, stats, rows and empty state from `PortfolioData` and calc, with no math of its own (LB-01…LB-09, LB-12)
+- [x] 1.3 `liabilities` and `liability(id)` route families added to `EXISTING_ROUTES`, and the nav item is active on `/liabilities` and Loan detail (LB-13)
+- [x] 1.4 `--loan-1…5` tokens added for light and dark
+- [x] 1.5 Tests named LB-01, LB-02, LB-03, LB-04, LB-05, LB-06, LB-07, LB-08, LB-09, LB-12, LB-13 pass in CI suites; npm run spec:coverage passes
 - [ ] 1.6 Checked by hand against the mockup's Liabilities screen (without the timeline) at 2000px, 800px and 390px, including the empty state
 
 ## 2. Payoff timeline
