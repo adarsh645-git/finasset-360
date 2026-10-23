@@ -104,7 +104,7 @@ describe("shell totals", () => {
       Assets: null,
       Liabilities: null,
       Growth: null,
-      Goals: null,
+      Goals: "/goals",
     });
     expect(shell.classes.map((c) => c.href)).toEqual([null]);
   });

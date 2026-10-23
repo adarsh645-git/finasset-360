@@ -14,6 +14,7 @@ export type RouteFamily =
 export const EXISTING_ROUTES: ReadonlySet<RouteFamily> = new Set<RouteFamily>([
   "overview",
   "holding",
+  "goals",
 ]);
 
 /** "+ Add" buttons and the first-run card's action render only when adding exists. */

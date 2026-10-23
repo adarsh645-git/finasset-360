@@ -5,13 +5,13 @@
 Blocked by: none
 A signed-in User opens `/goals` from the nav (now a link, with the Goal count) and sees "Net worth milestones", the savings-aware subtitle, and one card per Goal sorted by target. Each card shows the displayed name, the derived status, "current of target" and a progress bar, or "No goals yet" when there are none (D1–D5, D11, D12). Goals come from `npm run seed` until ticket 2 lands.
 
-- [ ] 1.1 Tests named GO-01, GO-02, GO-03, GO-05, GO-06, GO-07, GO-08, GO-09, GO-11, GO-17 written and failing (red)
-- [ ] 1.2 `goals` joins `EXISTING_ROUTES` in the link registry, so the Goals nav item links to `/goals` in the sidebar, tablet tabs and phone tab bar, and `buildShell` gives it the Goal count, "0" included (GO-17)
-- [ ] 1.3 `goalRows` builds one all-Countries nominal Net Worth series (history, then the Projection with Monthly savings over the horizon) and calls calc's Goal status helper for each Goal, taking no view state (GO-02, GO-03, GO-05)
-- [ ] 1.4 Status, progress and bar copy and colours follow D3 through the shared formatting helpers, with Reached sticking after a dip (GO-06, GO-07)
-- [ ] 1.5 `displayName` shows a blank name as "⟨compact target⟩ net worth" and trims the rest (GO-11)
-- [ ] 1.6 The page shows the heading, the subtitle, cards in target order, and "No goals yet" with no Goals (GO-01, GO-08, GO-09)
-- [ ] 1.7 Tests named GO-01, GO-02, GO-03, GO-05, GO-06, GO-07, GO-08, GO-09, GO-11, GO-17 pass in CI suites; npm run spec:coverage passes
+- [x] 1.1 Tests named GO-01, GO-02, GO-03, GO-05, GO-06, GO-07, GO-08, GO-09, GO-11, GO-17 written and failing (red)
+- [x] 1.2 `goals` joins `EXISTING_ROUTES` in the link registry, so the Goals nav item links to `/goals` in the sidebar, tablet tabs and phone tab bar, and `buildShell` gives it the Goal count, "0" included (GO-17)
+- [x] 1.3 `goalRows` builds one all-Countries nominal Net Worth series (history, then the Projection with Monthly savings over the horizon) and calls calc's Goal status helper for each Goal, taking no view state (GO-02, GO-03, GO-05)
+- [x] 1.4 Status, progress and bar copy and colours follow D3 through the shared formatting helpers, with Reached sticking after a dip (GO-06, GO-07)
+- [x] 1.5 `displayName` shows a blank name as "⟨compact target⟩ net worth" and trims the rest (GO-11)
+- [x] 1.6 The page shows the heading, the subtitle, cards in target order, and "No goals yet" with no Goals (GO-01, GO-08, GO-09)
+- [x] 1.7 Tests named GO-01, GO-02, GO-03, GO-05, GO-06, GO-07, GO-08, GO-09, GO-11, GO-17 pass in CI suites; npm run spec:coverage passes
 - [ ] 1.8 Checked by hand against the mockup's Goals screen and the nav at 2000px, 800px and 390px
 
 ## 2. Add and remove Goals

@@ -175,7 +175,14 @@ export function buildShell(
     items: NAV.map(({ key, label, target }) => ({
       key,
       label,
-      value: key === "assets" ? compact(assets) : key === "liabilities" ? compact(owed) : null,
+      value:
+        key === "assets"
+          ? compact(assets)
+          : key === "liabilities"
+            ? compact(owed)
+            : key === "goals"
+              ? String(portfolio.goals.length)
+              : null,
       href: hrefFor(target, existing),
       active: false,
     })),
