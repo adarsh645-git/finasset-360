@@ -61,10 +61,10 @@ The Stocks page shows the Positions card. By sector has the distribution bar, al
 Blocked by: 3
 The Real estate page shows By property type and By location, each with a stacked bar and rows of label, Holding names, value and share. Holdings with no city group as "Not set" (D10).
 
-- [ ] 5.1 Tests named AC-18 written and failing (red), and AC-09's Real estate row added to its test
-- [ ] 5.2 Property type and location rows sort by value with one-decimal shares, and an empty city groups as "Not set" (AC-18)
-- [ ] 5.3 Only the Real estate page renders the two cards (AC-09)
-- [ ] 5.4 Tests named AC-09, AC-18 pass in CI suites; npm run spec:coverage passes
+- [x] 5.1 Tests named AC-18 written and failing (red), and AC-09's Real estate row added to its test
+- [x] 5.2 Property type and location rows sort by value with one-decimal shares, and an empty city groups as "Not set" (AC-18)
+- [x] 5.3 Only the Real estate page renders the two cards (AC-09)
+- [x] 5.4 Tests named AC-09, AC-18 pass in CI suites; npm run spec:coverage passes
 - [ ] 5.5 Checked by hand against the mockup's Real estate class screen at 2000px, 800px and 390px (the two cards sit side by side wide and stack narrow)
 
 ## Workflow follow-up

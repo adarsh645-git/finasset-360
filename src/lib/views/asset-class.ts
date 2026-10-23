@@ -16,6 +16,7 @@ import { fxRatesOf, usableItems } from "@/lib/views/fx";
 import { buildHoldingRow, type HoldingRow } from "@/lib/views/holding-row";
 import { ADDING, EXISTING_ROUTES, addAssetHref, hrefFor, type RouteFamily } from "@/lib/views/links";
 import { addMonths, calcAssumptions, projectFromToday } from "@/lib/views/projection";
+import { buildRealEstateCards, type RealEstateCards } from "@/lib/views/real-estate-cards";
 import { calcClassId, historyItem } from "@/lib/views/shell";
 
 export type AssetClassView = {
@@ -35,6 +36,8 @@ export type AssetClassView = {
   /** Recorded history, then the class Projection; null for an empty class. */
   chart: { today: string; height: number; series: ChartSeries[] } | null;
   rows: HoldingRow[];
+  /** By property type and By location; only on a Real estate page that has Holdings. */
+  realEstate: RealEstateCards | null;
 };
 
 const IDS = Object.keys(CLASS_TOKENS) as AssetClassId[];
@@ -114,6 +117,7 @@ export function buildAssetClassView(
     empty: inClass.length === 0 ? { message: `No ${plural} in ${name} yet`, addHref } : null,
     chart: inClass.length === 0 ? null : { today, height: 280, series: [classSeries()] },
     rows,
+    realEstate: id === "realestate" && inClass.length > 0 ? buildRealEstateCards(inClass, rows) : null,
   };
 
   function classSeries(): ChartSeries {
