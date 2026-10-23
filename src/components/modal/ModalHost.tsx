@@ -2,9 +2,11 @@
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useState, type ComponentType } from "react";
+import { AssetForm } from "@/components/modal/AssetForm";
 import { ModalFrame } from "@/components/modal/ModalFrame";
 import { UpdateValueForm } from "@/components/modal/UpdateValueForm";
 import type { PortfolioData } from "@/lib/read-model/types";
+import { defaultAfterSave } from "@/lib/views/holding-entry";
 import { BUILTIN_MODES, closeHref, resolveModal, type ModalMatch, type ModeRow } from "@/lib/views/modal-modes";
 
 /** What the host gives every form (design.md D19). */
@@ -22,8 +24,10 @@ export type ModalFormProps = {
 
 export type ModalForm = ComponentType<ModalFormProps>;
 
-// Ticket 4 adds "add-asset", "edit" and "edit-positions".
+// Ticket 5 adds "edit-positions".
 const BUILTIN_FORMS: Record<string, ModalForm> = {
+  "add-asset": AssetForm,
+  edit: AssetForm,
   "update-value": UpdateValueForm,
 };
 
@@ -41,7 +45,7 @@ export function ModalHost({
   modes?: readonly ModeRow[];
   /** Forms by mode id, beside the built-in ones. */
   forms?: Record<string, ModalForm>;
-  /** A URL to go to after a save instead of closing, or null to close. */
+  /** A URL to go to after a save instead of closing, or null to close. Without it, an add opens the new Holding. */
   afterSave?: (result: Record<string, unknown>) => string | null;
   confirmPrices?: boolean;
 }) {
@@ -77,7 +81,7 @@ export function ModalHost({
         confirmPrices={confirmPrices}
         onSaved={(result) => {
           router.refresh();
-          const next = afterSave?.(result) ?? null;
+          const next = afterSave ? afterSave(result) : defaultAfterSave(match.mode, result);
           if (next) router.push(next);
           else close();
         }}
