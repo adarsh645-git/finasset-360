@@ -2,6 +2,7 @@
 
 import { useRef, useState, type ReactNode } from "react";
 import type { ModalFormProps } from "@/components/modal/ModalHost";
+import { PositionsEditor } from "@/components/modal/PositionsEditor";
 import {
   CLASS_LABEL,
   CLASS_ORDER,
@@ -63,7 +64,7 @@ function Amount({ label, prefix, value, onChange }: { label: string; prefix: str
 
 // Add (class chips, Held in) and edit (pre-filled, class and Country fixed)
 // share this form; all rules live in views/holding-entry.ts (design.md D3, D5).
-export function AssetForm({ match, formId, setBusy, setError, onSaved }: ModalFormProps) {
+export function AssetForm({ match, data, formId, setBusy, setError, onSaved, confirmPrices }: ModalFormProps) {
   const holding = match.holding;
   const [form, setForm] = useState<EntryForm>(() => (holding ? initialEdit(holding) : initialAdd(match.classId ?? "stocks")));
   const sending = useRef(false);
@@ -81,7 +82,7 @@ export function AssetForm({ match, formId, setBusy, setError, onSaved }: ModalFo
         sending.current = true;
         setError(null);
         setBusy(true);
-        const saved = await saveHolding(fetch, form, holding?.id);
+        const saved = await saveHolding(fetch, form, holding?.id, { confirmPrices });
         setBusy(false);
         sending.current = false;
         if (saved.ok) onSaved(saved.result);
@@ -148,8 +149,16 @@ export function AssetForm({ match, formId, setBusy, setError, onSaved }: ModalFo
         </>
       )}
 
-      {/* Stocks: ticket 5 mounts the positions editor here. */}
-      {form.classId !== "stocks" && (
+      {form.classId === "stocks" ? (
+        <PositionsEditor
+          key={form.country}
+          country={form.country}
+          rows={form.positions}
+          today={data.today}
+          onChange={set}
+          setError={setError}
+        />
+      ) : (
         <>
           <Amount label="Current value" prefix={prefix} value={form.value} onChange={(value) => set({ value })} />
           <Amount label="Cost basis (optional)" prefix={prefix} value={form.costBasis} onChange={(costBasis) => set({ costBasis })} />

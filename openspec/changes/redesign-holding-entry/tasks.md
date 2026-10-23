@@ -57,13 +57,13 @@ A User can add a Real estate, Cash, Crypto, Metals or Vehicles & other Holding f
 Blocked by: 4
 A User can add a Stocks Holding, with each Position previewed from the ticker lookup, `.NS` for India, and the Hand Price path for tickers without market data. Edit positions updates a Hand Price by re-typing its ticker; only a changed price is re-dated (D7, D8, D9).
 
-- [ ] 5.1 Tests named HE-13, HE-14, HE-15, HE-16, HE-17, HE-18, HE-19, HE-20, HE-21, HE-24, HE-25 written and failing (red)
-- [ ] 5.2 `positionsReducer` with the ticker key rule, the debounced lookup applied only for the current key, and the preview copy (HE-13, HE-14)
-- [ ] 5.3 The unknown-ticker path: price, Sector (default Other) and name pre-filled from the lookup (HE-15)
-- [ ] 5.4 Add (button or Enter) checks in order, defaults avg cost to the price, replaces a same-ticker row and clears the entry row. Re-typing a listed ticker pre-fills it (HE-16…HE-19)
-- [ ] 5.5 Rows, ×, the running native total, and the "· price N days old" cue (HE-20, HE-21)
-- [ ] 5.6 Stocks create and Edit positions send the full Positions list, with Hand Price, Sector and name only for tickers without market data. Save is blocked with "Add ⟨ticker⟩ or clear it first" while a ticker is typed but not added (HE-24, HE-25, HE-08)
-- [ ] 5.7 Tests named HE-13, HE-14, HE-15, HE-16, HE-17, HE-18, HE-19, HE-20, HE-21, HE-24, HE-25 pass in CI suites; npm run spec:coverage passes
+- [x] 5.1 Tests named HE-13, HE-14, HE-15, HE-16, HE-17, HE-18, HE-19, HE-20, HE-21, HE-24, HE-25 written and failing (red)
+- [x] 5.2 `positionsReducer` with the ticker key rule, the debounced lookup applied only for the current key, and the preview copy (HE-13, HE-14)
+- [x] 5.3 The unknown-ticker path: price, Sector (default Other) and name pre-filled from the lookup (HE-15)
+- [x] 5.4 Add (button or Enter) checks in order, defaults avg cost to the price, replaces a same-ticker row and clears the entry row. Re-typing a listed ticker pre-fills it (HE-16…HE-19)
+- [x] 5.5 Rows, ×, the running native total, and the "· price N days old" cue (HE-20, HE-21)
+- [x] 5.6 Stocks create and Edit positions send the full Positions list, with Hand Price, Sector and name only for tickers without market data. Save is blocked with "Add ⟨ticker⟩ or clear it first" while a ticker is typed but not added (HE-24, HE-25, HE-08)
+- [x] 5.7 Tests named HE-13, HE-14, HE-15, HE-16, HE-17, HE-18, HE-19, HE-20, HE-21, HE-24, HE-25 pass in CI suites; npm run spec:coverage passes
 - [ ] 5.8 Checked by hand against the mockup's Stocks modal at 2000px, 800px and 390px (Enter adds, preview while typing, entry row fits on phone)
 
 ## 6. Stocks detail: Positions in this account and By sector

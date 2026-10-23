@@ -24,10 +24,10 @@ export type ModalFormProps = {
 
 export type ModalForm = ComponentType<ModalFormProps>;
 
-// Ticket 5 adds "edit-positions".
 const BUILTIN_FORMS: Record<string, ModalForm> = {
   "add-asset": AssetForm,
   edit: AssetForm,
+  "edit-positions": AssetForm,
   "update-value": UpdateValueForm,
 };
 

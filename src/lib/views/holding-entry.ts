@@ -1,10 +1,11 @@
 import type { AssetClassId, CountryCode, HoldingData } from "@/lib/read-model/types";
 import { parseAmount, send, type FetchFn, type SaveResult } from "@/lib/views/holding-writes";
+import { initialEditor, toPositionBody, type PositionRow } from "@/lib/views/positions-editor";
 
 // The add/edit asset form as plain functions (design.md D3, D6, D8): what each
 // class shows, the first validation failure, and the request to send. The
-// component holds no rules. Ticket 5 (the Stocks positions editor) fills
-// `positionCount` and `pendingTicker` and adds the Positions to `toRequest`.
+// component holds no rules. The Stocks positions editor (positions-editor.ts)
+// fills `positions`, `positionCount` and `pendingTicker`.
 
 export const CLASS_ORDER: readonly AssetClassId[] = ["stocks", "realestate", "cash", "crypto", "metals", "other"];
 
@@ -40,7 +41,8 @@ export type EntryForm = {
   costBasis: string;
   quantity: string;
   unit: MetalUnit;
-  /** Stocks only: set by the positions editor (ticket 5). */
+  /** Stocks only: set by the positions editor. */
+  positions: PositionRow[];
   positionCount: number;
   pendingTicker: string;
 };
@@ -84,6 +86,7 @@ export function initialAdd(classId: AssetClassId): EntryForm {
     costBasis: "",
     quantity: "",
     unit: "g",
+    positions: [],
     positionCount: 0,
     pendingTicker: "",
   };
@@ -102,6 +105,7 @@ export function initialEdit(holding: HoldingData): EntryForm {
     costBasis: text(holding.costBasis),
     quantity: text(holding.quantity),
     unit: holding.unit === "oz t" ? "oz t" : "g",
+    positions: initialEditor(holding.country, holding.positions).positions,
     positionCount: holding.positions.length,
   };
 }
@@ -125,12 +129,20 @@ export function validate(form: EntryForm): string | null {
 export type EntryRequest = { method: "POST" | "PATCH"; url: string; body: Record<string, unknown> };
 
 /** An add posts; an edit patches, resending class and Country unchanged. Blank optional fields are left out (HE-10). */
-export function toRequest(form: EntryForm, holdingId?: string): EntryRequest {
+export function toRequest(
+  form: EntryForm,
+  holdingId?: string,
+  { confirmPrices = false }: { confirmPrices?: boolean } = {},
+): EntryRequest {
   const body: Record<string, unknown> = { asset_class: form.classId, country: form.country, name: form.name.trim() };
   const description = form.description.trim();
   if (description) body.description = description;
 
-  if (form.classId !== "stocks") {
+  if (form.classId === "stocks") {
+    body.positions = form.positions.map(toPositionBody);
+    // Off unless a caller (the update pass) opts in: the plain form never re-dates unchanged Hand Prices.
+    if (confirmPrices) body.confirm_prices = true;
+  } else {
     body.value = parseAmount(form.value);
     const cost = parseAmount(form.costBasis);
     if (cost !== null) body.cost_basis = cost;
@@ -153,10 +165,15 @@ export function toRequest(form: EntryForm, holdingId?: string): EntryRequest {
 }
 
 /** Checks, then sends. A failed check sends nothing and returns its message. */
-export async function saveHolding(fetchFn: FetchFn, form: EntryForm, holdingId?: string): Promise<SaveResult> {
+export async function saveHolding(
+  fetchFn: FetchFn,
+  form: EntryForm,
+  holdingId?: string,
+  options: { confirmPrices?: boolean } = {},
+): Promise<SaveResult> {
   const problem = validate(form);
   if (problem) return { ok: false, error: problem };
-  const { method, url, body } = toRequest(form, holdingId);
+  const { method, url, body } = toRequest(form, holdingId, options);
   return send(fetchFn, method, url, body);
 }
 
