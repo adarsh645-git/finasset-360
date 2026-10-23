@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Chart } from "@/components/chart/Chart";
 import { ProjectionToggle } from "@/components/chart/ProjectionProvider";
+import { PositionsCard } from "@/components/assets/PositionsCard";
 import { RowLink } from "@/components/overview/RowLink";
 import type { AssetClassView } from "@/lib/views/asset-class";
 
@@ -72,6 +73,7 @@ export function AssetClassPage({ view }: { view: AssetClassView }) {
               <Chart series={view.chart.series} today={view.chart.today} height={view.chart.height} />
             </section>
           )}
+          {view.positions && <PositionsCard card={view.positions} />}
           <section className={`${CARD} flex flex-col p-2`} aria-labelledby="class-holdings">
             <h2 id="class-holdings" className="sr-only">
               Holdings

@@ -47,13 +47,13 @@ Blocked by: 1
 Blocked by: 3
 The Stocks page shows the Positions card. By sector has the distribution bar, aligned columns, collapsible sector rows and Expand/Collapse all. All positions is the flat table with ticker, exchange, name · account, Sector, shares, price, value, gain and weight. Unknown tickers fall back as in D8, and every Position row opens the position drawer (D8, D9).
 
-- [ ] 4.1 Tests named AC-09, AC-10, AC-11, AC-12, AC-13, AC-14, AC-15, AC-16, AC-17 written and failing (red)
-- [ ] 4.2 Only the Stocks page renders the Positions card (AC-09, Stocks and other-class rows)
-- [ ] 4.3 Sector rows, the distribution bar and the card subtitle match the sums, shares and gains, and the phone subtitle leads with "% of stocks" (AC-10, AC-12, AC-13)
-- [ ] 4.4 Sectors start collapsed, and Expand all / Collapse all toggle them all (AC-11)
-- [ ] 4.5 All positions lists each Position once per Holding, with the suffix stripped, the exchange fallback, the name, Sector and Hand Price fallbacks, and the price age cue (AC-14, AC-15, AC-16)
-- [ ] 4.6 Position rows in both views target `?position=<holdingId>~<ticker>`, and the drawer opens over the Stocks page (AC-17)
-- [ ] 4.7 Tests named AC-09, AC-10, AC-11, AC-12, AC-13, AC-14, AC-15, AC-16, AC-17 pass in CI suites; npm run spec:coverage passes
+- [x] 4.1 Tests named AC-09, AC-10, AC-11, AC-12, AC-13, AC-14, AC-15, AC-16, AC-17 written and failing (red)
+- [x] 4.2 Only the Stocks page renders the Positions card (AC-09, Stocks and other-class rows)
+- [x] 4.3 Sector rows, the distribution bar and the card subtitle match the sums, shares and gains, and the phone subtitle leads with "% of stocks" (AC-10, AC-12, AC-13)
+- [x] 4.4 Sectors start collapsed, and Expand all / Collapse all toggle them all (AC-11)
+- [x] 4.5 All positions lists each Position once per Holding, with the suffix stripped, the exchange fallback, the name, Sector and Hand Price fallbacks, and the price age cue (AC-14, AC-15, AC-16)
+- [x] 4.6 Position rows in both views target `?position=<holdingId>~<ticker>`, and the drawer opens over the Stocks page (AC-17)
+- [x] 4.7 Tests named AC-09, AC-10, AC-11, AC-12, AC-13, AC-14, AC-15, AC-16, AC-17 pass in CI suites; npm run spec:coverage passes
 - [ ] 4.8 Checked by hand against the mockup's Stocks class screen at 2000px, 800px and 390px (columns align between sector and stock rows; phone drops shares, gain and weight)
 
 ## 5. Real estate distribution cards
