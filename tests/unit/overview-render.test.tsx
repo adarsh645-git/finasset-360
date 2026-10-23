@@ -19,7 +19,8 @@ describe("overview render", () => {
     expect(html).not.toMatch(/1Y|3Y|5Y|yr projection|Projection off/);
     expect(html).not.toMatch(/Total assets|Where it|Needs updating|Equity/);
     expect(html).not.toMatch(/<button/);
-    expect(html).not.toMatch(/Add account|or a loan/);
+    expect(html).not.toMatch(/Add account/);
+    expect(html).toContain("or a loan");
   });
 
   it("OV-22 a Portfolio with only archived items renders the first-run card", () => {

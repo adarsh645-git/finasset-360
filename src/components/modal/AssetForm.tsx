@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import type { ModalFormProps } from "@/components/modal/ModalHost";
 import { PositionsEditor } from "@/components/modal/PositionsEditor";
 import {
@@ -64,9 +64,14 @@ function Amount({ label, prefix, value, onChange }: { label: string; prefix: str
 
 // Add (class chips, Held in) and edit (pre-filled, class and Country fixed)
 // share this form; all rules live in views/holding-entry.ts (design.md D3, D5).
-export function AssetForm({ match, data, formId, setBusy, setError, onSaved, confirmPrices }: ModalFormProps) {
+export function AssetForm({ match, data, formId, setBusy, setError, onSaved, confirmPrices, carry, setCarry }: ModalFormProps) {
   const holding = match.holding;
-  const [form, setForm] = useState<EntryForm>(() => (holding ? initialEdit(holding) : initialAdd(match.classId ?? "stocks")));
+  const [form, setForm] = useState<EntryForm>(() =>
+    holding ? initialEdit(holding) : { ...initialAdd(match.classId ?? "stocks"), ...(carry ?? {}) },
+  );
+  useEffect(() => {
+    if (!holding) setCarry?.({ name: form.name, country: form.country });
+  }, [holding, form.name, form.country, setCarry]);
   const sending = useRef(false);
   const set = (patch: Partial<EntryForm>) => setForm((f) => ({ ...f, ...patch }));
   const { nameLabel, placeholder } = formFor(form.classId);

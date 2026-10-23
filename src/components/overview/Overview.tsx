@@ -16,6 +16,7 @@ export function Overview({ overview }: { overview: OverviewView }) {
     chart,
     firstRun,
     addHref,
+    addLoanHref,
     stats,
     allocation,
     equity,
@@ -79,12 +80,19 @@ export function Overview({ overview }: { overview: OverviewView }) {
             Your net worth, allocation and projection appear here once you&apos;ve added something.
           </p>
           {addHref && (
-            <Link
-              href={addHref}
-              className="mt-1 flex h-10 w-fit items-center rounded-lg bg-ink px-4 text-[13.5px] font-medium text-bg"
-            >
-              Add
-            </Link>
+            <div className="mt-1 flex flex-wrap items-center gap-3">
+              <Link
+                href={addHref}
+                className="flex h-10 w-fit items-center rounded-lg bg-ink px-4 text-[13.5px] font-medium text-bg"
+              >
+                Add
+              </Link>
+              {addLoanHref && (
+                <Link href={addLoanHref} className="text-[13.5px] text-ink2 underline hover:text-ink">
+                  or a loan
+                </Link>
+              )}
+            </div>
           )}
         </section>
       ) : (

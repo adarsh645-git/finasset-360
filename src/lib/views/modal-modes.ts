@@ -94,6 +94,25 @@ const update: ModeRow = {
   },
 };
 
+const addLiability: ModeRow = {
+  id: "add-liability",
+  match(params) {
+    if (params.get("modal") !== "add-liability") return null;
+    return { mode: "add-liability", title: "Add to portfolio", saveLabel: "Add loan", holding: null, liability: null };
+  },
+};
+
+const editLiability: ModeRow = {
+  id: "edit-liability",
+  match(params, data) {
+    if (params.get("modal") !== "edit") return null;
+    const id = params.get("liability");
+    const liability = (id && data.liabilities.find((l) => l.id === id && l.archivedAt === null)) || null;
+    if (!liability) return null;
+    return { mode: "edit-liability", title: "Edit loan", saveLabel: "Save", holding: null, liability };
+  },
+};
+
 const updateBalance: ModeRow = {
   id: "update-balance",
   match(params, data) {
@@ -105,7 +124,16 @@ const updateBalance: ModeRow = {
   },
 };
 
-export const BUILTIN_MODES: readonly ModeRow[] = [addAsset, edit, update, updateBalance];
+
+export const BUILTIN_MODES: readonly ModeRow[] = [addAsset, edit, update, addLiability, editLiability, updateBalance];
+
+/** The current URL with the add modal switched to the other side (LE-01); other params stay. */
+export function swapAddHref(pathname: string, search: string, to: "add-asset" | "add-liability"): string {
+  const params = new URLSearchParams(search.replace(/^\?/, ""));
+  params.set("modal", to);
+  if (to === "add-liability") params.delete("class");
+  return `${pathname}?${params.toString().replace(/%7E/gi, "~")}`;
+}
 
 /** The first row that claims the params, or null (render nothing). */
 export function resolveModal(
