@@ -29,12 +29,12 @@ A signed-in User sees the new frame around the existing interim page. It is in t
 Blocked by: 1, 2
 The shell shows the User's real numbers from the read model: Net Worth with its 12-month change ("—" without a year of history), compact Assets and Liabilities totals in every nav form, and the "Asset classes" list of classes in use with colour dots, all plain text until their pages exist. An empty Portfolio shows $0 and "—" (D13).
 
-- [ ] 3.1 Tests named SH-04, SH-05, SH-06, SH-07, SH-08, SH-09, SH-11 written and failing (red)
-- [ ] 3.2 A request-scoped `getPortfolio()` wraps `loadPortfolio` in `cache()`, and the layout passes its data to `buildShell()`
-- [ ] 3.3 Net Worth, its 12-month change and the nav totals come from `calc/`, excluding archived items (SH-04, SH-05, SH-06)
-- [ ] 3.4 The class list shows only classes with current Holdings, in the fixed order; every row and item takes its `href` from the registry (SH-07, SH-08, SH-09)
-- [ ] 3.5 With no current items the sidebar shows $0, — and no class heading (SH-11)
-- [ ] 3.6 Tests named SH-04, SH-05, SH-06, SH-07, SH-08, SH-09, SH-11 pass in CI suites; npm run spec:coverage passes
+- [x] 3.1 Tests named SH-04, SH-05, SH-06, SH-07, SH-08, SH-09, SH-11 written and failing (red)
+- [x] 3.2 A request-scoped `getPortfolio()` wraps `loadPortfolio` in `cache()`, and the layout passes its data to `buildShell()`
+- [x] 3.3 Net Worth, its 12-month change and the nav totals come from `calc/`, excluding archived items (SH-04, SH-05, SH-06)
+- [x] 3.4 The class list shows only classes with current Holdings, in the fixed order; every row and item takes its `href` from the registry (SH-07, SH-08, SH-09)
+- [x] 3.5 With no current items the sidebar shows $0, — and no class heading (SH-11)
+- [x] 3.6 Tests named SH-04, SH-05, SH-06, SH-07, SH-08, SH-09, SH-11 pass in CI suites; npm run spec:coverage passes
 - [ ] 3.7 Checked by hand with `npm run seed` data and with an empty User against the mockup's sidebar at 2000px, and the tab bar totals at 390px
 
 ## 4. Shared chart primitive

@@ -6,7 +6,7 @@ import type { ReactNode } from "react";
 import { SignOutButton } from "@/components/SignOutButton";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import type { Theme } from "@/lib/theme";
-import { markActive, type NavItem, type Shell } from "@/lib/views/shell";
+import { markActive, type ClassRow, type NavItem, type Shell } from "@/lib/views/shell";
 
 // One frame, three nav forms from one Shell: sidebar (>=1024px), top bar with
 // scrolling tabs (640-1023px), top bar with a bottom tab bar (<640px). CSS
@@ -53,6 +53,51 @@ function NavEntry({
   );
 }
 
+function NetWorth({ shell }: { shell: Shell }) {
+  const { total, change, tone } = shell.netWorth;
+  return (
+    <div data-section="net-worth" className="flex flex-col gap-1 px-2">
+      <span className="text-[11px] uppercase tracking-[0.04em] text-ink2">Net worth</span>
+      <span className="text-[26px] font-semibold tracking-[-0.02em] tabular-nums">{total}</span>
+      <span
+        data-tone={tone ?? undefined}
+        className={`text-[12px] tabular-nums ${
+          tone === "up" ? "text-pos" : tone === "down" ? "text-neg" : "text-ink2"
+        }`}
+      >
+        {change}
+      </span>
+    </div>
+  );
+}
+
+// Plain text until the class page exists, like every other row.
+function ClassEntry({ row }: { row: ClassRow }) {
+  const className = `flex h-9 items-center gap-2.5 rounded-lg px-2.5 text-[13px] ${
+    row.href ? "hover:bg-sel" : ""
+  }`;
+  const content = (
+    <>
+      <span
+        aria-hidden
+        className="h-2 w-2 flex-none rounded-full"
+        style={{ background: `var(${row.dot})` }}
+      />
+      <span className="flex-1 truncate">{row.name}</span>
+      <span className="tabular-nums text-ink2">{row.value}</span>
+    </>
+  );
+  return row.href ? (
+    <Link href={row.href} data-class={row.id} className={className}>
+      {content}
+    </Link>
+  ) : (
+    <span data-class={row.id} className={className}>
+      {content}
+    </span>
+  );
+}
+
 export function ShellFrame({
   shell: base,
   theme,
@@ -70,6 +115,7 @@ export function ShellFrame({
         <div className="px-2">
           <Brand />
         </div>
+        <NetWorth shell={shell} />
         <nav data-nav="sidebar" className="flex flex-col gap-0.5">
           {shell.items.map((item) => (
             <NavEntry
@@ -80,9 +126,20 @@ export function ShellFrame({
               } ${item.href ? "hover:bg-sel" : ""}`}
             >
               <span>{item.label}</span>
+              {item.value && <span className="tabular-nums text-ink2">{item.value}</span>}
             </NavEntry>
           ))}
         </nav>
+        {shell.classes.length > 0 && (
+          <section data-section="classes" className="flex flex-col gap-0.5">
+            <h2 className="px-2.5 pb-1 text-[11px] font-normal uppercase tracking-[0.04em] text-ink2">
+              Asset classes
+            </h2>
+            {shell.classes.map((row) => (
+              <ClassEntry key={row.id} row={row} />
+            ))}
+          </section>
+        )}
         <div className="flex-1" />
         <div className="flex flex-col gap-2">
           <ThemeToggle theme={theme} />
@@ -115,6 +172,7 @@ export function ShellFrame({
                 }`}
               >
                 {item.label}
+                {item.value && <span className="ml-1.5 tabular-nums text-ink2">{item.value}</span>}
               </NavEntry>
             ))}
           </nav>
@@ -135,7 +193,7 @@ export function ShellFrame({
           <NavEntry
             key={item.key}
             item={item}
-            className={`relative flex h-14 min-w-0 flex-1 items-center justify-center text-[11px] ${
+            className={`relative flex h-14 min-w-0 flex-1 flex-col items-center justify-center text-[11px] ${
               item.active ? "font-medium text-ink" : "text-ink2"
             }`}
           >
@@ -143,6 +201,7 @@ export function ShellFrame({
               <span aria-hidden className="absolute inset-x-3 top-0 h-0.5 rounded-full bg-ink" />
             )}
             {item.label}
+            {item.value && <span className="tabular-nums text-ink2">{item.value}</span>}
           </NavEntry>
         ))}
       </nav>

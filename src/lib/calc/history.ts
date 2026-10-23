@@ -12,7 +12,7 @@ const dayNumber = (date: string): number => Date.parse(`${date}T00:00:00Z`) / MS
 const isoDay = (ms: number): string => new Date(ms).toISOString().slice(0, 10);
 
 /** The date one calendar year before `date`, clamped to the month's last day. */
-function yearBefore(date: string): string {
+export function yearBefore(date: string): string {
   const [y, m, d] = date.split("-").map(Number);
   const lastDay = new Date(Date.UTC(y - 1, m, 0)).getUTCDate();
   return isoDay(Date.UTC(y - 1, m - 1, Math.min(d, lastDay)));
