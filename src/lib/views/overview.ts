@@ -5,15 +5,12 @@ import {
   fxRateOn,
   percentOwned,
   netWorthOn,
-  project,
   sampleDates,
   setTwelveMonthChange,
   valueOn,
   yearBefore,
-  type AssetClassId as CalcClassId,
   type FxRate,
   type HistoryItem,
-  type ProjectionAssumptionsInput,
 } from "@/lib/calc";
 import type { ChartGoal, ChartSeries, Point } from "@/lib/chart";
 import {
@@ -32,7 +29,9 @@ import { CLASS_TOKENS, COUNTRY_TOKENS } from "@/lib/tokens";
 import { fxRatesOf, usableItems } from "@/lib/views/fx";
 import { ADDING, EXISTING_ROUTES, hrefFor, type RouteFamily } from "@/lib/views/links";
 import { buildStaleList, type StaleRow } from "@/lib/views/stale-list";
-import { calcClassId, calcCountry, historyItem } from "@/lib/views/shell";
+import { calcClassId, historyItem } from "@/lib/views/shell";
+import { addMonths, projectFromToday } from "@/lib/views/projection";
+import { goalRows, type GoalRow } from "@/lib/views/goals";
 
 export const RANGES = ["1Y", "3Y", "5Y", "All"] as const;
 export type Range = (typeof RANGES)[number];
@@ -125,6 +124,8 @@ export type Overview = {
   countries: CountryBlock[];
   currencyEffect: CurrencyEffect | null;
   needsUpdating: { title: string; rows: StaleRow[] } | null;
+  /** The next three unreached Goals; null when there are none. */
+  goals: { rows: GoalRow[]; allHref: string | null } | null;
 };
 
 const LABEL = "Net worth · rolled up to USD";
@@ -134,16 +135,6 @@ function yearsBefore(date: string, years: number): string {
   let d = date;
   for (let i = 0; i < years; i++) d = yearBefore(d);
   return d;
-}
-
-/** The date `months` calendar months after `date`, clamped to the month's last day. */
-export function addMonths(date: string, months: number): string {
-  const [y, m, d] = date.split("-").map(Number) as [number, number, number];
-  const total = y * 12 + (m - 1) + months;
-  const ty = Math.floor(total / 12);
-  const tm = total % 12;
-  const last = new Date(Date.UTC(ty, tm + 1, 0)).getUTCDate();
-  return new Date(Date.UTC(ty, tm, Math.min(d, last))).toISOString().slice(0, 10);
 }
 
 const pts = (dates: string[], values: number[]): Point[] =>
@@ -188,6 +179,7 @@ export function buildOverview(
       countries: [],
       currencyEffect: null,
       needsUpdating: null,
+      goals: null,
     };
   }
 
@@ -223,6 +215,7 @@ export function buildOverview(
   const owedAt = (date: string) => -worth([], owed, date);
 
   // History, then the Projection month by month over the horizon (today is already in history).
+  const goals = goalRows(data, today);
   const projection = projectFromToday(data);
   const projected = projection.netWorth.map((_, k) => addMonths(today, k + 1));
   const all = [...dates, ...projected];
@@ -238,10 +231,11 @@ export function buildOverview(
     ranges,
     ...buildCards(data, { rates, holdings, liabilities, existing }),
     needsUpdating: needsUpdating(data, existing),
+    goals: goalsCard(goals, existing),
     chart: {
       today,
       height: CHART_HEIGHT,
-      goals: [],
+      goals: goals.map((g) => ({ value: g.target, label: g.name })),
       series: [
         {
           name: "Net worth",
@@ -270,6 +264,11 @@ export function buildOverview(
       ],
     },
   };
+}
+
+function goalsCard(rows: GoalRow[], existing: ReadonlySet<RouteFamily>): Overview["goals"] {
+  const next = rows.filter((r) => r.status.kind !== "reached").slice(0, 3);
+  return next.length ? { rows: next, allHref: hrefFor({ kind: "goals" }, existing) } : null;
 }
 
 type Cards = Pick<Overview, "stats" | "allocation" | "equity" | "countries" | "currencyEffect">;
@@ -451,63 +450,5 @@ function buildCards(
     equity: equityRows.length ? { rows: equityRows } : null,
     countries,
     currencyEffect,
-  };
-}
-
-const fraction = (v: number | null) => (v === null ? null : v / 100);
-
-/** The read model's stored assumptions as calc's Projection input. */
-export function calcAssumptions(data: PortfolioData): ProjectionAssumptionsInput {
-  const a = data.assumptions;
-  const country = (c: "US" | "IN") => {
-    const x = a.byCountry[c];
-    return {
-      inflation: fraction(x.inflation),
-      realEstate: fraction(x.realestate),
-      stocks: fraction(x.stocks),
-      cash: fraction(x.cash),
-      monthlySavings: x.monthlySavings,
-    };
-  };
-  return {
-    countries: { US: country("US"), India: country("IN") },
-    shared: {
-      crypto: fraction(a.shared.crypto),
-      metals: fraction(a.shared.metals),
-      vehiclesAndOther: fraction(a.shared.other),
-    },
-    savingsGrowth: fraction(a.savingsGrowth),
-    horizonYears: a.horizonYears,
-  };
-}
-
-/** The Projection of current items from month 1 on, in USD. */
-function projectFromToday(data: PortfolioData) {
-  const assumptions = calcAssumptions(data);
-  const fxRate = data.fx.today?.rate ?? data.fx.history.at(-1)?.rate ?? 1;
-  const hasRate = data.fx.today !== null || data.fx.history.length > 0;
-  const usable = <T extends { country: "US" | "IN" }>(items: T[]) =>
-    items.filter((i) => hasRate || i.country === "US");
-  const result = project({
-    holdings: usable(data.holdings.filter((h) => h.archivedAt === null)).map((h) => ({
-      id: h.id,
-      country: calcCountry(h.country),
-      assetClass: calcClassId(h.assetClass) as CalcClassId,
-      currentValue: h.currentValue,
-    })),
-    liabilities: usable(data.liabilities.filter((l) => l.archivedAt === null)).map((l) => ({
-      id: l.id,
-      country: calcCountry(l.country),
-      balance: l.currentBalance,
-      apr: l.apr / 100,
-      monthlyPayment: l.monthlyPayment,
-    })),
-    assumptions,
-    fxRate,
-  });
-  return {
-    netWorth: result.netWorthUsd.slice(1),
-    assets: result.totalAssetsUsd.slice(1),
-    liabilities: result.totalLiabilitiesUsd.slice(1),
   };
 }

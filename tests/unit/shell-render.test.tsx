@@ -47,9 +47,9 @@ describe("shell render", () => {
     expect(html).toContain("Sign out");
   });
 
-  it("SH-08 only the Overview is a link; Stocks is plain text and nothing offers adding", () => {
+  it("SH-08 only the Overview and Goals are links; Stocks is plain text and nothing offers adding", () => {
     expect(html).toMatch(/<a [^>]*href="\/"[^>]*data-label="Overview"|<a [^>]*data-label="Overview"[^>]*href="\/"/);
-    expect(html.match(/<a /g)?.length).toBe(3); // Overview in the sidebar, tabs and bottom bar
+    expect(html.match(/<a /g)?.length).toBe(6); // Overview and Goals in the sidebar, tabs and bottom bar
     expect(html).toMatch(/<span data-class="stocks"/);
     expect(html).toContain("Stocks");
     expect(html).not.toContain("+ Add");
