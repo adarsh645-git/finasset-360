@@ -19,11 +19,11 @@ Blocked by: none
 Blocked by: 1
 The class tiles filter the list, and selecting the selected tile again clears it. Group by Country and None work. Search matches name, Description, city, tickers and company names, opens collapsed groups, and shows "No holdings match." when nothing is left (D4, D5).
 
-- [ ] 2.1 Tests named AS-09, AS-10, AS-11, AS-12, AS-14, AS-15, AS-16 written and failing (red)
-- [ ] 2.2 Tiles show "All assets" plus one per class in use, and filtering keeps group shares relative to total assets (AS-09, AS-10)
-- [ ] 2.3 Country groups count in items and badge the Asset Class. None shows one "All holdings" group (AS-11, AS-12)
-- [ ] 2.4 Search combines with the filter, ignores case and spaces, opens every group, and shows "No holdings match." (AS-14, AS-15, AS-16)
-- [ ] 2.5 Tests named AS-09, AS-10, AS-11, AS-12, AS-14, AS-15, AS-16 pass in CI suites; npm run spec:coverage passes
+- [x] 2.1 Tests named AS-09, AS-10, AS-11, AS-12, AS-14, AS-15, AS-16 written and failing (red)
+- [x] 2.2 Tiles show "All assets" plus one per class in use, and filtering keeps group shares relative to total assets (AS-09, AS-10)
+- [x] 2.3 Country groups count in items and badge the Asset Class. None shows one "All holdings" group (AS-11, AS-12)
+- [x] 2.4 Search combines with the filter, ignores case and spaces, opens every group, and shows "No holdings match." (AS-14, AS-15, AS-16)
+- [x] 2.5 Tests named AS-09, AS-10, AS-11, AS-12, AS-14, AS-15, AS-16 pass in CI suites; npm run spec:coverage passes
 - [ ] 2.6 Checked by hand against the mockup's Assets screen at 2000px, 800px and 390px (tiles reflow, search field and Group by fit on phone)
 
 ## 3. Class pages with chart and Holdings table, with links on
