@@ -87,6 +87,13 @@ export function dayMonth(d: string | Date | Absent): string {
   return `${Number(iso.slice(8, 10))} ${MONTHS[Number(iso.slice(5, 7)) - 1]}`;
 }
 
+/** "Oct 14, 2026". */
+export function formatDay(d: string | Date | Absent): string {
+  if (d == null) return DASH;
+  const iso = typeof d === "string" ? d : d.toISOString();
+  return `${MONTHS[Number(iso.slice(5, 7)) - 1]} ${Number(iso.slice(8, 10))}, ${iso.slice(0, 4)}`;
+}
+
 export function monthAxis(d: string | Date | Absent): string {
   if (d == null) return DASH;
   const [m, y] = monthParts(d);

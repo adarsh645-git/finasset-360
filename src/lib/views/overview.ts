@@ -30,7 +30,7 @@ import {
 import type { AssetClassId, PortfolioData } from "@/lib/read-model/types";
 import { CLASS_TOKENS, COUNTRY_TOKENS } from "@/lib/tokens";
 import { fxRatesOf, usableItems } from "@/lib/views/fx";
-import { EXISTING_ROUTES, hrefFor, type RouteFamily } from "@/lib/views/links";
+import { ADDING, EXISTING_ROUTES, hrefFor, type RouteFamily } from "@/lib/views/links";
 import { buildStaleList, type StaleRow } from "@/lib/views/stale-list";
 import { calcClassId, calcCountry, historyItem } from "@/lib/views/shell";
 
@@ -113,6 +113,8 @@ export type CurrencyEffect = {
 
 export type Overview = {
   firstRun: boolean;
+  /** The first-run card's Add button target; null while adding is off. */
+  addHref: string | null;
   header: OverviewHeader;
   range: Range;
   ranges: { label: Range; href: string; selected: boolean }[];
@@ -135,7 +137,7 @@ function yearsBefore(date: string, years: number): string {
 }
 
 /** The date `months` calendar months after `date`, clamped to the month's last day. */
-function addMonths(date: string, months: number): string {
+export function addMonths(date: string, months: number): string {
   const [y, m, d] = date.split("-").map(Number) as [number, number, number];
   const total = y * 12 + (m - 1) + months;
   const ty = Math.floor(total / 12);
@@ -151,7 +153,11 @@ const plural = (n: number, one: string, many: string) => (n === 1 ? one : many);
 
 export function buildOverview(
   data: PortfolioData,
-  { range, existing = EXISTING_ROUTES }: { range: Range; existing?: ReadonlySet<RouteFamily> },
+  {
+    range,
+    existing = EXISTING_ROUTES,
+    adding = ADDING,
+  }: { range: Range; existing?: ReadonlySet<RouteFamily>; adding?: boolean },
 ): Overview {
   const { today } = data;
   const ranges = RANGES.map((label) => ({
@@ -165,6 +171,7 @@ export function buildOverview(
   if (firstRun) {
     return {
       firstRun,
+      addHref: adding ? "/?modal=add-asset" : null,
       header: {
         label: LABEL,
         total: usd(0),
@@ -225,6 +232,7 @@ export function buildOverview(
 
   return {
     firstRun,
+    addHref: null,
     header: { label: LABEL, total: usd(netNow), change, since, tone },
     range,
     ranges,
@@ -448,8 +456,8 @@ function buildCards(
 
 const fraction = (v: number | null) => (v === null ? null : v / 100);
 
-/** The Projection of current items from month 1 on, in USD. */
-function projectFromToday(data: PortfolioData) {
+/** The read model's stored assumptions as calc's Projection input. */
+export function calcAssumptions(data: PortfolioData): ProjectionAssumptionsInput {
   const a = data.assumptions;
   const country = (c: "US" | "IN") => {
     const x = a.byCountry[c];
@@ -461,7 +469,7 @@ function projectFromToday(data: PortfolioData) {
       monthlySavings: x.monthlySavings,
     };
   };
-  const assumptions: ProjectionAssumptionsInput = {
+  return {
     countries: { US: country("US"), India: country("IN") },
     shared: {
       crypto: fraction(a.shared.crypto),
@@ -471,6 +479,11 @@ function projectFromToday(data: PortfolioData) {
     savingsGrowth: fraction(a.savingsGrowth),
     horizonYears: a.horizonYears,
   };
+}
+
+/** The Projection of current items from month 1 on, in USD. */
+function projectFromToday(data: PortfolioData) {
+  const assumptions = calcAssumptions(data);
   const fxRate = data.fx.today?.rate ?? data.fx.history.at(-1)?.rate ?? 1;
   const hasRate = data.fx.today !== null || data.fx.history.length > 0;
   const usable = <T extends { country: "US" | "IN" }>(items: T[]) =>

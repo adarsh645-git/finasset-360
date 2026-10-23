@@ -1,5 +1,7 @@
-import type { ReactNode } from "react";
+import { Suspense, type ReactNode } from "react";
 import { cookies } from "next/headers";
+import { DrawerHost } from "@/components/holding/DrawerHost";
+import { ModalHost } from "@/components/modal/ModalHost";
 import { ProjectionProvider } from "@/components/chart/ProjectionProvider";
 import { ShellFrame } from "@/components/shell/ShellFrame";
 import { requireSignedInUser } from "@/lib/auth/require-signed-in-user";
@@ -27,6 +29,10 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
         horizon={portfolio.assumptions.horizonYears ?? DEFAULT_HORIZON_YEARS}
       >
         {children}
+        <Suspense fallback={null}>
+          <ModalHost data={portfolio} />
+          <DrawerHost data={portfolio} />
+        </Suspense>
       </ProjectionProvider>
     </ShellFrame>
   );

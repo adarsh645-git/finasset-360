@@ -19,9 +19,9 @@ describe("shell view", () => {
     expect(shell.items.filter((i) => i.active).map((i) => i.label)).toEqual([item]);
   });
 
-  it("SH-10 the registry has only the Overview on and adding off, and the shell knows the first name", () => {
-    expect([...EXISTING_ROUTES]).toEqual(["overview"]);
-    expect(ADDING).toBe(false);
+  it("SH-10 the registry has the Overview and Holding detail on, adding on, and the shell knows the first name", () => {
+    expect([...EXISTING_ROUTES]).toEqual(["overview", "holding"]);
+    expect(ADDING).toBe(true);
     expect(hrefFor({ kind: "overview" })).toBe("/");
     expect(hrefFor({ kind: "assets" })).toBeNull();
     expect(buildShell({ user, portfolio: data }, { pathname: "/" }).userName).toBe("Adarsh");

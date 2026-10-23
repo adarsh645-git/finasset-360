@@ -57,7 +57,10 @@ After `redesign-data-model` and `redesign-shell-and-overview`, production shows 
 
 ### Modified Capabilities
 
-None (`openspec/specs/` is empty; the capabilities this change consumes are still in flight).
+- `app-shell`: "The shell links only to pages that exist" now names Holding detail pages and adding as existing, so the "+ Add" buttons show (SH-08 is scoped to a registry with only the Overview and adding off).
+- `overview`: "An empty Portfolio shows the first-run card" now shows the card's Add button once adding exists.
+
+Both are requirements of `redesign-shell-and-overview`, which is still in flight, so these deltas apply on top of its own.
 
 ## Impact
 

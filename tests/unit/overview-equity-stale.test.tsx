@@ -158,7 +158,7 @@ describe("overview needs updating", () => {
       ["holding", "b", 35],
       ["holding", "chase", 35],
     ]);
-    expect(list[1]).toMatchObject({ stocks: true, href: null });
+    expect(list[1]).toMatchObject({ stocks: true, href: "/holdings/zer" });
   });
 
   it("OV-18 nothing Stale hides the card", () => {

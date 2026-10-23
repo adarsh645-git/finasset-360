@@ -15,6 +15,7 @@ export function Overview({ overview }: { overview: OverviewView }) {
     ranges,
     chart,
     firstRun,
+    addHref,
     stats,
     allocation,
     equity,
@@ -76,6 +77,14 @@ export function Overview({ overview }: { overview: OverviewView }) {
           <p className="text-[13.5px] text-ink2">
             Your net worth, allocation and projection appear here once you&apos;ve added something.
           </p>
+          {addHref && (
+            <Link
+              href={addHref}
+              className="mt-1 flex h-10 w-fit items-center rounded-lg bg-ink px-4 text-[13.5px] font-medium text-bg"
+            >
+              Add
+            </Link>
+          )}
         </section>
       ) : (
         chart && (
