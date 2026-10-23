@@ -1,11 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import type { ReactNode } from "react";
 import { SignOutButton } from "@/components/SignOutButton";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import type { Theme } from "@/lib/theme";
+import { addAssetHref } from "@/lib/views/links";
 import { markActive, type ClassRow, type NavItem, type Shell } from "@/lib/views/shell";
 
 // One frame, three nav forms from one Shell: sidebar (>=1024px), top bar with
@@ -107,7 +108,10 @@ export function ShellFrame({
   theme: Theme;
   children: ReactNode;
 }) {
-  const shell = markActive(base, usePathname());
+  const pathname = usePathname();
+  const search = useSearchParams();
+  const shell = markActive(base, pathname);
+  const addHref = shell.adding ? addAssetHref(pathname ?? "/", search) : null;
 
   return (
     <div className="flex min-h-screen bg-bg text-ink">
@@ -140,6 +144,14 @@ export function ShellFrame({
             ))}
           </section>
         )}
+        {addHref && (
+          <Link
+            href={addHref}
+            className="flex h-10 items-center rounded-lg border border-line px-2.5 text-[13.5px] font-medium hover:bg-sel"
+          >
+            + Add account or asset
+          </Link>
+        )}
         <div className="flex-1" />
         <div className="flex flex-col gap-2">
           <ThemeToggle theme={theme} />
@@ -158,6 +170,14 @@ export function ShellFrame({
               <span className="hidden max-w-32 truncate text-[13px] text-ink2 sm:inline">
                 {shell.userName}
               </span>
+              {addHref && (
+                <Link
+                  href={addHref}
+                  className="flex h-10 items-center rounded-lg border border-line px-3 text-[13px] font-medium"
+                >
+                  + Add
+                </Link>
+              )}
               <ThemeToggle theme={theme} short />
               <SignOutButton />
             </div>

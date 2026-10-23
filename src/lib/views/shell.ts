@@ -10,7 +10,7 @@ import {
 import { compact, DASH, signed, signedPct, usd } from "@/lib/format";
 import type { AssetClassId, HoldingData, LiabilityData, PortfolioData } from "@/lib/read-model/types";
 import { CLASS_TOKENS } from "@/lib/tokens";
-import { EXISTING_ROUTES, hrefFor, type LinkTarget, type RouteFamily } from "@/lib/views/links";
+import { ADDING, EXISTING_ROUTES, hrefFor, type LinkTarget, type RouteFamily } from "@/lib/views/links";
 
 export type NavKey = "overview" | "assets" | "liabilities" | "growth" | "goals";
 
@@ -45,6 +45,8 @@ export type Shell = {
   items: NavItem[];
   /** Classes with current Holdings, in the fixed order; empty hides the list. */
   classes: ClassRow[];
+  /** Whether the "+ Add" buttons show (the link registry's ADDING flag). */
+  adding: boolean;
 };
 
 const NAV: { key: NavKey; label: string; target: LinkTarget }[] = [
@@ -123,7 +125,8 @@ export function buildShell(
   {
     pathname,
     existing = EXISTING_ROUTES,
-  }: { pathname: string | null; existing?: ReadonlySet<RouteFamily> },
+    adding = ADDING,
+  }: { pathname: string | null; existing?: ReadonlySet<RouteFamily>; adding?: boolean },
 ): Shell {
   const { portfolio } = input;
   const { today } = portfolio;
@@ -184,6 +187,7 @@ export function buildShell(
       active: false,
     })),
     classes,
+    adding,
   };
   return markActive(shell, pathname);
 }

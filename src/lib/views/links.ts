@@ -11,10 +11,20 @@ export type RouteFamily =
   | "growth"
   | "goals";
 
-export const EXISTING_ROUTES: ReadonlySet<RouteFamily> = new Set<RouteFamily>(["overview"]);
+export const EXISTING_ROUTES: ReadonlySet<RouteFamily> = new Set<RouteFamily>([
+  "overview",
+  "holding",
+]);
 
 /** "+ Add" buttons and the first-run card's action render only when adding exists. */
-export const ADDING = false;
+export const ADDING = true;
+
+/** The add modal opens on the page the User is on, keeping the page's other params. */
+export function addAssetHref(pathname: string, search?: string | URLSearchParams | null): string {
+  const params = new URLSearchParams(search ?? undefined);
+  params.set("modal", "add-asset");
+  return `${pathname}?${params.toString()}`;
+}
 
 export type LinkTarget =
   | { kind: "overview" }

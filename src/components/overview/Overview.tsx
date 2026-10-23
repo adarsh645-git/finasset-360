@@ -9,7 +9,7 @@ const CARD = "rounded-[14px] border border-line bg-panel shadow-[var(--shadow)]"
 
 // Renders what buildOverview returns; the later cards join below the chart.
 export function Overview({ overview }: { overview: OverviewView }) {
-  const { header, ranges, chart, firstRun, stats, allocation, countries, currencyEffect } = overview;
+  const { header, ranges, chart, firstRun, addHref, stats, allocation, countries, currencyEffect } = overview;
   return (
     <div className="flex flex-col gap-4">
       <div className="mb-1 flex flex-wrap items-end justify-between gap-4">
@@ -60,6 +60,14 @@ export function Overview({ overview }: { overview: OverviewView }) {
           <p className="text-[13.5px] text-ink2">
             Your net worth, allocation and projection appear here once you&apos;ve added something.
           </p>
+          {addHref && (
+            <Link
+              href={addHref}
+              className="mt-1 flex h-10 w-fit items-center rounded-lg bg-ink px-4 text-[13.5px] font-medium text-bg"
+            >
+              Add
+            </Link>
+          )}
         </section>
       ) : (
         chart && (

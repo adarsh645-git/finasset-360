@@ -28,7 +28,7 @@ import {
 } from "@/lib/format";
 import type { AssetClassId, PortfolioData } from "@/lib/read-model/types";
 import { CLASS_TOKENS, COUNTRY_TOKENS } from "@/lib/tokens";
-import { EXISTING_ROUTES, hrefFor, type RouteFamily } from "@/lib/views/links";
+import { ADDING, EXISTING_ROUTES, hrefFor, type RouteFamily } from "@/lib/views/links";
 import { calcClassId, calcCountry, historyItem } from "@/lib/views/shell";
 
 export const RANGES = ["1Y", "3Y", "5Y", "All"] as const;
@@ -97,6 +97,8 @@ export type CurrencyEffect = {
 
 export type Overview = {
   firstRun: boolean;
+  /** The first-run card's Add button target; null while adding is off. */
+  addHref: string | null;
   header: OverviewHeader;
   range: Range;
   ranges: { label: Range; href: string; selected: boolean }[];
@@ -133,7 +135,11 @@ const plural = (n: number, one: string, many: string) => (n === 1 ? one : many);
 
 export function buildOverview(
   data: PortfolioData,
-  { range, existing = EXISTING_ROUTES }: { range: Range; existing?: ReadonlySet<RouteFamily> },
+  {
+    range,
+    existing = EXISTING_ROUTES,
+    adding = ADDING,
+  }: { range: Range; existing?: ReadonlySet<RouteFamily>; adding?: boolean },
 ): Overview {
   const { today } = data;
   const ranges = RANGES.map((label) => ({
@@ -147,6 +153,7 @@ export function buildOverview(
   if (firstRun) {
     return {
       firstRun,
+      addHref: adding ? "/?modal=add-asset" : null,
       header: { label: LABEL, total: usd(0), change: null, since: null, tone: null },
       range,
       ranges,
@@ -208,6 +215,7 @@ export function buildOverview(
 
   return {
     firstRun,
+    addHref: null,
     header: { label: LABEL, total: usd(netNow), change, since, tone },
     range,
     ranges,
