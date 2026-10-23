@@ -79,13 +79,13 @@ Below the chart, the User sees Total assets, Liabilities (paid down in 12 mo) an
 Blocked by: 6
 The left column gains the Equity card per linked pair (hidden with none). The right column gains the Needs updating card, shown only when something is Stale, listing it oldest first with "N days old", plus the empty slot `redesign-goals` will fill. The two columns stack when the content is under 820px (D5, D14).
 
-- [ ] 7.1 Tests named OV-11, OV-12, OV-17, OV-18, OV-19, OV-20, OV-23 written and failing (red)
-- [ ] 7.2 Equity rows come from `calc/` Equity and % owned for current pairs, and the card is absent with none (OV-11, OV-12)
-- [ ] 7.3 Needs updating uses `calc/` staleness over current Holdings and Liabilities, sorted by age then name, with Stocks rows reading "prices N days old", and is absent when nothing is Stale (OV-17, OV-18)
-- [ ] 7.4 The ordered Stale list is exported on its own as `buildStaleList()` from `src/lib/views/stale-list.ts`, `buildOverview` uses it, and the card header has an empty trailing action slot for update-pass (OV-17)
-- [ ] 7.5 Rows take Holding or Liability detail links from the registry, plain text while those routes don't exist (OV-19)
-- [ ] 7.6 The right column ends with an empty Goals slot, and the cards stack in the order Allocation, Equity, Where it's held, Needs updating (OV-20, OV-23)
-- [ ] 7.7 Tests named OV-11, OV-12, OV-17, OV-18, OV-19, OV-20, OV-23 pass in CI suites; npm run spec:coverage passes
+- [x] 7.1 Tests named OV-11, OV-12, OV-17, OV-18, OV-19, OV-20, OV-23 written and failing (red)
+- [x] 7.2 Equity rows come from `calc/` Equity and % owned for current pairs, and the card is absent with none (OV-11, OV-12)
+- [x] 7.3 Needs updating uses `calc/` staleness over current Holdings and Liabilities, sorted by age then name, with Stocks rows reading "prices N days old", and is absent when nothing is Stale (OV-17, OV-18)
+- [x] 7.4 The ordered Stale list is exported on its own as `buildStaleList()` from `src/lib/views/stale-list.ts`, `buildOverview` uses it, and the card header has an empty trailing action slot for update-pass (OV-17)
+- [x] 7.5 Rows take Holding or Liability detail links from the registry, plain text while those routes don't exist (OV-19)
+- [x] 7.6 The right column ends with an empty Goals slot, and the cards stack in the order Allocation, Equity, Where it's held, Needs updating (OV-20, OV-23)
+- [x] 7.7 Tests named OV-11, OV-12, OV-17, OV-18, OV-19, OV-20, OV-23 pass in CI suites; npm run spec:coverage passes
 - [ ] 7.8 Checked by hand against the mockup's Overview at 2000px, 1100px and 800px (stacking around 820px of content) and 390px, with seed data that has linked loans and Stale items
 
 ## Workflow follow-up
