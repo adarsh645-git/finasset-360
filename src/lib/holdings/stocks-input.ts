@@ -32,6 +32,9 @@ export type PositionRow = {
   name: string;
 };
 
+/** Fields of the manually valued classes; a Stocks Holding rejects them rather than ignoring them (design D3). */
+const OTHER_CLASS_FIELDS = ["cost_basis", "property_type", "city", "quantity", "unit"] as const;
+
 type Fail = { ok: false; error: string };
 
 const absent = (value: unknown) => value === undefined || value === null;
@@ -46,6 +49,10 @@ export function parseStocksHolding(
   knownCountries: readonly string[],
 ): { ok: true; input: StocksHoldingInput } | Fail {
   const fail = (error: string): Fail => ({ ok: false, error });
+
+  for (const field of OTHER_CLASS_FIELDS) {
+    if (body[field] !== undefined) return fail(`${field} doesn't apply to a Stocks Holding.`);
+  }
 
   const country = body.country;
   if (typeof country !== "string" || !knownCountries.includes(country)) return fail("Country must be a known country.");

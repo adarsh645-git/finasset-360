@@ -2,7 +2,7 @@ import type { NextRequest } from "next/server";
 import { readJsonObject } from "@/lib/http/body";
 import { parseManualHolding } from "@/lib/holdings/manual-holding-input";
 import { parseStocksHolding } from "@/lib/holdings/stocks-input";
-import { priceStocksPositions, writeStocksPositions } from "@/lib/holdings/stocks-store";
+import { priceStocksPositions, updateStocksHolding } from "@/lib/holdings/stocks-store";
 import { errorResponse, loadCountryCodes, loadWritableHolding, recordTodayValuation } from "@/lib/holdings/store";
 import { createRouteClient, jsonWithCookies, requireUser } from "@/lib/supabase/route";
 
@@ -35,12 +35,13 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
     const priced = await priceStocksPositions(supabase, stocks.input, id);
     if (!priced.ok) return errorResponse(priced.error, 400);
 
-    const { error: updateError } = await supabase
-      .from("holding")
-      .update({ name: stocks.input.name, description: stocks.input.description })
-      .eq("id", id);
-    if (updateError) throw updateError;
-    await writeStocksPositions(supabase, auth.user.id, id, priced);
+    await updateStocksHolding(
+      supabase,
+      auth.user.id,
+      id,
+      { name: stocks.input.name, description: stocks.input.description },
+      priced,
+    );
     return jsonWithCookies({ id }, { status: 200 }, responseCookies);
   }
 

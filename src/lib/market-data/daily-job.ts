@@ -8,8 +8,11 @@ import { fetchFxSeries } from "./frankfurter";
 // stops the next.
 
 const FX_BACKFILL_START = "2018-01-01";
-const CHUNK = 200;
+const BATCH_SIZE = 200;
 const PAGE = 1000;
+
+/** Who wrote a Valuation: the User, or the daily job. */
+type ValuationSource = "user" | "cron";
 
 type Holding = { id: string; user_id: string };
 type ActivePosition = { holding_id: string; ticker: string; shares: number; hand_price: number | null };
@@ -25,15 +28,33 @@ async function readAll<T>(
   const rows: T[] = [];
   for (let from = 0; ; from += PAGE) {
     const { data, error } = await page(from, from + PAGE - 1);
-    if (error) throw new Error(error.message);
+    orThrow(error);
     rows.push(...(data ?? []));
     if (!data || data.length < PAGE) return rows;
   }
 }
 
+const orThrow = (error: { message: string } | null) => {
+  if (error) throw new Error(error.message);
+};
+
+/** Runs `read` once per batch of `keys` (the `.in()` filter has a size limit) and concatenates the rows. */
+async function readInBatches<T>(
+  keys: string[],
+  read: (batch: string[]) => PromiseLike<{ data: T[] | null; error: { message: string } | null }>,
+): Promise<T[]> {
+  const rows: T[] = [];
+  for (const batch of chunks(keys)) {
+    const { data, error } = await read(batch);
+    orThrow(error);
+    rows.push(...(data ?? []));
+  }
+  return rows;
+}
+
 function chunks<T>(items: T[]): T[][] {
   const out: T[][] = [];
-  for (let i = 0; i < items.length; i += CHUNK) out.push(items.slice(i, i + CHUNK));
+  for (let i = 0; i < items.length; i += BATCH_SIZE) out.push(items.slice(i, i + BATCH_SIZE));
   return out;
 }
 
@@ -84,12 +105,9 @@ export async function refreshHeldPrices(
   positions: ActivePosition[],
 ): Promise<{ quoted: number; failed: number }> {
   const held = [...new Set(positions.map((p) => p.ticker))];
-  const listed: string[] = [];
-  for (const batch of chunks(held)) {
-    const { data, error } = await admin.from("stock_symbol").select("symbol").in("symbol", batch);
-    if (error) throw new Error(error.message);
-    listed.push(...data.map((r) => r.symbol as string));
-  }
+  const listed = (
+    await readInBatches<{ symbol: string }>(held, (batch) => admin.from("stock_symbol").select("symbol").in("symbol", batch))
+  ).map((r) => r.symbol);
 
   let quoted = 0;
   let failed = 0;
@@ -100,12 +118,12 @@ export async function refreshHeldPrices(
         { symbol, price: result.price, currency: result.priceCurrency, fetched_at: new Date().toISOString(), last_error: null },
         { onConflict: "symbol" },
       );
-      if (error) throw new Error(error.message);
+      orThrow(error);
       quoted += 1;
     } else {
       // Update, never insert: a symbol with no cached price has nothing to keep.
       const { error } = await admin.from("price_cache").update({ last_error: result.error }).eq("symbol", symbol);
-      if (error) throw new Error(error.message);
+      orThrow(error);
       failed += 1;
     }
   }
@@ -119,43 +137,46 @@ export async function snapshotStocksHoldings(
   positions: ActivePosition[],
 ): Promise<{ snapshots: number }> {
   const prices = new Map<string, number>();
-  for (const batch of chunks([...new Set(positions.map((p) => p.ticker))])) {
-    const { data, error } = await admin.from("price_cache").select("symbol, price").in("symbol", batch);
-    if (error) throw new Error(error.message);
-    for (const r of data) prices.set(r.symbol as string, Number(r.price));
-  }
+  const cached = await readInBatches<{ symbol: string; price: number }>(
+    [...new Set(positions.map((p) => p.ticker))],
+    (batch) => admin.from("price_cache").select("symbol, price").in("symbol", batch),
+  );
+  for (const r of cached) prices.set(r.symbol, Number(r.price));
 
+  // A Position with neither a market nor a Hand Price can't be saved by the
+  // routes. If one exists anyway, the Holding gets no snapshot: a total that
+  // silently leaves it out would disagree with the read model.
   const totals = new Map<string, number>();
+  const unpriced = new Set<string>();
   for (const p of positions) {
     const price = prices.get(p.ticker) ?? p.hand_price;
-    if (price === null) continue; // unpriced: left out of the sum
+    if (price === null) {
+      unpriced.add(p.holding_id);
+      continue;
+    }
     totals.set(p.holding_id, (totals.get(p.holding_id) ?? 0) + p.shares * price);
   }
 
   const today = todayIsoDate();
   const userMarked = new Set<string>();
-  for (const batch of chunks(holdings.map((h) => h.id))) {
-    const { data, error } = await admin
-      .from("holding_valuation")
-      .select("holding_id, source")
-      .in("holding_id", batch)
-      .eq("valued_on", today);
-    if (error) throw new Error(error.message);
-    for (const r of data) if (r.source === "user") userMarked.add(r.holding_id as string);
-  }
+  const todays = await readInBatches<{ holding_id: string; source: ValuationSource }>(
+    holdings.map((h) => h.id),
+    (batch) => admin.from("holding_valuation").select("holding_id, source").in("holding_id", batch).eq("valued_on", today),
+  );
+  for (const r of todays) if (r.source === "user") userMarked.add(r.holding_id);
 
   const rows = holdings
-    .filter((h) => totals.has(h.id))
+    .filter((h) => totals.has(h.id) && !unpriced.has(h.id))
     .map((h) => ({
       user_id: h.user_id,
       holding_id: h.id,
       valued_on: today,
       value: Math.round((totals.get(h.id) as number) * 1e6) / 1e6,
-      source: userMarked.has(h.id) ? "user" : "cron",
+      source: (userMarked.has(h.id) ? "user" : "cron") satisfies ValuationSource,
     }));
   for (const batch of chunks(rows)) {
     const { error } = await admin.from("holding_valuation").upsert(batch, { onConflict: "holding_id,valued_on" });
-    if (error) throw new Error(error.message);
+    orThrow(error);
   }
   return { snapshots: rows.length };
 }
