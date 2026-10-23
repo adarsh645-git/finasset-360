@@ -52,7 +52,7 @@ describe("holding entry links", () => {
     const html = renderToStaticMarkup(<Overview overview={overview} />);
     expect(html).toContain("Add your first account or asset");
     expect(html).toMatch(/<a [^>]*href="\/\?modal=add-asset"/);
-    expect(html).not.toMatch(/or a loan/);
+    expect(html).toMatch(/<a [^>]*href="\/\?modal=add-liability"[^>]*>or a loan/);
   });
 
   it("HE-27 without adding the first-run card has no button", () => {

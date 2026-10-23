@@ -114,6 +114,8 @@ export type Overview = {
   firstRun: boolean;
   /** The first-run card's Add button target; null while adding is off. */
   addHref: string | null;
+  /** The first-run card's "or a loan" link (`?modal=add-liability`); null while adding is off. */
+  addLoanHref: string | null;
   header: OverviewHeader;
   range: Range;
   ranges: { label: Range; href: string; selected: boolean }[];
@@ -163,6 +165,7 @@ export function buildOverview(
     return {
       firstRun,
       addHref: adding ? "/?modal=add-asset" : null,
+      addLoanHref: adding ? "/?modal=add-liability" : null,
       header: {
         label: LABEL,
         total: usd(0),
@@ -226,6 +229,7 @@ export function buildOverview(
   return {
     firstRun,
     addHref: null,
+    addLoanHref: null,
     header: { label: LABEL, total: usd(netNow), change, since, tone },
     range,
     ranges,

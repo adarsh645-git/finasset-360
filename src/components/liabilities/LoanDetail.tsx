@@ -8,7 +8,7 @@ import type { LoanDetail as LoanDetailView } from "@/lib/views/loan-detail";
 const BUTTON = "flex h-10 items-center rounded-lg border border-line px-3.5 text-[13.5px] font-medium hover:bg-hover";
 const CARD = "rounded-[14px] border border-line bg-panel shadow-[var(--shadow)]";
 
-// Renders what buildLoanDetail returns. Edit arrives with ticket 4.
+// Renders what buildLoanDetail returns.
 export function LoanDetail({ detail }: { detail: LoanDetailView }) {
   const card = detail.securedAgainst;
   return (
@@ -45,6 +45,9 @@ export function LoanDetail({ detail }: { detail: LoanDetailView }) {
         <div className="flex flex-wrap gap-2">
           <Link href={detail.actions.updateBalance.href} className={BUTTON}>
             Update balance
+          </Link>
+          <Link href={`/liabilities/${detail.id}?modal=edit&liability=${detail.id}`} className={BUTTON}>
+            Edit
           </Link>
           <ConfirmDeleteButton url={`/api/liabilities/${detail.id}/archive`} to={detail.afterArchive} className={BUTTON} />
         </div>
