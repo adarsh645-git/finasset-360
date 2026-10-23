@@ -79,6 +79,13 @@ export function monthLong(d: string | Date | Absent): string {
   return `${m} ${y}`;
 }
 
+/** "10 Oct". */
+export function dayMonth(d: string | Date | Absent): string {
+  if (d == null) return DASH;
+  const iso = typeof d === "string" ? d : d.toISOString();
+  return `${Number(iso.slice(8, 10))} ${MONTHS[Number(iso.slice(5, 7)) - 1]}`;
+}
+
 export function monthAxis(d: string | Date | Absent): string {
   if (d == null) return DASH;
   const [m, y] = monthParts(d);
