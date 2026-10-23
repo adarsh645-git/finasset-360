@@ -63,12 +63,12 @@ A User can create and edit a Stocks Holding with its full Positions list. Ticker
 Blocked by: 3
 A User can record a loan, edit it, update its balance and archive it, and link it to one of their active Holdings. Each save records today's balance Valuation, and archiving a Holding unlinks its loan (D8, D9, D10).
 
-- [ ] 6.1 Tests named DM-26, DM-28, DM-29, DM-30, DM-31, DM-32, DM-33 written and failing (red)
-- [ ] 6.2 `POST /api/liabilities` and `PATCH /api/liabilities/[id]` validate balance, APR, Monthly payment, principal (stored as max with balance), term, start month and revolving, and upsert today's balance Valuation (DM-28…DM-30)
-- [ ] 6.3 `POST /api/liabilities/[id]/valuations` upserts today's balance (DM-31)
-- [ ] 6.4 Links accept only the User's own active Holdings with no other active loan; archiving a Holding unlinks its loans (DM-26, DM-32)
-- [ ] 6.5 `POST /api/liabilities/[id]/archive` keeps the Valuations and link and makes the loan read-only (DM-33)
-- [ ] 6.6 Tests named DM-26, DM-28, DM-29, DM-30, DM-31, DM-32, DM-33 pass in CI suites; npm run spec:coverage passes
+- [x] 6.1 Tests named DM-26, DM-28, DM-29, DM-30, DM-31, DM-32, DM-33 written and failing (red)
+- [x] 6.2 `POST /api/liabilities` and `PATCH /api/liabilities/[id]` validate balance, APR, Monthly payment, principal (stored as max with balance), term, start month and revolving, and upsert today's balance Valuation (DM-28…DM-30)
+- [x] 6.3 `POST /api/liabilities/[id]/valuations` upserts today's balance (DM-31)
+- [x] 6.4 Links accept only the User's own active Holdings with no other active loan; archiving a Holding unlinks its loans (DM-26, DM-32)
+- [x] 6.5 `POST /api/liabilities/[id]/archive` keeps the Valuations and link and makes the loan read-only (DM-33)
+- [x] 6.6 Tests named DM-26, DM-28, DM-29, DM-30, DM-31, DM-32, DM-33 pass in CI suites; npm run spec:coverage passes
 
 ## 7. Goals and Projection Assumptions
 

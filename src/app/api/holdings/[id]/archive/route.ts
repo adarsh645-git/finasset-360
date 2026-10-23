@@ -15,5 +15,13 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
 
   const { error } = await supabase.from("holding").update({ archived_at: new Date().toISOString() }).eq("id", id);
   if (error) throw error;
+
+  // An archived Holding can't be financed: unlink its active loans (design.md D9).
+  const { error: unlinkError } = await supabase
+    .from("liability")
+    .update({ linked_holding_id: null })
+    .eq("linked_holding_id", id)
+    .is("archived_at", null);
+  if (unlinkError) throw unlinkError;
   return jsonWithCookies({ id }, { status: 200 }, responseCookies);
 }
