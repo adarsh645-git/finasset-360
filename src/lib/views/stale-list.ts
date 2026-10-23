@@ -1,5 +1,5 @@
 import { staleness, type StalenessInput } from "@/lib/calc";
-import { daysOld } from "@/lib/format";
+import { ageCue } from "@/lib/views/age-cue";
 import type { HoldingData, LiabilityData, PortfolioData } from "@/lib/read-model/types";
 import { EXISTING_ROUTES, hrefFor, type RouteFamily } from "@/lib/views/links";
 
@@ -53,7 +53,7 @@ export function buildStaleList(
       name: item.name,
       ageDays,
       stocks,
-      age: stocks ? `prices ${daysOld(ageDays)}` : daysOld(ageDays),
+      age: ageCue(stocks ? "stocks" : kind, ageDays) ?? "",
       href: hrefFor({ kind, id: item.id }, existing),
     });
   };
