@@ -35,6 +35,9 @@ export type LoanDetail = {
   /** "10% of principal paid off", "₹38,00,000 borrowed in Apr 2022" and the fill, 0 to 1. */
   bar: { label: string; sub: string; fraction: number; colorVar: string };
   stats: LoanDetailStat[];
+  /** Where Delete goes after archiving. */
+  afterArchive: string;
+  actions: { updateBalance: { href: string } };
   chart: {
     title: string;
     sub: string;
@@ -165,6 +168,8 @@ export function buildLoanDetail(
       colorVar,
     },
     stats,
+    afterArchive: hrefFor({ kind: "liabilities" }, existing) ?? "/",
+    actions: { updateBalance: { href: `/liabilities/${loan.id}?modal=update-balance&liability=${loan.id}` } },
     chart: buildChart(),
     securedAgainst: linked ? card() : null,
   };
