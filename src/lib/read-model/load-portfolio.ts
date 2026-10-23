@@ -264,17 +264,16 @@ async function loadFx(supabase: SupabaseClient, today: string, earliestValuation
     .order("rate_date", { ascending: false })
     .limit(1);
   if (start.error) throw new Error(start.error.message);
-  const from = start.data[0] ? str(start.data[0].rate_date) : "0000-01-01";
+  // No rate on or before the earliest Valuation: the history starts at the first rate stored.
+  const from = start.data[0] ? str(start.data[0].rate_date) : null;
 
-  const rows = await readAll((a, b) =>
-    supabase
-      .from("fx_rate")
-      .select("rate_date, inr_per_usd")
-      .gte("rate_date", from)
+  const rows = await readAll((a, b) => {
+    const query = supabase.from("fx_rate").select("rate_date, inr_per_usd");
+    return (from === null ? query : query.gte("rate_date", from))
       .lte("rate_date", today)
       .order("rate_date")
-      .range(a, b),
-  );
+      .range(a, b);
+  });
   return {
     today: todayRate,
     history: rows.map((r) => ({ date: str(r.rate_date), rate: num(r.inr_per_usd) })),
