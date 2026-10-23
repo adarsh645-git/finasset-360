@@ -13,7 +13,7 @@ import type { PortfolioData } from "@/lib/read-model/types";
 import { defaultAfterSave } from "@/lib/views/holding-entry";
 import type { LoanCarry } from "@/lib/views/loan-form";
 import { BUILTIN_MODES, closeHref, errorFor, modalKey, MODAL_PARAMS, resolveModal, swapAddHref, withoutParams, type ModalMatch, type ModeRow } from "@/lib/views/modal-modes";
-import { parsePass, passStep, type PassCurrent } from "@/lib/views/update-pass";
+import { parsePass, passStep, stepFocus, stepSaveOptions, type PassCurrent } from "@/lib/views/update-pass";
 
 /** What the host gives every form (design.md D19). */
 export type ModalFormProps = {
@@ -111,6 +111,7 @@ export function ModalHost({
       saveLabel={step ? "Save & next" : match.saveLabel}
       footerSlot={step ? <PassFooter counter={step.counter} onSkip={() => goTo(step.skipHref)} /> : undefined}
       hideCancel={step !== null}
+      focusSave={stepFocus(match.mode, step !== null) === "save"}
       error={error}
       saving={busy}
       formId="modal-form"
@@ -134,7 +135,7 @@ export function ModalHost({
         formId="modal-form"
         setBusy={setBusy}
         setError={setError}
-        confirmPrices={confirmPrices}
+        confirmPrices={confirmPrices || stepSaveOptions(match.mode, step !== null).confirmPrices}
         carry={carryNext?.to === match.mode ? carryNext.carry : undefined}
         setCarry={setCarry}
         onSaved={(result) => {
