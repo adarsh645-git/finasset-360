@@ -16,6 +16,8 @@ export const EXISTING_ROUTES: ReadonlySet<RouteFamily> = new Set<RouteFamily>([
   "assets",
   "assetClass",
   "holding",
+  "liabilities",
+  "liability",
   "growth",
   "goals",
 ]);

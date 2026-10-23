@@ -47,9 +47,9 @@ describe("shell render", () => {
     expect(html).toContain("Sign out");
   });
 
-  it("SH-08 the Overview, Assets, Growth, Goals and class rows are links; Liabilities is not and nothing offers adding", () => {
+  it("SH-08 the five nav items and the class rows are links and nothing offers adding", () => {
     expect(html).toMatch(/<a [^>]*href="\/"[^>]*data-label="Overview"|<a [^>]*data-label="Overview"[^>]*href="\/"/);
-    expect(html.match(/<a /g)?.length).toBe(13); // Overview, Assets, Growth and Goals in the sidebar, tabs and bottom bar, plus the Stocks row
+    expect(html.match(/<a /g)?.length).toBe(16); // Overview, Assets, Liabilities, Growth and Goals in the sidebar, tabs and bottom bar, plus the Stocks row
     expect(html).toMatch(/<a [^>]*data-class="stocks"/);
     expect(html).toContain("Stocks");
     expect(html).not.toContain("+ Add");

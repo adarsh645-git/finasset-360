@@ -42,7 +42,10 @@ After `redesign-asset-pages` the app shows everything a User owns but nothing th
 
 ### Modified Capabilities
 
-None (`openspec/specs/` is empty).
+- `holding-entry`: HE-02 no longer lists `modal=add-liability` as opening nothing (it opens the loan form, covered by LE).
+- `holding-detail`: Liability rows link to `/liabilities/[id]` (HD-22).
+- `app-shell`: the link registry includes the Liabilities page and Loan detail; SH-08 and SH-09 are re-scoped for it.
+- `overview`: the Liabilities stat card is a link (OV-08).
 
 ## Impact
 

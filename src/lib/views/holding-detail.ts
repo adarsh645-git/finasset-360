@@ -13,6 +13,7 @@ import { shortTicker } from "@/lib/market-data/ticker";
 import { fxRatesOf } from "@/lib/views/fx";
 import { ageCue, updatedCue } from "@/lib/views/age-cue";
 import { calcClassId, calcCountry, historyItem } from "@/lib/views/shell";
+import { buildHoldingEquity, type LinkedLoanCard } from "@/lib/views/holding-equity";
 import { buildChart, buildValueLog, type HoldingChart, type ValueLog } from "@/lib/views/holding-history";
 
 export type Crumb = { label: string; href: string | null };
@@ -36,8 +37,8 @@ export type HoldingDetail = {
   };
   /** Ends with an optional "Your equity" card that redesign-liabilities appends. */
   stats: DetailStat[];
-  /** Slot for redesign-liabilities; always empty here. */
-  linkedLoan: null;
+  /** The Linked loan card; null for a Holding no active loan secures. */
+  linkedLoan: LinkedLoanCard | null;
   /** "Positions in this account" and "By sector"; null for every class but Stocks. */
   stocks: StocksSections | null;
   // Value over time and the Value log (ticket 2).
@@ -191,6 +192,9 @@ export function buildHoldingDetail(
     });
   }
 
+  const equityView = buildHoldingEquity(data, { holdingId, existing });
+  if (equityView) stats.push(equityView.stat);
+
   return {
     id: holding.id,
     name: holding.name,
@@ -215,9 +219,9 @@ export function buildHoldingDetail(
       edit: { href: `${path}?modal=edit&holding=${holding.id}` },
     },
     stats,
-    linkedLoan: null,
+    linkedLoan: equityView?.linkedLoan ?? null,
     stocks: fromPositions ? stocksSections() : null,
-    chart: buildChart(data, holding, rates, hasRate),
+    chart: equityView?.chart ?? buildChart(data, holding, rates, hasRate),
     valueLog: buildValueLog(holding, today),
   };
 

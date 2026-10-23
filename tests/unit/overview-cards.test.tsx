@@ -64,12 +64,12 @@ describe("overview stat cards", () => {
     expect(stats.equity).toMatchObject({ value: "$0", detail: "No loans linked to assets" });
   });
 
-  it("OV-08 none of the stat cards is a link while only the Overview exists", () => {
+  it("OV-08 only the Liabilities stat card is a link, to /liabilities", () => {
     const html = render(portfolio({ today: TODAY, holdings: [holding({ currentValue: 5_000 })] }));
 
     expect(html).toContain("Total assets");
     expect(html).toContain("Equity built");
-    expect(html).not.toMatch(/href="\/liabilities/);
+    expect(html.match(/href="\/liabilities"/g)).toHaveLength(1);
   });
 });
 

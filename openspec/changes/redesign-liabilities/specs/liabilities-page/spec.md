@@ -50,10 +50,10 @@ Examples:
 The page SHALL list every active Liability, sorted by USD balance descending. A row SHALL show the loan's colour, name, Country, USD balance, the native balance for an India loan, a paid-off bar, "⟨N%⟩ paid · ⟨APR⟩% · ⟨Monthly payment⟩/mo", and "Secures ⟨Holding⟩ · " (when linked) followed by "Paid off ⟨Mon YYYY⟩" or "No payoff at this payment". The row SHALL link to its Loan detail.
 
 #### Scenario: LB-06 A linked India loan's row
-- **GIVEN** an India loan "Apartment loan · HDFC" with principal ₹38,00,000, balance ₹34,30,000, APR 8.5%, Monthly payment ₹33,000, linked to "Pune apartment", paying off in Jun 2039, and an FX Rate of 83.40
+- **GIVEN** an India loan "Apartment loan · HDFC" with principal ₹38,00,000, balance ₹34,30,000, APR 8.5%, Monthly payment ₹33,000, linked to "Pune apartment", paying off in Jul 2042 (today is 2026-10-14), and an FX Rate of 83.40
 - **WHEN** its row is shown
 - **THEN** it reads "Apartment loan · HDFC", "IN", "$41,127" and "₹34,30,000"
-- **AND** "10% paid · 8.5% · ₹33,000/mo" and "Secures Pune apartment · Paid off Jun 2039"
+- **AND** "10% paid · 8.5% · ₹33,000/mo" and "Secures Pune apartment · Paid off Jul 2042"
 - **AND** it links to that loan's Loan detail
 
 #### Scenario: LB-07 An unlinked Not on track loan's row

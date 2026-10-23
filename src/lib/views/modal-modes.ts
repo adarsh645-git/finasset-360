@@ -1,18 +1,18 @@
-import type { AssetClassId, HoldingData, PortfolioData } from "@/lib/read-model/types";
+import type { AssetClassId, HoldingData, LiabilityData, PortfolioData } from "@/lib/read-model/types";
 
 // The modal host's mode table (design.md D1, D19): URL params in, what to open
 // out. Later changes append rows (add-liability, pass-summary, ...); a
 // combination no row claims opens nothing.
 
 /** Identifies one open modal; a different key means a different modal instance. */
-export const modalKey = (match: ModalMatch) => `${match.mode}:${match.holding?.id ?? ""}:${match.classId ?? ""}`;
+export const modalKey = (match: ModalMatch) => `${match.mode}:${match.holding?.id ?? ""}:${match.classId ?? ""}:${match.liability?.id ?? ""}`;
 
 /** The footer error stored for `key`'s modal, or null once another modal (or none) is open. */
 export const errorFor = (stored: { key: string; message: string } | null, key: string | null) =>
   stored && stored.key === key ? stored.message : null;
 
 /** The params the modal owns. Closing removes these and nothing else. */
-export const MODAL_PARAMS = ["modal", "holding", "class"] as const;
+export const MODAL_PARAMS = ["modal", "holding", "class", "liability"] as const;
 
 export type ModalMatch = {
   /** Picks the form: "add-asset", "edit", "update-value", "edit-positions", or a row's own id. */
@@ -23,6 +23,8 @@ export type ModalMatch = {
   holding: HoldingData | null;
   /** add-asset only. */
   classId?: AssetClassId;
+  /** The Liability a loan mode targets. */
+  liability?: LiabilityData | null;
 };
 
 export type ModeRow = {
@@ -92,7 +94,46 @@ const update: ModeRow = {
   },
 };
 
-export const BUILTIN_MODES: readonly ModeRow[] = [addAsset, edit, update];
+const addLiability: ModeRow = {
+  id: "add-liability",
+  match(params) {
+    if (params.get("modal") !== "add-liability") return null;
+    return { mode: "add-liability", title: "Add to portfolio", saveLabel: "Add loan", holding: null, liability: null };
+  },
+};
+
+const editLiability: ModeRow = {
+  id: "edit-liability",
+  match(params, data) {
+    if (params.get("modal") !== "edit") return null;
+    const id = params.get("liability");
+    const liability = (id && data.liabilities.find((l) => l.id === id && l.archivedAt === null)) || null;
+    if (!liability) return null;
+    return { mode: "edit-liability", title: "Edit loan", saveLabel: "Save", holding: null, liability };
+  },
+};
+
+const updateBalance: ModeRow = {
+  id: "update-balance",
+  match(params, data) {
+    if (params.get("modal") !== "update") return null;
+    const id = params.get("liability");
+    const liability = (id && data.liabilities.find((l) => l.id === id && l.archivedAt === null)) || null;
+    if (!liability) return null;
+    return { mode: "update-balance", title: "Update balance", saveLabel: "Save", holding: null, liability };
+  },
+};
+
+
+export const BUILTIN_MODES: readonly ModeRow[] = [addAsset, edit, update, addLiability, editLiability, updateBalance];
+
+/** The current URL with the add modal switched to the other side (LE-01); other params stay. */
+export function swapAddHref(pathname: string, search: string, to: "add-asset" | "add-liability"): string {
+  const params = new URLSearchParams(search.replace(/^\?/, ""));
+  params.set("modal", to);
+  if (to === "add-liability") params.delete("class");
+  return `${pathname}?${params.toString().replace(/%7E/gi, "~")}`;
+}
 
 /** The first row that claims the params, or null (render nothing). */
 export function resolveModal(

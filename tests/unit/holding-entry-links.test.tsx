@@ -6,11 +6,11 @@ import { buildOverview } from "@/lib/views/overview";
 import { holding, liability, portfolio } from "../fixtures/portfolio";
 
 describe("holding entry links", () => {
-  it("HD-22 Holding rows link to their detail page and Liability rows stay plain text", () => {
+  it("HD-22 Holding rows link to their detail page and Liability rows link to Loan detail", () => {
     expect(EXISTING_ROUTES.has("holding")).toBe(true);
     expect(hrefFor({ kind: "holding", id: "h1" })).toBe("/holdings/h1");
     expect(hrefFor({ kind: "holding", id: "h2" })).toBe("/holdings/h2");
-    expect(hrefFor({ kind: "liability", id: "l1" })).toBeNull();
+    expect(hrefFor({ kind: "liability", id: "l1" })).toBe("/liabilities/l1");
   });
 
   it("HD-22 the Overview Equity and Needs updating rows link a Holding to its page", () => {
@@ -52,7 +52,7 @@ describe("holding entry links", () => {
     const html = renderToStaticMarkup(<Overview overview={overview} />);
     expect(html).toContain("Add your first account or asset");
     expect(html).toMatch(/<a [^>]*href="\/\?modal=add-asset"/);
-    expect(html).not.toMatch(/or a loan/);
+    expect(html).toMatch(/<a [^>]*href="\/\?modal=add-liability"[^>]*>or a loan/);
   });
 
   it("HE-27 without adding the first-run card has no button", () => {

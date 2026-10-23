@@ -20,7 +20,16 @@ describe("shell view", () => {
   });
 
   it("SH-09 the registry lists every built page with adding on, and the shell knows the first name", () => {
-    expect([...EXISTING_ROUTES]).toEqual(["overview", "assets", "assetClass", "holding", "growth", "goals"]);
+    expect([...EXISTING_ROUTES]).toEqual([
+      "overview",
+      "assets",
+      "assetClass",
+      "holding",
+      "liabilities",
+      "liability",
+      "growth",
+      "goals",
+    ]);
     expect(ADDING).toBe(true);
     expect(hrefFor({ kind: "overview" })).toBe("/");
     expect(hrefFor({ kind: "assets" })).toBe("/assets");
