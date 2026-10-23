@@ -66,12 +66,12 @@ The Overview replaces the interim page. It has the Net Worth header with its cha
 Blocked by: 5
 Below the chart, the User sees Total assets, Liabilities (paid down in 12 mo) and Equity built, the Allocation bar and rows of classes in use, "Where it's held" for the Countries in use, and the 12-month Currency effect line when there are India items. Everything is plain text until its target page exists (D14, D16).
 
-- [ ] 6.1 Tests named OV-06, OV-07, OV-08, OV-09, OV-10, OV-13, OV-14, OV-15, OV-16 written and failing (red)
-- [ ] 6.2 Stat cards use the set 12-month rule, with — when absent and the empty-state wording (OV-06, OV-07, OV-08)
-- [ ] 6.3 Allocation lists classes with current Holdings, largest first, with 0% shares of a $0 total and the 12-month column dropped on phones (OV-09, OV-10)
-- [ ] 6.4 Where it's held shows only Countries in use (OV-13)
-- [ ] 6.5 The Currency effect comes from `calc/` attribution over 12 months, shows the FX as-of date when stale, and is absent without India items (OV-14, OV-15, OV-16)
-- [ ] 6.6 Tests named OV-06, OV-07, OV-08, OV-09, OV-10, OV-13, OV-14, OV-15, OV-16 pass in CI suites; npm run spec:coverage passes
+- [x] 6.1 Tests named OV-06, OV-07, OV-08, OV-09, OV-10, OV-13, OV-14, OV-15, OV-16 written and failing (red)
+- [x] 6.2 Stat cards use the set 12-month rule, with — when absent and the empty-state wording (OV-06, OV-07, OV-08)
+- [x] 6.3 Allocation lists classes with current Holdings, largest first, with 0% shares of a $0 total and the 12-month column dropped on phones (OV-09, OV-10)
+- [x] 6.4 Where it's held shows only Countries in use (OV-13)
+- [x] 6.5 The Currency effect comes from `calc/` attribution over 12 months, shows the FX as-of date when stale, and is absent without India items (OV-14, OV-15, OV-16)
+- [x] 6.6 Tests named OV-06, OV-07, OV-08, OV-09, OV-10, OV-13, OV-14, OV-15, OV-16 pass in CI suites; npm run spec:coverage passes
 - [ ] 6.7 Checked by hand against the mockup's Overview cards at 2000px, 800px and 390px
 
 ## 7. Equity in financed assets, Needs updating and the Goals slot
