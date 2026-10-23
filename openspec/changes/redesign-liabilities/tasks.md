@@ -28,9 +28,9 @@ The Liabilities page gains the payoff timeline: balances stacked by loan, histor
 Blocked by: 1
 `/liabilities/[id]` shows the balance and native line, the paid-off bar, the four stats, "Balance over time" with the linked Holding's line, the Secured against card, and the stale cue. Unknown or archived ids show not found (D9, D12, D17). Loan rows already link here from ticket 1.
 
-- [ ] 3.1 Tests named LD-01, LD-02, LD-03, LD-04, LD-05, LD-06, LD-07, LD-08, LD-09, LD-11 written and failing (red)
-- [ ] 3.2 `loan-detail.ts` returns the header, bar, stats, chart series and card, or null for an id that isn't an active Liability of the User (LD-01…LD-09, LD-11)
-- [ ] 3.3 Tests named LD-01, LD-02, LD-03, LD-04, LD-05, LD-06, LD-07, LD-08, LD-09, LD-11 pass in CI suites; npm run spec:coverage passes
+- [x] 3.1 Tests named LD-01, LD-02, LD-03, LD-04, LD-05, LD-06, LD-07, LD-08, LD-09, LD-11 written and failing (red)
+- [x] 3.2 `loan-detail.ts` returns the header, bar, stats, chart series and card, or null for an id that isn't an active Liability of the User (LD-01…LD-09, LD-11)
+- [x] 3.3 Tests named LD-01, LD-02, LD-03, LD-04, LD-05, LD-06, LD-07, LD-08, LD-09, LD-11 pass in CI suites; npm run spec:coverage passes
 - [ ] 3.4 Checked by hand against the mockup's Loan detail at 2000px, 800px and 390px
 
 ## 4. Add and edit a loan
