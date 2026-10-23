@@ -68,7 +68,7 @@ describe("liabilities page render", () => {
     expect(html).toContain("Monthly payments");
     expect(html).toContain("· 47 days old");
     expect(html).toContain("+ Add loan");
-    expect(html).not.toContain("<svg");
+    expect(html).toContain("Payoff timeline");
   });
 
   it("LB-12 the empty state shows No loans and an Add loan button, with no chart", () => {

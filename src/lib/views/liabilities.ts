@@ -11,6 +11,7 @@ import { compact, DASH, inDuration, inr, monthLong, native, usd } from "@/lib/fo
 import type { LiabilityData, PortfolioData } from "@/lib/read-model/types";
 import { ageCue } from "@/lib/views/age-cue";
 import { fxRatesOf, usableItems } from "@/lib/views/fx";
+import { buildPayoffTimeline, type PayoffTimeline } from "@/lib/views/liabilities-timeline";
 import { ADDING, EXISTING_ROUTES, hrefFor, type RouteFamily } from "@/lib/views/links";
 import { addMonths } from "@/lib/views/projection";
 import { calcCountry, historyItem } from "@/lib/views/shell";
@@ -51,6 +52,8 @@ export type LiabilitiesView = {
   empty: { message: string; addHref: string | null } | null;
   /** The "+ Add loan" button target; null while adding is off. */
   addHref: string | null;
+  /** The payoff timeline; null with no active loan. */
+  timeline: PayoffTimeline | null;
 };
 
 const ADD_LOAN_HREF = "/liabilities?modal=add-liability";
@@ -176,5 +179,6 @@ export function buildLiabilities(
     rows,
     empty: active.length ? null : { message: "No loans", addHref },
     addHref,
+    timeline: buildPayoffTimeline(data, usable, rates, (id) => loanColorVar(data.liabilities, id)),
   };
 }
