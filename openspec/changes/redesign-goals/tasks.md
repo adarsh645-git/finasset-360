@@ -31,10 +31,10 @@ The User adds a Goal from the inline form (name + $ target; Enter or "Add goal")
 Blocked by: 1
 The Overview's Goals slot shows the next 3 unreached Goals with "All goals →", or nothing when none is unreached. The Overview chart is given every Goal as a labelled goal line and draws the nearby ones dotted (D9, D10).
 
-- [ ] 3.1 Tests named GO-04, GO-13, GO-14, GO-15, GO-16 written and failing (red)
-- [ ] 3.2 `buildOverview` returns the Goals card from `goalRows`: the first 3 not Reached, in target order, with "All goals →" to `/goals`, or null (GO-04, GO-13, GO-14)
-- [ ] 3.3 `buildOverview`'s chart `goals` prop carries every Goal's target and displayed name, and the rendered chart shows a nearby line and omits a distant one (GO-15, GO-16)
-- [ ] 3.4 Tests named GO-04, GO-13, GO-14, GO-15, GO-16 pass in CI suites; npm run spec:coverage passes
+- [x] 3.1 Tests named GO-04, GO-13, GO-14, GO-15, GO-16 written and failing (red)
+- [x] 3.2 `buildOverview` returns the Goals card from `goalRows`: the first 3 not Reached, in target order, with "All goals →" to `/goals`, or null (GO-04, GO-13, GO-14)
+- [x] 3.3 `buildOverview`'s chart `goals` prop carries every Goal's target and displayed name, and the rendered chart shows a nearby line and omits a distant one (GO-15, GO-16)
+- [x] 3.4 Tests named GO-04, GO-13, GO-14, GO-15, GO-16 pass in CI suites; npm run spec:coverage passes
 - [ ] 3.5 Checked by hand against the mockup's Overview at 2000px, 800px and 390px, with the projection on and off
 
 ## Workflow follow-up

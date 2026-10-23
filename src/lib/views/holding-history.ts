@@ -10,7 +10,7 @@ import {
 import type { ChartSeries, Point } from "@/lib/chart";
 import { DASH, formatDay, monthLong, native, signedPct } from "@/lib/format";
 import type { HoldingData, PortfolioData } from "@/lib/read-model/types";
-import { addMonths, calcAssumptions } from "@/lib/views/overview";
+import { addMonths, calcAssumptions } from "@/lib/views/projection";
 import { calcClassId, calcCountry, historyItem } from "@/lib/views/shell";
 
 export type HoldingChart = {

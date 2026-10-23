@@ -2,7 +2,7 @@ import { DEFAULT_HORIZON_YEARS, goalStatus, netWorthOn, sampleDates, type NetWor
 import { compact, inDuration, monthLong } from "@/lib/format";
 import type { PortfolioData } from "@/lib/read-model/types";
 import { fxRatesOf, usableItems } from "@/lib/views/fx";
-import { addMonths, projectFromToday } from "@/lib/views/overview";
+import { addMonths, projectFromToday } from "@/lib/views/projection";
 import { historyItem } from "@/lib/views/shell";
 
 export const GOALS_HEADING = "Net worth milestones";
