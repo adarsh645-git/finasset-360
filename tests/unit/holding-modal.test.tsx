@@ -72,25 +72,25 @@ describe("modal mode table", () => {
     expect(closeHref("/holdings/h1", "modal=update&holding=h1")).toBe("/holdings/h1");
   });
 
-  it("HE-03 pass and from survive a close", () => {
-    expect(closeHref("/update", "pass=1&from=%2Fgoals&modal=update&holding=h1")).toBe(
-      "/update?pass=1&from=%2Fgoals",
+  it("UP-18 pass and from go with the modal on a close", () => {
+    expect(closeHref("/update", "pass=1&from=5&modal=update&holding=h1&position=h1%7EAAPL")).toBe(
+      "/update?position=h1~AAPL",
     );
   });
 
   it("HE-03 externally registered rows resolve through the table", () => {
-    const passSummary: ModeRow = {
-      id: "pass-summary",
+    const demoRow: ModeRow = {
+      id: "demo-row",
       match: (params) =>
-        params.get("modal") === "pass-summary"
-          ? { mode: "pass-summary", title: "Update pass", saveLabel: "Done", holding: null }
+        params.get("modal") === "demo-row"
+          ? { mode: "demo-row", title: "Update pass", saveLabel: "Done", holding: null }
           : null,
     };
-    expect(open("modal=pass-summary")).toBeNull();
-    expect(open("modal=pass-summary&pass=1", [...BUILTIN_MODES, passSummary])).toMatchObject({
+    expect(open("modal=demo-row")).toBeNull();
+    expect(open("modal=demo-row&pass=1", [...BUILTIN_MODES, demoRow])).toMatchObject({
       title: "Update pass",
     });
-    expect(open("modal=update&holding=cash1", [...BUILTIN_MODES, passSummary])).toMatchObject({
+    expect(open("modal=update&holding=cash1", [...BUILTIN_MODES, demoRow])).toMatchObject({
       title: "Update value",
     });
   });

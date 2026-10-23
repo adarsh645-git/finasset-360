@@ -31,6 +31,7 @@ import { ADDING, EXISTING_ROUTES, hrefFor, type RouteFamily } from "@/lib/views/
 import { buildStaleList, type StaleRow } from "@/lib/views/stale-list";
 import { calcClassId, historyItem } from "@/lib/views/shell";
 import { addMonths, projectFromToday } from "@/lib/views/projection";
+import { updateAllEntry } from "@/lib/views/update-pass";
 import { goalRows, type GoalRow } from "@/lib/views/goals";
 
 export const RANGES = ["1Y", "3Y", "5Y", "All"] as const;
@@ -125,7 +126,7 @@ export type Overview = {
   equity: { rows: EquityRow[] } | null;
   countries: CountryBlock[];
   currencyEffect: CurrencyEffect | null;
-  needsUpdating: { title: string; rows: StaleRow[] } | null;
+  needsUpdating: { title: string; rows: StaleRow[]; updateAll: { label: string; href: string } | null } | null;
   /** The next three unreached Goals; null when there are none. */
   goals: { rows: GoalRow[]; allHref: string | null } | null;
 };
@@ -282,7 +283,9 @@ function needsUpdating(
   existing: ReadonlySet<RouteFamily>,
 ): Overview["needsUpdating"] {
   const rows = buildStaleList(data, data.today, existing);
-  return rows.length ? { title: `Needs updating (${rows.length})`, rows } : null;
+  return rows.length
+    ? { title: `Needs updating (${rows.length})`, rows, updateAll: updateAllEntry(data, data.today, "/", rows) }
+    : null;
 }
 type Held = PortfolioData["holdings"][number];
 type Owed = PortfolioData["liabilities"][number];

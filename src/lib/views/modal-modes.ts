@@ -1,3 +1,4 @@
+import { parseFrom } from "@/lib/views/update-pass";
 import type { AssetClassId, HoldingData, LiabilityData, PortfolioData } from "@/lib/read-model/types";
 
 // The modal host's mode table (design.md D1, D19): URL params in, what to open
@@ -11,8 +12,8 @@ export const modalKey = (match: ModalMatch) => `${match.mode}:${match.holding?.i
 export const errorFor = (stored: { key: string; message: string } | null, key: string | null) =>
   stored && stored.key === key ? stored.message : null;
 
-/** The params the modal owns. Closing removes these and nothing else. */
-export const MODAL_PARAMS = ["modal", "holding", "class", "liability"] as const;
+/** The params the modal and the update pass own. Closing removes these and nothing else. */
+export const MODAL_PARAMS = ["modal", "holding", "class", "liability", "pass", "from"] as const;
 
 export type ModalMatch = {
   /** Picks the form: "add-asset", "edit", "update-value", "edit-positions", or a row's own id. */
@@ -25,6 +26,8 @@ export type ModalMatch = {
   classId?: AssetClassId;
   /** The Liability a loan mode targets. */
   liability?: LiabilityData | null;
+  /** pass-summary only: the starting Net Worth the pass carried, or null. */
+  from?: number | null;
 };
 
 export type ModeRow = {
@@ -124,8 +127,21 @@ const updateBalance: ModeRow = {
   },
 };
 
+const passSummary: ModeRow = {
+  id: "pass-summary",
+  match(params) {
+    if (params.get("modal") !== "pass-summary") return null;
+    return {
+      mode: "pass-summary",
+      title: "Pass complete",
+      saveLabel: "Done",
+      holding: null,
+      from: parseFrom(params.get("from")),
+    };
+  },
+};
 
-export const BUILTIN_MODES: readonly ModeRow[] = [addAsset, edit, update, addLiability, editLiability, updateBalance];
+export const BUILTIN_MODES: readonly ModeRow[] = [addAsset, edit, update, addLiability, editLiability, updateBalance, passSummary];
 
 /** The current URL with the add modal switched to the other side (LE-01); other params stay. */
 export function swapAddHref(pathname: string, search: string, to: "add-asset" | "add-liability"): string {
@@ -150,7 +166,7 @@ export function resolveModal(
 
 /**
  * The current URL without the modal params. Other params stay exactly as they
- * were (`position`, `pass`, `from`, ...); `~` is kept literal because
+ * were (`position`, `range`, ...); `~` is kept literal because
  * URLSearchParams.toString() would write it as %7E.
  */
 export function closeHref(pathname: string, search: string): string {

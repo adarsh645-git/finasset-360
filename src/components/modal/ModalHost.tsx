@@ -6,12 +6,15 @@ import { AddToggle } from "@/components/modal/AddToggle";
 import { AssetForm } from "@/components/modal/AssetForm";
 import { LoanForm } from "@/components/modal/LoanForm";
 import { ModalFrame } from "@/components/modal/ModalFrame";
+import { PassFooter } from "@/components/modal/PassFooter";
+import { PassSummary } from "@/components/modal/PassSummary";
 import { UpdateBalanceForm } from "@/components/modal/UpdateBalanceForm";
 import { UpdateValueForm } from "@/components/modal/UpdateValueForm";
 import type { PortfolioData } from "@/lib/read-model/types";
 import { defaultAfterSave } from "@/lib/views/holding-entry";
 import type { LoanCarry } from "@/lib/views/loan-form";
-import { BUILTIN_MODES, closeHref, errorFor, modalKey, resolveModal, swapAddHref, type ModalMatch, type ModeRow } from "@/lib/views/modal-modes";
+import { BUILTIN_MODES, closeHref, errorFor, modalKey, MODAL_PARAMS, resolveModal, swapAddHref, withoutParams, type ModalMatch, type ModeRow } from "@/lib/views/modal-modes";
+import { parsePass, passStep, stepFocus, stepSaveOptions, type PassCurrent } from "@/lib/views/update-pass";
 
 /** What the host gives every form (design.md D19). */
 export type ModalFormProps = {
@@ -40,6 +43,7 @@ const BUILTIN_FORMS: Record<string, ModalForm> = {
   "add-liability": LoanForm,
   "edit-liability": LoanForm,
   "update-balance": UpdateBalanceForm,
+  "pass-summary": PassSummary,
 };
 
 // Mounted once in the (app) layout. Which modal is open is the URL's business:
@@ -79,6 +83,19 @@ export function ModalHost({
     setCarryNext(null);
     router.replace(closeHref(pathname, params.toString()));
   };
+
+  // The update pass (design.md D2, D9): a step is the item's own form plus pass chrome.
+  const pass = parsePass(new URLSearchParams(params.toString()));
+  const current: PassCurrent | null = match.holding
+    ? { kind: "holding", id: match.holding.id }
+    : match.liability
+      ? { kind: "liability", id: match.liability.id }
+      : null;
+  const stepMode = ["update-value", "edit-positions", "update-balance"].includes(match.mode);
+  const step =
+    pass && current && stepMode
+      ? passStep(data, { current, ...pass }, data.today, withoutParams(pathname, params.toString(), MODAL_PARAMS))
+      : null;
   const key = modalKey(match);
   const error = errorFor(stored, key);
   const setError = (message: string | null) => setStored(message === null ? null : { key, message });
@@ -87,7 +104,10 @@ export function ModalHost({
     <ModalFrame
       key={key}
       title={match.title}
-      saveLabel={match.saveLabel}
+      saveLabel={step ? "Save & next" : match.saveLabel}
+      footerSlot={step ? <PassFooter counter={step.counter} onSkip={() => router.replace(step.skipHref)} /> : undefined}
+      hideCancel={step !== null || match.mode === "pass-summary"}
+      focusSave={stepFocus(match.mode, step !== null) === "save"}
       error={error}
       saving={busy}
       formId="modal-form"
@@ -111,11 +131,16 @@ export function ModalHost({
         formId="modal-form"
         setBusy={setBusy}
         setError={setError}
-        confirmPrices={confirmPrices}
+        confirmPrices={confirmPrices || stepSaveOptions(match.mode, step !== null).confirmPrices}
         carry={carryNext?.to === match.mode ? carryNext.carry : undefined}
         setCarry={setCarry}
         onSaved={(result) => {
           setCarryNext(null);
+          if (step) {
+            router.replace(step.nextHref);
+            router.refresh();
+            return;
+          }
           router.refresh();
           const next = afterSave ? afterSave(result) : defaultAfterSave(match.mode, result);
           if (next) router.push(next);

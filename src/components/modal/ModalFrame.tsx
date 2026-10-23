@@ -17,6 +17,8 @@ export function ModalFrame({
   onClose,
   headerSlot,
   footerSlot,
+  hideCancel = false,
+  focusSave = false,
   children,
 }: {
   title: string;
@@ -29,10 +31,17 @@ export function ModalFrame({
   headerSlot?: ReactNode;
   /** Holds "Save & next" and "i of N" (redesign-update-pass). */
   footerSlot?: ReactNode;
+  /** A pass step leaves through ×, Esc and Back, so it drops Cancel. */
+  hideCancel?: boolean;
+  /** Open with focus on Save, for a step with nothing to type (Edit positions in a pass, the pass summary). */
+  focusSave?: boolean;
   children: ReactNode;
 }) {
   const panel = useRef<HTMLDivElement>(null);
   const close = useRef(onClose);
+  const inPass = useRef(footerSlot !== undefined);
+  const toSave = useRef(focusSave);
+  const save = useRef<HTMLButtonElement>(null);
   useEffect(() => {
     close.current = onClose;
   });
@@ -40,7 +49,9 @@ export function ModalFrame({
   useEffect(() => {
     const previous = document.activeElement as HTMLElement | null;
     const first = panel.current?.querySelector<HTMLElement>("input, select, textarea");
-    (first ?? panel.current)?.focus();
+    (toSave.current ? save.current : (first ?? panel.current))?.focus();
+    // In a pass the value is pre-filled, so typing replaces it.
+    if (inPass.current && !toSave.current && first instanceof HTMLInputElement) first.select();
 
     function onKey(event: KeyboardEvent) {
       if (event.key === "Escape") {
@@ -105,14 +116,17 @@ export function ModalFrame({
             {error}
           </p>
           {footerSlot}
+          {!hideCancel && (
+            <button
+              type="button"
+              onClick={onClose}
+              className="h-10 rounded-lg border border-line px-3.5 text-[13.5px] font-medium hover:bg-hover"
+            >
+              Cancel
+            </button>
+          )}
           <button
-            type="button"
-            onClick={onClose}
-            className="h-10 rounded-lg border border-line px-3.5 text-[13.5px] font-medium hover:bg-hover"
-          >
-            Cancel
-          </button>
-          <button
+            ref={save}
             type="submit"
             form={formId}
             disabled={saving}
