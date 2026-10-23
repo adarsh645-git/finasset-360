@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { parseField, planSave, type FieldSpec } from "@/lib/views/projection-assumptions";
+import { parseAssumptionsUpdate } from "@/lib/projection-assumptions";
+import { RESET_PATCH, parseField, planSave, type FieldSpec } from "@/lib/views/projection-assumptions";
 
 const usStocks: FieldSpec = { kind: "rate", target: { country: "US", column: "stocks_rate" } };
 const inSavings: FieldSpec = { kind: "savings", target: { country: "IN", column: "monthly_savings" } };
@@ -59,5 +60,43 @@ describe("planSave", () => {
 
   it("PA-10 an invalid entry saves nothing and carries its message", () => {
     expect(planSave(usStocks, "60", 7.5)).toEqual({ kind: "error", message: RATE_MSG });
+  });
+});
+
+describe("horizon and Reset defaults", () => {
+  const HORIZON_MSG = "Enter whole years from 1 to 40";
+  const horizon: FieldSpec = { kind: "horizon", target: { country: null, column: "horizon_years" } };
+
+  it.each([
+    ["1", 1],
+    ["40", 40],
+    ["", null],
+  ])("PA-06 horizon text %j reads %s", (text, value) => {
+    expect(parseField("horizon", text)).toEqual({ ok: true, value });
+  });
+
+  it.each(["0", "41", "12.5", "abc", "-3"])("PA-06 horizon text %j is refused", (text) => {
+    expect(parseField("horizon", text)).toEqual({ ok: false, message: HORIZON_MSG });
+  });
+
+  it("PA-06 a horizon of 15 saves through the same plan", () => {
+    expect(planSave(horizon, "15", null)).toEqual({ kind: "save", patch: { horizon_years: 15 } });
+    expect(planSave(horizon, "41", null)).toEqual({ kind: "error", message: HORIZON_MSG });
+  });
+
+  it("PA-11 Reset defaults is one patch blanking every field", () => {
+    const blank = { inflation: null, realestate_rate: null, stocks_rate: null, cash_rate: null, monthly_savings: null };
+    expect(RESET_PATCH).toEqual({
+      horizon_years: null,
+      savings_growth: null,
+      crypto_rate: null,
+      metals_rate: null,
+      other_rate: null,
+      countries: { US: blank, IN: blank },
+    });
+  });
+
+  it("PA-11 the route accepts the Reset defaults patch", () => {
+    expect(parseAssumptionsUpdate(RESET_PATCH).ok).toBe(true);
   });
 });

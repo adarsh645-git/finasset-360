@@ -1,13 +1,20 @@
-import { COUNTRY_DEFAULTS, DEFAULT_HORIZON_YEARS, SHARED_DEFAULTS } from "@/lib/calc";
-import { compact } from "@/lib/format";
+import {
+  COUNTRY_DEFAULTS,
+  DEFAULT_HORIZON_YEARS,
+  restateInTodaysDollars,
+  SHARED_DEFAULTS,
+  type Country,
+} from "@/lib/calc";
+import { compact, monthLong, usd } from "@/lib/format";
 import type { AssetClassId, PortfolioData } from "@/lib/read-model/types";
 import { fxRatesOf } from "@/lib/views/fx";
 import { growthHref, type GrowthViewState, type Tab } from "@/lib/views/growth";
+import { addMonths, calcAssumptions, projectFromToday } from "@/lib/views/projection";
 
 // The Projection assumptions card's view-model: each field's value, placeholder
 // and hint, the tab, and the pure validation and save plan the card calls.
 
-export type FieldKind = "rate" | "savings";
+export type FieldKind = "rate" | "savings" | "horizon";
 /** Where a field lives in the route's body: top level, or under a Country. */
 export type FieldTarget = { country: "US" | "IN" | null; column: string };
 export type FieldSpec = { kind: FieldKind; target: FieldTarget };
@@ -30,12 +37,26 @@ export type Assumptions = {
   tab: Tab;
   fields: AssumptionField[];
   shared: AssumptionField[];
-  /** The horizon, which sits in the card header (ticket 6 renders it). */
+  /** The horizon, which sits in the card header. */
   horizon: AssumptionField;
+  /** Net Worth at the end of the horizon for the Country scope. */
+  footer: Footer;
+};
+
+export type Footer = {
+  /** "Projection for United States". */
+  label: string;
+  /** "Oct 2036". */
+  month: string;
+  nominal: string;
+  /** In Today's dollars. */
+  real: string;
+  lost: string;
 };
 
 const RATE_MESSAGE = "Enter a rate from −50 to 50";
 const SAVINGS_MESSAGE = "Enter an amount of 0 or more";
+const HORIZON_MESSAGE = "Enter whole years from 1 to 40";
 const MINUS = "−";
 
 export type ParseResult = { ok: true; value: number | null } | { ok: false; message: string };
@@ -44,10 +65,14 @@ export type ParseResult = { ok: true; value: number | null } | { ok: false; mess
 export function parseField(kind: FieldKind, text: string): ParseResult {
   const cleaned = text.replace(/[,\s%$₹]/g, "").replace(/−/g, "-");
   if (cleaned === "") return { ok: true, value: null };
-  const message = kind === "rate" ? RATE_MESSAGE : SAVINGS_MESSAGE;
+  const message = { rate: RATE_MESSAGE, savings: SAVINGS_MESSAGE, horizon: HORIZON_MESSAGE }[kind];
   if (!/^[+-]?(\d+\.?\d*|\.\d+)$/.test(cleaned)) return { ok: false, message };
   const value = Number(cleaned);
-  const valid = kind === "rate" ? value >= -50 && value <= 50 : value >= 0;
+  const valid = {
+    rate: value >= -50 && value <= 50,
+    savings: value >= 0,
+    horizon: Number.isInteger(value) && value >= 1 && value <= 40,
+  }[kind];
   return valid ? { ok: true, value } : { ok: false, message };
 }
 
@@ -72,6 +97,24 @@ export function planSave(spec: FieldSpec, text: string, saved: number | null): S
       : { [column]: parsed.value },
   };
 }
+
+const BLANK_COUNTRY = {
+  inflation: null,
+  realestate_rate: null,
+  stocks_rate: null,
+  cash_rate: null,
+  monthly_savings: null,
+};
+
+/** Reset defaults: every field blank, in one request. */
+export const RESET_PATCH: SavePatch = {
+  horizon_years: null,
+  savings_growth: null,
+  crypto_rate: null,
+  metals_rate: null,
+  other_rate: null,
+  countries: { US: { ...BLANK_COUNTRY }, IN: { ...BLANK_COUNTRY } },
+};
 
 const num = (n: number) => String(Math.round(n * 100) / 100).replace("-", MINUS);
 const shown = (n: number | null) => (n === null ? "" : num(n));
@@ -170,9 +213,10 @@ export function buildAssumptions(data: PortfolioData, view: GrowthViewState): As
     })),
     fields,
     shared,
+    footer: buildFooter(data, view),
     horizon: {
       label: "Horizon",
-      kind: "rate",
+      kind: "horizon",
       target: { country: null, column: "horizon_years" },
       value: horizon === null ? "" : String(horizon),
       placeholder: String(DEFAULT_HORIZON_YEARS),
@@ -180,5 +224,38 @@ export function buildAssumptions(data: PortfolioData, view: GrowthViewState): As
       unit: "yrs",
       saved: horizon,
     },
+  };
+}
+
+const FOOTER_LABEL = {
+  all: "Projection for all countries",
+  us: "Projection for United States",
+  in: "Projection for India",
+};
+const FOOTER_COUNTRIES: Record<GrowthViewState["scope"], Country[]> = {
+  all: ["US", "India"],
+  us: ["US"],
+  in: ["India"],
+};
+
+/** Net Worth at the horizon's end for the scope, nominal and in Today's dollars. */
+function buildFooter(data: PortfolioData, view: GrowthViewState): Footer {
+  const projection = projectFromToday(data);
+  const months = projection.netWorth.length;
+  const countries = FOOTER_COUNTRIES[view.scope];
+  const end = addMonths(data.today, months);
+  const atEnd = (c: Country) => projection.countries[c].netWorth[months - 1]!;
+  const nominal = countries.reduce((sum, c) => sum + atEnd(c), 0);
+  const real = restateInTodaysDollars(
+    Object.fromEntries(countries.map((c) => [c, [{ month: end.slice(0, 7), netWorth: atEnd(c) }]])),
+    data.today.slice(0, 7),
+    calcAssumptions(data),
+  )[0]!.netWorth;
+  return {
+    label: FOOTER_LABEL[view.scope],
+    month: monthLong(end),
+    nominal: usd(nominal),
+    real: usd(real),
+    lost: usd(nominal - real),
   };
 }

@@ -42,7 +42,8 @@ The mockup redesign ([map #13](https://github.com/adarsh645-git/finasset-360/iss
 
 ### Modified Capabilities
 
-None (`openspec/specs/` is empty; earlier `redesign-*` changes add their capabilities as ADDED too).
+- `app-shell`: "The shell links only to pages that exist" now lists the Growth page, so Growth is a link (SH-08). Based on `redesign-goals`' version of the requirement.
+- `overview`: "Three stat cards summarise assets, liabilities and equity" now has Equity built link to `/growth` (OV-08), while Total assets and Liabilities stay plain.
 
 ## Impact
 
