@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { buildOverview } from "@/lib/views/overview";
 import { parsePass, passStep, updateAllEntry } from "@/lib/views/update-pass";
-import { closeHref } from "@/lib/views/modal-modes";
+import { BUILTIN_MODES, closeHref, resolveModal } from "@/lib/views/modal-modes";
 import { holding, liability, portfolio } from "../fixtures/portfolio";
 
 const TODAY = "2026-10-13";
@@ -48,7 +48,14 @@ describe("updateAllEntry", () => {
 
   it("UP-01 a Liability first opens the balance edit", () => {
     const data = portfolio({ today: TODAY, liabilities: [loan("loan", "Loan", 45, 1_000)] });
-    expect(updateAllEntry(data, TODAY)!.href).toBe("/?modal=update-balance&liability=loan&pass=1&from=-1000");
+    expect(updateAllEntry(data, TODAY)!.href).toBe("/?modal=update&liability=loan&pass=1&from=-1000");
+  });
+
+  it("UP-01 a Liability step href opens the update-balance modal", () => {
+    const data = portfolio({ today: TODAY, liabilities: [loan("loan", "Loan", 45, 1_000)] });
+    const href = updateAllEntry(data, TODAY)!.href;
+    const match = resolveModal(data, new URLSearchParams(href.split("?")[1]), BUILTIN_MODES);
+    expect(match).toMatchObject({ mode: "update-balance", liability: { id: "loan" } });
   });
 
   it("UP-02 nothing Stale gives no entry", () => {
@@ -91,7 +98,7 @@ describe("passStep", () => {
     expect(passStep(data, { current: H("w"), i: 1, from: 0 }, TODAY)).toMatchObject({
       title: "Wells Fargo cash",
       counter: "1 of 3",
-      nextHref: "/?modal=update-balance&liability=a&pass=2&from=0",
+      nextHref: "/?modal=update&liability=a&pass=2&from=0",
     });
     expect(passStep(data, { current: { kind: "liability", id: "a" }, i: 2, from: 0 }, TODAY)).toMatchObject({
       counter: "2 of 3",

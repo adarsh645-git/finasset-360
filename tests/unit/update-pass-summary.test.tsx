@@ -56,6 +56,10 @@ describe("pass-summary mode", () => {
     expect(modes("modal=pass-summary&from=5")?.mode).toBe("pass-summary");
   });
 
+  it("UP-19 the summary mode is titled Pass complete with save label Done", () => {
+    expect(modes("modal=pass-summary&from=5")).toMatchObject({ title: "Pass complete", saveLabel: "Done" });
+  });
+
   it("UP-17 an invalid from renders only today's Net Worth", () => {
     const match = modes("modal=pass-summary&from=abc")!;
     const html = renderToStaticMarkup(

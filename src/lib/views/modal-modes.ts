@@ -1,3 +1,4 @@
+import { parseFrom } from "@/lib/views/update-pass";
 import type { AssetClassId, HoldingData, LiabilityData, PortfolioData } from "@/lib/read-model/types";
 
 // The modal host's mode table (design.md D1, D19): URL params in, what to open
@@ -130,13 +131,12 @@ const passSummary: ModeRow = {
   id: "pass-summary",
   match(params) {
     if (params.get("modal") !== "pass-summary") return null;
-    const from = params.get("from");
     return {
       mode: "pass-summary",
       title: "Pass complete",
       saveLabel: "Done",
       holding: null,
-      from: from !== null && /^-?\d+$/.test(from) ? Number(from) : null,
+      from: parseFrom(params.get("from")),
     };
   },
 };

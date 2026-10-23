@@ -36,7 +36,7 @@ const joinQuery = (base: string, query: string) => `${base}${base.includes("?") 
 function stepQuery(row: PassCurrent | StaleRow, i: number, from: number | null): string {
   const target =
     row.kind === "liability"
-      ? `modal=update-balance&liability=${row.id}`
+      ? `modal=update&liability=${row.id}`
       : `modal=update&holding=${row.id}`;
   return `${target}&pass=${i}${from === null ? "" : `&from=${from}`}`;
 }
@@ -57,12 +57,16 @@ export function updateAllEntry(
   };
 }
 
+/** A `from` param: a whole number, else null. */
+export function parseFrom(value: string | null): number | null {
+  return value !== null && /^-?\d+$/.test(value) ? Number(value) : null;
+}
+
 /** `pass` (a positive integer) and `from` (a whole number) from the URL; null without a valid `pass`. */
 export function parsePass(params: URLSearchParams): { i: number; from: number | null } | null {
   const pass = params.get("pass");
   if (pass === null || !/^[1-9]\d*$/.test(pass)) return null;
-  const from = params.get("from");
-  return { i: Number(pass), from: from !== null && /^-?\d+$/.test(from) ? Number(from) : null };
+  return { i: Number(pass), from: parseFrom(params.get("from")) };
 }
 
 const FORMS: Record<"holding" | "stocks" | "liability", PassForm> = {

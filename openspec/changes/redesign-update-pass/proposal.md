@@ -38,7 +38,9 @@ The User updates 10–30 values once a month in one sitting (docs/SPEC.md l.20).
 
 ### Modified Capabilities
 
-None (`openspec/specs/` is empty). The "Update all (N)" button sits on the `overview` card, but its behaviour is specified here under `update-pass`.
+- `holding-entry`: "The modal is opened and closed through the URL" now also removes `pass` and `from` on close, defines `modal=pass-summary` ("Pass complete", "Done"), and drops Cancel on a pass step and the summary.
+
+The "Update all (N)" button sits on the `overview` card, but its behaviour is specified here under `update-pass`.
 
 ## Impact
 

@@ -96,12 +96,6 @@ export function ModalHost({
     pass && current && stepMode
       ? passStep(data, { current, ...pass }, data.today, withoutParams(pathname, params.toString(), MODAL_PARAMS))
       : null;
-  // Until the summary mode is registered, the last step has nowhere to go but out.
-  const summaryOpen = modes.some((m) => m.id === "pass-summary");
-  const goTo = (href: string) => {
-    const leaves = href.includes("modal=pass-summary") && !summaryOpen;
-    router.replace(leaves ? closeHref(pathname, params.toString()) : href);
-  };
   const key = modalKey(match);
   const error = errorFor(stored, key);
   const setError = (message: string | null) => setStored(message === null ? null : { key, message });
@@ -111,7 +105,7 @@ export function ModalHost({
       key={key}
       title={match.title}
       saveLabel={step ? "Save & next" : match.saveLabel}
-      footerSlot={step ? <PassFooter counter={step.counter} onSkip={() => goTo(step.skipHref)} /> : undefined}
+      footerSlot={step ? <PassFooter counter={step.counter} onSkip={() => router.replace(step.skipHref)} /> : undefined}
       hideCancel={step !== null || match.mode === "pass-summary"}
       focusSave={stepFocus(match.mode, step !== null) === "save"}
       error={error}
@@ -143,7 +137,7 @@ export function ModalHost({
         onSaved={(result) => {
           setCarryNext(null);
           if (step) {
-            goTo(step.nextHref);
+            router.replace(step.nextHref);
             router.refresh();
             return;
           }
