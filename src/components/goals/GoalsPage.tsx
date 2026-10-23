@@ -1,9 +1,10 @@
+import { GoalForm } from "@/components/goals/GoalForm";
+import { RemoveGoalButton } from "@/components/goals/RemoveGoalButton";
 import type { GoalsPage as GoalsPageView } from "@/lib/views/goals";
 
 const CARD = "rounded-[14px] border border-line bg-panel shadow-[var(--shadow)]";
 
-// Renders what buildGoalsPage returns. The add form (ticket 2) goes in the
-// "goal-form" slot, after the cards or the empty state.
+// Renders what buildGoalsPage returns, then the add form after the cards or the empty state.
 export function GoalsPage({ page }: { page: GoalsPageView }) {
   return (
     <div className="mx-auto flex w-full max-w-[760px] flex-col gap-4">
@@ -43,11 +44,14 @@ export function GoalsPage({ page }: { page: GoalsPageView }) {
                   style={{ width: `${row.barPercent}%` }}
                 />
               </div>
+              <RemoveGoalButton id={row.id} />
             </li>
           ))}
         </ul>
       )}
-      <div data-slot="goal-form" />
+      <div data-slot="goal-form">
+        <GoalForm />
+      </div>
     </div>
   );
 }

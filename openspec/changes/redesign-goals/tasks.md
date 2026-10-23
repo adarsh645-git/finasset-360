@@ -19,11 +19,11 @@ A signed-in User opens `/goals` from the nav (now a link, with the Goal count) a
 Blocked by: 1
 The User adds a Goal from the inline form (name + $ target; Enter or "Add goal") and it appears in its sorted place. A bad target saves nothing and keeps the text. Remove deletes a Goal for good, with no edit control (D6–D8).
 
-- [ ] 2.1 Tests named GO-10, GO-12 written and failing (red)
-- [ ] 2.2 `parseGoalTarget` strips `$`, commas and spaces and accepts only finite numbers > 0 (GO-10)
-- [ ] 2.3 The form posts the trimmed name (or none) and the target to `POST /api/goals`, then clears and refreshes. A failed request shows the route's message under the form
-- [ ] 2.4 Each card offers Remove, which calls `DELETE /api/goals/[id]` and refreshes, and no edit control (GO-12)
-- [ ] 2.5 Tests named GO-10, GO-12 pass in CI suites; npm run spec:coverage passes
+- [x] 2.1 Tests named GO-10, GO-12 written and failing (red)
+- [x] 2.2 `parseGoalTarget` strips `$`, commas and spaces and accepts only finite numbers > 0 (GO-10)
+- [x] 2.3 The form posts the trimmed name (or none) and the target to `POST /api/goals`, then clears and refreshes. A failed request shows the route's message under the form
+- [x] 2.4 Each card offers Remove, which calls `DELETE /api/goals/[id]` and refreshes, and no edit control (GO-12)
+- [x] 2.5 Tests named GO-10, GO-12 pass in CI suites; npm run spec:coverage passes
 - [ ] 2.6 Checked by hand at 2000px, 800px and 390px: the form wraps, Enter adds, Remove and inputs meet 40px touch targets on phone, and a removed Goal also leaves the nav count
 
 ## 3. Overview Goals card and goal lines
