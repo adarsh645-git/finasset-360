@@ -10,12 +10,18 @@ vi.mock("next/navigation", async (importOriginal) => ({
 const { ShellFrame } = await import("@/components/shell/ShellFrame");
 const { buildShell } = await import("@/lib/views/shell");
 
+const { holding, portfolio } = await import("../fixtures/portfolio");
+
 const user = { email: "a@example.test", user_metadata: { full_name: "Adarsh Reddy" } };
-const html = renderToStaticMarkup(
-  <ShellFrame shell={buildShell({ user }, { pathname: null })} theme="light">
-    <p>page</p>
-  </ShellFrame>,
-);
+function render(data: ReturnType<typeof portfolio>): string {
+  return renderToStaticMarkup(
+    <ShellFrame shell={buildShell({ user, portfolio: data }, { pathname: null })} theme="light">
+      <p>page</p>
+    </ShellFrame>,
+  );
+}
+
+const html = render(portfolio({ holdings: [holding({ currentValue: 412_000 })] }));
 
 const LABELS = ["Overview", "Assets", "Liabilities", "Growth", "Goals"];
 
@@ -39,5 +45,27 @@ describe("shell render", () => {
     expect(html).toContain("Adarsh");
     expect(html).not.toContain("Reddy");
     expect(html).toContain("Sign out");
+  });
+
+  it("SH-08 only the Overview is a link; Stocks is plain text and nothing offers adding", () => {
+    expect(html).toMatch(/<a [^>]*href="\/"[^>]*data-label="Overview"|<a [^>]*data-label="Overview"[^>]*href="\/"/);
+    expect(html.match(/<a /g)?.length).toBe(3); // Overview in the sidebar, tabs and bottom bar
+    expect(html).toMatch(/<span data-class="stocks"/);
+    expect(html).toContain("Stocks");
+    expect(html).not.toContain("+ Add");
+    expect(html).not.toContain("Add account");
+  });
+
+  it("SH-04 the totals show in the sidebar and the phone tab bar", () => {
+    expect(navHtml("sidebar")).toContain("$412K");
+    expect(navHtml("bottom")).toContain("$412K");
+    expect(html).toContain("$412,000");
+  });
+
+  it("SH-11 an empty Portfolio's shell shows $0 and — with no Asset classes heading", () => {
+    const empty = render(portfolio());
+    expect(empty).toContain("$0");
+    expect(empty).toContain("—");
+    expect(empty).not.toContain("Asset classes");
   });
 });

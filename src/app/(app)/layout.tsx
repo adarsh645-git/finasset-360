@@ -3,7 +3,9 @@ import { cookies } from "next/headers";
 import { ProjectionProvider } from "@/components/chart/ProjectionProvider";
 import { ShellFrame } from "@/components/shell/ShellFrame";
 import { requireSignedInUser } from "@/lib/auth/require-signed-in-user";
+import { DEFAULT_HORIZON_YEARS } from "@/lib/calc";
 import { PROJECTION_COOKIE, resolveProjection } from "@/lib/chart/projection";
+import { getPortfolio } from "@/lib/read-model/get-portfolio";
 import { createClient } from "@/lib/supabase/server";
 import { resolveTheme, THEME_COOKIE } from "@/lib/theme";
 import { buildShell } from "@/lib/views/shell";
@@ -16,11 +18,14 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
   const theme = resolveTheme(jar.get(THEME_COOKIE)?.value);
   const projection = resolveProjection(jar.get(PROJECTION_COOKIE)?.value);
   // Active item is applied in ShellFrame from usePathname, which layouts can't read.
-  const shell = buildShell({ user }, { pathname: null });
+  const portfolio = await getPortfolio();
+  const shell = buildShell({ user, portfolio }, { pathname: null });
   return (
     <ShellFrame shell={shell} theme={theme}>
-      {/* Horizon is the default 10 until the Portfolio's assumptions reach the layout (Overview ticket). */}
-      <ProjectionProvider initial={projection} horizon={10}>
+      <ProjectionProvider
+        initial={projection}
+        horizon={portfolio.assumptions.horizonYears ?? DEFAULT_HORIZON_YEARS}
+      >
         {children}
       </ProjectionProvider>
     </ShellFrame>

@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { buildShell } from "@/lib/views/shell";
+import { holding, portfolio } from "../fixtures/portfolio";
 import { ADDING, EXISTING_ROUTES, hrefFor } from "@/lib/views/links";
 
+const data = portfolio({ holdings: [holding({ currentValue: 1 })] });
 const user = { email: "a@example.test", user_metadata: { full_name: "Adarsh Reddy" } };
 
 describe("shell view", () => {
@@ -13,7 +15,7 @@ describe("shell view", () => {
     ["/growth", "Growth"],
     ["/goals", "Goals"],
   ])("SH-03 the active item follows the path %s to %s", (pathname, item) => {
-    const shell = buildShell({ user }, { pathname });
+    const shell = buildShell({ user, portfolio: data }, { pathname });
     expect(shell.items.filter((i) => i.active).map((i) => i.label)).toEqual([item]);
   });
 
@@ -22,6 +24,6 @@ describe("shell view", () => {
     expect(ADDING).toBe(false);
     expect(hrefFor({ kind: "overview" })).toBe("/");
     expect(hrefFor({ kind: "assets" })).toBeNull();
-    expect(buildShell({ user }, { pathname: "/" }).userName).toBe("Adarsh");
+    expect(buildShell({ user, portfolio: data }, { pathname: "/" }).userName).toBe("Adarsh");
   });
 });
