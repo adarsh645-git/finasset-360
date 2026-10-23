@@ -6,10 +6,10 @@ Blocked by: none
 Every amount, percentage, date, duration and age the redesign shows can be written one way, from one module that later changes reuse: whole-dollar USD, en-IN rupees, compact and signed amounts, shares that are 0% of a $0 total, and "—" for absent figures (D15).
 
 - [ ] 1.1 Tests named FM-01, FM-02, FM-03, FM-04, FM-05, FM-06, FM-07, FM-08, FM-09, FM-10 written and failing (red)
-- [ ] 1.2 USD, rupee and native amounts round to whole units, use U+2212 for minus and never print −$0 (FM-01, FM-02, FM-03)
-- [ ] 1.3 Compact thresholds match the prototype's `cmp()`; signed forms show + for zero; a share of a $0 total is 0% (FM-04, FM-05, FM-06)
-- [ ] 1.4 Every helper turns an absent figure into — (FM-07); months, durations and ages have their fixed shapes (FM-08, FM-09, FM-10)
-- [ ] 1.5 Tests named FM-01, FM-02, FM-03, FM-04, FM-05, FM-06, FM-07, FM-08, FM-09, FM-10 pass in CI suites; npm run spec:coverage passes
+- [x] 1.2 USD, rupee and native amounts round to whole units, use U+2212 for minus and never print −$0 (FM-01, FM-02, FM-03)
+- [x] 1.3 Compact thresholds match the prototype's `cmp()`; signed forms show + for zero; a share of a $0 total is 0% (FM-04, FM-05, FM-06)
+- [x] 1.4 Every helper turns an absent figure into — (FM-07); months, durations and ages have their fixed shapes (FM-08, FM-09, FM-10)
+- [x] 1.5 Tests named FM-01, FM-02, FM-03, FM-04, FM-05, FM-06, FM-07, FM-08, FM-09, FM-10 pass in CI suites; npm run spec:coverage passes
 
 ## 2. Tokens, theme and the shell frame
 
