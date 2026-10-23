@@ -1,7 +1,8 @@
+import { ONE_YEAR_SECONDS } from "@/lib/chart/projection";
+
 export type Theme = "light" | "dark";
 
 export const THEME_COOKIE = "theme";
-const ONE_YEAR_SECONDS = 31536000;
 
 /** The stored cookie value to a theme. Anything but "dark" is light. */
 export function resolveTheme(cookie: string | undefined | null): Theme {
@@ -36,5 +37,23 @@ export function toggleTheme(current: Theme, doc: ThemeDocument): Theme {
   const next = nextTheme(current);
   doc.documentElement.dataset.theme = next;
   doc.cookie = themeCookie(next);
+  listeners.forEach((l) => l());
   return next;
+}
+
+const listeners = new Set<() => void>();
+
+/** Every ThemeToggle subscribes, so a flip in one reaches the others. Returns the unsubscribe. */
+export function subscribeTheme(listener: () => void): () => void {
+  listeners.add(listener);
+  return () => void listeners.delete(listener);
+}
+
+/** The theme the page is showing; `fallback` before the page has set one (server render). */
+export function readTheme(
+  doc: Pick<ThemeDocument, "documentElement"> | undefined,
+  fallback: Theme,
+): Theme {
+  const set = doc?.documentElement.dataset.theme;
+  return set === "dark" || set === "light" ? set : fallback;
 }

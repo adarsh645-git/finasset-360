@@ -60,6 +60,13 @@ describe("FM-04 Writing a compact amount", () => {
 });
 
 describe("FM-05 Writing signed amounts and percentages", () => {
+  it("FM-01 a negative that rounds to zero never reads −$0 or −0.0%", () => {
+    expect(signed(-0.2)).toBe("+$0");
+    expect(signedCompact(-0.2)).toBe("+$0");
+    expect(signedPct(-0.0004)).toBe("+0.0%");
+    expect(signedPct(-0.0004, 0)).toBe("+0%");
+    expect(signed(-0.6)).toBe("−$1");
+  });
   it("FM-05 signed amounts", () => {
     expect(signed(6750)).toBe("+$6,750");
     expect(signed(-4250)).toBe("−$4,250");

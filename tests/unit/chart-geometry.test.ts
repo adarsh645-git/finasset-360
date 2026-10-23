@@ -61,6 +61,22 @@ describe("chart axis", () => {
     expect(JSON.stringify(l)).not.toMatch(/NaN|Infinity/);
   });
 
+  it("CH-02 a single $0 point gets distinct tick labels, not a column of $0", () => {
+    const labels = lay([one([{ date: "2026-10-13", value: 0 }])]).y.ticks.map((t) => t.label);
+    expect(new Set(labels).size).toBe(labels.length);
+    expect(labels[0]).toBe("$0");
+  });
+
+  it("CH-02 a flat non-zero series gets distinct tick labels too", () => {
+    const labels = lay([
+      one([
+        { date: "2026-01-31", value: 1_000_000 },
+        { date: "2026-10-13", value: 1_000_000 },
+      ]),
+    ]).y.ticks.map((t) => t.label);
+    expect(new Set(labels).size).toBe(labels.length);
+  });
+
   it("CH-03 tooltip-only series don't move the axis", () => {
     const l = lay([
       one([

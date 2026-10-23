@@ -4,12 +4,12 @@ import {
   netWorthOn,
   yearBefore,
   type Country,
-  type FxRate,
   type HistoryItem,
 } from "@/lib/calc";
 import { compact, DASH, signed, signedPct, usd } from "@/lib/format";
 import type { AssetClassId, HoldingData, LiabilityData, PortfolioData } from "@/lib/read-model/types";
 import { CLASS_TOKENS } from "@/lib/tokens";
+import { fxRatesOf, usableItems } from "@/lib/views/fx";
 import { EXISTING_ROUTES, hrefFor, type LinkTarget, type RouteFamily } from "@/lib/views/links";
 
 export type NavKey = "overview" | "assets" | "liabilities" | "growth" | "goals";
@@ -127,17 +127,10 @@ export function buildShell(
 ): Shell {
   const { portfolio } = input;
   const { today } = portfolio;
-  const rates: FxRate[] = portfolio.fx.history.length
-    ? portfolio.fx.history
-    : portfolio.fx.today
-      ? [{ date: portfolio.fx.today.asOf, rate: portfolio.fx.today.rate }]
-      : [];
-  // Without any FX Rate an INR item can't be valued in USD; it is left out rather than guessed.
-  const usable = <T extends { country: "US" | "IN" }>(items: T[]): T[] =>
-    rates.length ? items : items.filter((i) => i.country === "US");
+  const rates = fxRatesOf(portfolio);
 
-  const holdings = usable(portfolio.holdings);
-  const liabilities = usable(portfolio.liabilities);
+  const holdings = usableItems(portfolio.holdings, rates);
+  const liabilities = usableItems(portfolio.liabilities, rates);
   const held = holdings.map(historyItem);
   const owedItems = liabilities.map(historyItem);
   const worth = (h: HistoryItem[], l: HistoryItem[], date = today) =>

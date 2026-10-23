@@ -41,22 +41,23 @@ export function compact(v: number | Absent): string {
   return (v < 0 ? MINUS : "") + "$" + body;
 }
 
-const sign = (v: number) => (v >= 0 ? "+" : MINUS);
+/** The sign follows the rounded text: a value that shows as zero reads "+", never "−". */
+const withSign = (v: number, body: string) => (v < 0 && /[1-9]/.test(body) ? MINUS : "+") + body;
 
 export function signed(v: number | Absent): string {
   if (absent(v)) return DASH;
-  return sign(v) + usd(Math.abs(v));
+  return withSign(v, usd(Math.abs(v)));
 }
 
 export function signedCompact(v: number | Absent): string {
   if (absent(v)) return DASH;
-  return sign(v) + compact(Math.abs(v));
+  return withSign(v, compact(Math.abs(v)));
 }
 
 /** A fraction (0.0812) as a signed percent, one decimal by default. */
 export function signedPct(v: number | Absent, digits = 1): string {
   if (absent(v)) return DASH;
-  return sign(v) + Math.abs(v * 100).toFixed(digits) + "%";
+  return withSign(v, Math.abs(v * 100).toFixed(digits) + "%");
 }
 
 /** `part / total` as a whole percent; a total of 0 is 0%. */
