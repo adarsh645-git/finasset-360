@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ConfirmDeleteButton } from "@/components/holding/ConfirmDeleteButton";
 import type { HoldingDetail as HoldingDetailView } from "@/lib/views/holding-detail";
 
 const MONO_LABEL = "font-mono text-[11px] font-medium uppercase leading-tight tracking-[0.06em] text-ink3";
@@ -46,6 +47,7 @@ export function HoldingDetail({ detail }: { detail: HoldingDetailView }) {
           <Link href={detail.actions.edit.href} className={BUTTON}>
             Edit
           </Link>
+          <ConfirmDeleteButton url={`/api/holdings/${detail.id}/archive`} to="/" className={BUTTON} />
         </div>
       </header>
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4">

@@ -1,10 +1,16 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
 import { HoldingDetail } from "@/components/holding/HoldingDetail";
 import type { HoldingData, PortfolioData } from "@/lib/read-model/types";
 import { buildHoldingDetail } from "@/lib/views/holding-detail";
 import type { RouteFamily } from "@/lib/views/links";
 import { holding, portfolio } from "../fixtures/portfolio";
+
+// The Delete button reads the router and path.
+vi.mock("next/navigation", () => ({
+  usePathname: () => "/holdings/h1",
+  useRouter: () => ({ push: () => {}, refresh: () => {}, replace: () => {} }),
+}));
 
 const TODAY = "2026-10-14";
 const fx = (asOf = TODAY): PortfolioData["fx"] => ({

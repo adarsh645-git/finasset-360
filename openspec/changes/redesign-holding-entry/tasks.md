@@ -30,13 +30,13 @@ The detail page shows the Holding's USD value over time (history, then its Proje
 Blocked by: 1
 The layout-level modal host opens from the URL as a dialog or a phone bottom sheet with a footer error line. Update value records today's Valuation even when unchanged, and the two-click Delete archives the Holding and unlinks its loans (D1, D2, D9, D15, D19).
 
-- [ ] 3.1 Tests named HE-01, HE-02, HE-03, HE-22, HE-23, HD-07 written and failing (red)
-- [ ] 3.2 `ModalHost` in the `(app)` layout resolves params through the mode table; titles and save labels follow HE-01; unregistered or archived targets render nothing; closing removes only the modal params (HE-01, HE-02, HE-03)
-- [ ] 3.3 The dialog frame has title, ×, body, footer error line, Cancel and Save, plus the header toggle slot and footer slot for later changes. Esc and backdrop close it, focus is trapped, and Save is disabled while saving
-- [ ] 3.4 Update value: one large pre-filled input, the "Was … · logged as today's value, ⟨date⟩" line, "Enter the current value", and a post on every save, including unchanged (HE-22, HE-23)
-- [ ] 3.5 `ConfirmDeleteButton`: "Delete" → "Confirm delete", reset on leaving the page; the second click archives, then goes to `/` and refreshes (HD-07)
-- [ ] 3.6 `ModalHost` passes through extra params (`pass`, `from`) and accepts externally registered mode rows (e.g. `pass-summary`). Forms take an optional after-save URL callback that defaults to closing, and an optional `confirmPrices` flag (off by default; the plain form never sends `confirm_prices`), checked by a mode-table and close-href test under HE-03
-- [ ] 3.7 Tests named HE-01, HE-02, HE-03, HE-22, HE-23, HD-07 pass in CI suites; npm run spec:coverage passes
+- [x] 3.1 Tests named HE-01, HE-02, HE-03, HE-22, HE-23, HD-07 written and failing (red)
+- [x] 3.2 `ModalHost` in the `(app)` layout resolves params through the mode table; titles and save labels follow HE-01; unregistered or archived targets render nothing; closing removes only the modal params (HE-01, HE-02, HE-03)
+- [x] 3.3 The dialog frame has title, ×, body, footer error line, Cancel and Save, plus the header toggle slot and footer slot for later changes. Esc and backdrop close it, focus is trapped, and Save is disabled while saving
+- [x] 3.4 Update value: one large pre-filled input, the "Was … · logged as today's value, ⟨date⟩" line, "Enter the current value", and a post on every save, including unchanged (HE-22, HE-23)
+- [x] 3.5 `ConfirmDeleteButton`: "Delete" → "Confirm delete", reset on leaving the page; the second click archives, then goes to `/` and refreshes (HD-07)
+- [x] 3.6 `ModalHost` passes through extra params (`pass`, `from`) and accepts externally registered mode rows (e.g. `pass-summary`). Forms take an optional after-save URL callback that defaults to closing, and an optional `confirmPrices` flag (off by default; the plain form never sends `confirm_prices`), checked by a mode-table and close-href test under HE-03
+- [x] 3.7 Tests named HE-01, HE-02, HE-03, HE-22, HE-23, HD-07 pass in CI suites; npm run spec:coverage passes
 - [ ] 3.8 Checked by hand against the mockup's Update value modal at 2000px and 800px (dialog) and 390px (bottom sheet, 92vh, inner scroll, 16px input)
 
 ## 4. Add and edit a Holding of any class except Stocks
