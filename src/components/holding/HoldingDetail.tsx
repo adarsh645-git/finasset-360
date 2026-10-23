@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ConfirmDeleteButton } from "@/components/holding/ConfirmDeleteButton";
+import { StocksSections } from "@/components/holding/StocksSections";
 import type { HoldingDetail as HoldingDetailView } from "@/lib/views/holding-detail";
 
 const MONO_LABEL = "font-mono text-[11px] font-medium uppercase leading-tight tracking-[0.06em] text-ink3";
@@ -61,6 +62,7 @@ export function HoldingDetail({ detail }: { detail: HoldingDetailView }) {
           </div>
         ))}
       </div>
+      {detail.stocks && <StocksSections stocks={detail.stocks} />}
     </div>
   );
 }

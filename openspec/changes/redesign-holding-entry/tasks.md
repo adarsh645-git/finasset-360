@@ -71,11 +71,11 @@ A User can add a Stocks Holding, with each Position previewed from the ticker lo
 Blocked by: 1
 A Stocks Holding's page shows its Cost Basis and gain from Positions, its Positions sorted by value with weight and gain, By sector, and the price age cue on stale hand-priced rows. Each row links to the drawer param (D13).
 
-- [ ] 6.1 Tests named HD-12, HD-13, HD-14, HD-15, HD-16 written and failing (red)
-- [ ] 6.2 Cost basis and Unrealized gain from Positions (HD-12)
-- [ ] 6.3 Positions rows (ticker without suffix, Sector dot, "N sh · name", price, value, gain %, weight) sorted by value, and By sector with tickers and one-decimal shares, side by side in the `@container` two-column class (HD-13, HD-14)
-- [ ] 6.4 Rows link to `?position=<holdingId>~<ticker>`, and stale hand-priced rows end "· price N days old" (HD-15, HD-16)
-- [ ] 6.5 Tests named HD-12, HD-13, HD-14, HD-15, HD-16 pass in CI suites; npm run spec:coverage passes
+- [x] 6.1 Tests named HD-12, HD-13, HD-14, HD-15, HD-16 written and failing (red)
+- [x] 6.2 Cost basis and Unrealized gain from Positions (HD-12)
+- [x] 6.3 Positions rows (ticker without suffix, Sector dot, "N sh · name", price, value, gain %, weight) sorted by value, and By sector with tickers and one-decimal shares, side by side in the `@container` two-column class (HD-13, HD-14)
+- [x] 6.4 Rows link to `?position=<holdingId>~<ticker>`, and stale hand-priced rows end "· price N days old" (HD-15, HD-16)
+- [x] 6.5 Tests named HD-12, HD-13, HD-14, HD-15, HD-16 pass in CI suites; npm run spec:coverage passes
 - [ ] 6.6 Checked by hand against the mockup's brokerage detail at 2000px, 800px (stacked below 820px of content) and 390px (dropped columns)
 
 ## 7. The position drawer
