@@ -36,7 +36,7 @@ function Segments({
 
 // Renders what buildGrowth returns.
 export function GrowthPage({ growth }: { growth: Growth }) {
-  const { header, chart, empty, addHref, ranges, scopes } = growth;
+  const { header, chart, empty, addHref, ranges, scopes, modes, bases } = growth;
   if (empty || !header || !chart) {
     return (
       <div className="flex flex-col gap-4">
@@ -82,6 +82,16 @@ export function GrowthPage({ growth }: { growth: Growth }) {
         </div>
       </div>
       <section className={`${CARD} px-5 pb-3 pt-5`}>
+        <div className="mb-3 flex flex-wrap items-start justify-between gap-3">
+          <div className="flex flex-col gap-0.5">
+            <h2 className="text-[15px] font-semibold">{chart.title}</h2>
+            <p className="text-[12.5px] text-ink3">{chart.subtitle}</p>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <Segments label="Chart mode" items={modes} />
+            <Segments label="Basis" items={bases} />
+          </div>
+        </div>
         <Chart
           series={chart.series}
           today={chart.today}

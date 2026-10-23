@@ -19,11 +19,11 @@ Blocked by: none
 Blocked by: 1
 The chart switches between Simple, By asset class and By country, and between Nominal and Today's dollars. The title and subtitle name the basis, the scope and each in-scope Country's inflation (D3).
 
-- [ ] 2.1 Tests named GR-06, GR-07, GR-08, GR-09, GR-10 written and failing (red)
-- [ ] 2.2 By asset class stacks the classes with value anywhere in the window, largest at the bottom, each with its own values as `tip`, then Owed and Net worth. Savings appear as a Stocks layer (GR-06, GR-07)
-- [ ] 2.3 By country draws each in-scope Country's Net Worth line, plus Total when both are in scope (GR-08)
-- [ ] 2.4 Today's dollars restates every series per Country through the calculations module, with the title and subtitle per basis and scope (GR-09, GR-10)
-- [ ] 2.5 Tests named GR-06, GR-07, GR-08, GR-09, GR-10 pass in CI suites; npm run spec:coverage passes
+- [x] 2.1 Tests named GR-06, GR-07, GR-08, GR-09, GR-10 written and failing (red)
+- [x] 2.2 By asset class stacks the classes with value anywhere in the window, largest at the bottom, each with its own values as `tip`, then Owed and Net worth. Savings appear as a Stocks layer (GR-06, GR-07)
+- [x] 2.3 By country draws each in-scope Country's Net Worth line, plus Total when both are in scope (GR-08)
+- [x] 2.4 Today's dollars restates every series per Country through the calculations module, with the title and subtitle per basis and scope (GR-09, GR-10)
+- [x] 2.5 Tests named GR-06, GR-07, GR-08, GR-09, GR-10 pass in CI suites; npm run spec:coverage passes
 - [ ] 2.6 Checked by hand against the mockup's Growth chart in all three modes and both bases at 2000px, 800px and 390px
 
 ## 3. Where the change came from
