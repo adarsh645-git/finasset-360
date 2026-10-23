@@ -19,12 +19,12 @@ The Needs updating card offers "Update all (N)". It opens a pass that walks the 
 Blocked by: 1
 After the last item the pass ends on a summary instead of closing: "Net worth $X → $Y (±$Z)", from the starting figure the pass carried and today's Net Worth, plus how many items still need updating. It's computed, never stored, and "Done" closes it (D8).
 
-- [ ] 2.1 Tests named UP-15, UP-16, UP-17 written and failing (red)
-- [ ] 2.2 `passSummary` formats X, Y and Z with `src/lib/format/` and reconciles them in whole dollars, with the right sign (UP-15)
-- [ ] 2.3 The still-Stale line is counted live, pluralised, and absent at 0 (UP-16)
-- [ ] 2.4 A missing or invalid `from` shows only "Net worth $Y" (UP-17)
-- [ ] 2.5 `ModalHost` registers the `pass-summary` mode, and the last Save & next or Skip leads there. Done is the default action and clears the params. Nothing is written to the database or browser storage (`git diff` shows no migration and no storage calls)
-- [ ] 2.6 Tests named UP-15, UP-16, UP-17 pass in CI suites; npm run spec:coverage passes
+- [x] 2.1 Tests named UP-15, UP-16, UP-17 written and failing (red)
+- [x] 2.2 `passSummary` formats X, Y and Z with `src/lib/format/` and reconciles them in whole dollars, with the right sign (UP-15)
+- [x] 2.3 The still-Stale line is counted live, pluralised, and absent at 0 (UP-16)
+- [x] 2.4 A missing or invalid `from` shows only "Net worth $Y" (UP-17)
+- [x] 2.5 `ModalHost` registers the `pass-summary` mode, and the last Save & next or Skip leads there. Done is the default action and clears the params. Nothing is written to the database or browser storage (`git diff` shows no migration and no storage calls)
+- [x] 2.6 Tests named UP-15, UP-16, UP-17 pass in CI suites; npm run spec:coverage passes
 - [ ] 2.7 Checked by hand at 2000px, 800px and 390px: the summary in the dialog and bottom sheet, Enter closes it, the Overview behind it shows the new Net Worth
 
 ## 3. Stocks step: confirming Positions clears staleness

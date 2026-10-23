@@ -18,6 +18,7 @@ export function ModalFrame({
   headerSlot,
   footerSlot,
   hideCancel = false,
+  focusSubmit = false,
   children,
 }: {
   title: string;
@@ -32,11 +33,14 @@ export function ModalFrame({
   footerSlot?: ReactNode;
   /** A pass step leaves through ×, Esc and Back, so it drops Cancel. */
   hideCancel?: boolean;
+  /** A form-less step (the pass summary) opens with focus on the submit button, so Enter confirms. */
+  focusSubmit?: boolean;
   children: ReactNode;
 }) {
   const panel = useRef<HTMLDivElement>(null);
   const close = useRef(onClose);
   const inPass = useRef(footerSlot !== undefined);
+  const focusOnSubmit = useRef(focusSubmit);
   useEffect(() => {
     close.current = onClose;
   });
@@ -44,7 +48,8 @@ export function ModalFrame({
   useEffect(() => {
     const previous = document.activeElement as HTMLElement | null;
     const first = panel.current?.querySelector<HTMLElement>("input, select, textarea");
-    (first ?? panel.current)?.focus();
+    const submit = focusOnSubmit.current ?panel.current?.querySelector<HTMLElement>('button[type="submit"]') : null;
+    (first ?? submit ?? panel.current)?.focus();
     // In a pass the value is pre-filled, so typing replaces it.
     if (inPass.current && first instanceof HTMLInputElement) first.select();
 
