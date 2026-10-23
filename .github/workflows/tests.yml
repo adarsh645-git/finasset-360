@@ -45,4 +45,5 @@ jobs:
             echo "CRON_SECRET=ci-test-cron-secret"
             echo "FINNHUB_API_KEY=ci-test-finnhub-key"
           } > .env.test.local
-      - run: npx vitest run tests/route
+      # Route suites share one local DB (daily-job.test.ts rewrites fx_rate), so run files serially.
+      - run: npx vitest run tests/route --no-file-parallelism
