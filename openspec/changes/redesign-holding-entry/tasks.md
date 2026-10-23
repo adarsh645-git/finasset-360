@@ -83,11 +83,11 @@ A Stocks Holding's page shows its Cost Basis and gain from Positions, its Positi
 Blocked by: 6
 Any page whose URL carries `?position=` opens the drawer for that Position: identity, USD value and native line, six stats with the Hand Price date, the Yahoo Finance link rule and "View ⟨account⟩" (D16).
 
-- [ ] 7.1 Tests named PD-01, PD-02, PD-03, PD-04, PD-05, PD-06, PD-07 written and failing (red)
-- [ ] 7.2 `DrawerHost` in the `(app)` layout resolves the param among current Stocks Holdings, and closing removes only `position` (PD-01, PD-02)
-- [ ] 7.3 `buildPositionDrawer`: ticker, exchange, name, Sector and account, USD value and native line, and the six stats with "Market price" or "as of D Mon" (PD-03, PD-04, PD-05)
-- [ ] 7.4 "Open on Yahoo Finance ↗" only for market data or `.NS`/`.BO`, in a new tab, plus "View ⟨account⟩" (PD-06, PD-07)
-- [ ] 7.5 Tests named PD-01, PD-02, PD-03, PD-04, PD-05, PD-06, PD-07 pass in CI suites; npm run spec:coverage passes
+- [x] 7.1 Tests named PD-01, PD-02, PD-03, PD-04, PD-05, PD-06, PD-07 written and failing (red)
+- [x] 7.2 `DrawerHost` in the `(app)` layout resolves the param among current Stocks Holdings, and closing removes only `position` (PD-01, PD-02)
+- [x] 7.3 `buildPositionDrawer`: ticker, exchange, name, Sector and account, USD value and native line, and the six stats with "Market price" or "as of D Mon" (PD-03, PD-04, PD-05)
+- [x] 7.4 "Open on Yahoo Finance ↗" only for market data or `.NS`/`.BO`, in a new tab, plus "View ⟨account⟩" (PD-06, PD-07)
+- [x] 7.5 Tests named PD-01, PD-02, PD-03, PD-04, PD-05, PD-06, PD-07 pass in CI suites; npm run spec:coverage passes
 - [ ] 7.6 Checked by hand against the mockup's position drawer at 2000px and 800px (400px panel) and 390px (full width)
 
 ## Workflow follow-up
