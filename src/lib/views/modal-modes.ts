@@ -106,6 +106,11 @@ export function resolveModal(
  * URLSearchParams.toString() would write it as %7E.
  */
 export function closeHref(pathname: string, search: string): string {
+  return withoutParams(pathname, search, MODAL_PARAMS);
+}
+
+/** The URL without the named params; the rest stays as written, `~` literal. */
+export function withoutParams(pathname: string, search: string, names: readonly string[]): string {
   const kept = search
     .replace(/^\?/, "")
     .replace(/%7E/gi, "~")
@@ -113,7 +118,7 @@ export function closeHref(pathname: string, search: string): string {
     .filter((pair) => {
       if (pair === "") return false;
       const key = decodeURIComponent(pair.split("=")[0].replace(/\+/g, " "));
-      return !(MODAL_PARAMS as readonly string[]).includes(key);
+      return !names.includes(key);
     });
   return kept.length ? `${pathname}?${kept.join("&")}` : pathname;
 }
