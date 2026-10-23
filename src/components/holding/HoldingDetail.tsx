@@ -50,7 +50,7 @@ export function HoldingDetail({ detail }: { detail: HoldingDetailView }) {
           <Link href={detail.actions.edit.href} className={BUTTON}>
             Edit
           </Link>
-          <ConfirmDeleteButton url={`/api/holdings/${detail.id}/archive`} to="/" className={BUTTON} />
+          <ConfirmDeleteButton url={`/api/holdings/${detail.id}/archive`} to={detail.afterArchive} className={BUTTON} />
         </div>
       </header>
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4">

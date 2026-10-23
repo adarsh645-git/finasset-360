@@ -391,7 +391,7 @@ function buildCards(
       const total = usdOf(items);
       const slug = calcClassId(id);
       const row: AllocationRow = {
-        id: slug,
+        id,
         name: ASSET_CLASSES.find((c) => c.id === slug)!.name,
         dot: CLASS_TOKENS[id].cssVar,
         count: inClass.length,
@@ -399,7 +399,7 @@ function buildCards(
         share: share(total, assetsNow),
         pct: assetsNow === 0 ? 0 : (total / assetsNow) * 100,
         change: signedCompact(setTwelveMonthChange(items, ctx, "holdings")?.amount),
-        href: hrefFor({ kind: "assetClass", id: slug }, existing),
+        href: hrefFor({ kind: "assetClass", id }, existing),
       };
       return [{ row, total }];
     })

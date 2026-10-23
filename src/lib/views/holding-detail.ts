@@ -28,6 +28,8 @@ export type HoldingDetail = {
   usd: string;
   /** The line under the value; null when there is nothing to say. */
   nativeLine: string | null;
+  /** Where a confirmed Delete goes: the class page, or the Overview while that page is off. */
+  afterArchive: string;
   actions: {
     update: { label: string; href: string };
     edit: { href: string };
@@ -196,11 +198,12 @@ export function buildHoldingDetail(
       { label: "Assets", href: hrefFor({ kind: "assets" }, existing) },
       {
         label: ASSET_CLASSES.find((c) => c.id === slug)!.name,
-        href: hrefFor({ kind: "assetClass", id: slug }, existing),
+        href: hrefFor({ kind: "assetClass", id: holding.assetClass }, existing),
       },
       { label: holding.name, href: null },
     ],
     kind: KIND[holding.assetClass],
+    afterArchive: hrefFor({ kind: "assetClass", id: holding.assetClass }, existing) ?? "/",
     badges: india ? ["India", "INR"] : ["United States", "USD"],
     usd: usd(hasRate ? toUsd(item.currentValue ?? 0) : null),
     nativeLine: nativeLine === "" ? null : nativeLine,

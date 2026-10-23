@@ -13,6 +13,8 @@ export type RouteFamily =
 
 export const EXISTING_ROUTES: ReadonlySet<RouteFamily> = new Set<RouteFamily>([
   "overview",
+  "assets",
+  "assetClass",
   "holding",
   "growth",
   "goals",
