@@ -17,6 +17,7 @@ import { buildHoldingRow, type HoldingRow } from "@/lib/views/holding-row";
 import { ADDING, EXISTING_ROUTES, addAssetHref, hrefFor, type RouteFamily } from "@/lib/views/links";
 import { buildPositionsCard, type PositionsCard } from "@/lib/views/positions-card";
 import { addMonths, calcAssumptions, projectFromToday } from "@/lib/views/projection";
+import { buildRealEstateCards, type RealEstateCards } from "@/lib/views/real-estate-cards";
 import { calcClassId, historyItem } from "@/lib/views/shell";
 
 export type AssetClassView = {
@@ -38,6 +39,8 @@ export type AssetClassView = {
   rows: HoldingRow[];
   /** Stocks only: the Positions card; null for every other class and for an empty Stocks page. */
   positions: PositionsCard | null;
+  /** By property type and By location; only on a Real estate page that has Holdings. */
+  realEstate: RealEstateCards | null;
 };
 
 export { sectorsControlLabel, toggleAllSectors, toggleSector } from "@/lib/views/positions-card";
@@ -120,6 +123,7 @@ export function buildAssetClassView(
     chart: inClass.length === 0 ? null : { today, height: 280, series: [classSeries()] },
     rows,
     positions: id === "stocks" ? buildPositionsCard(inClass, { today, fxRate, path }) : null,
+    realEstate: id === "realestate" && inClass.length > 0 ? buildRealEstateCards(inClass, rows) : null,
   };
 
   function classSeries(): ChartSeries {
