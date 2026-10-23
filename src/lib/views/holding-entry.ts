@@ -113,6 +113,9 @@ export function initialEdit(holding: HoldingData): EntryForm {
 /** Everything typed stays; only the class changes (HE-06). */
 export const switchClass = (form: EntryForm, classId: AssetClassId): EntryForm => ({ ...form, classId });
 
+/** A typed optional amount that does not parse as 0 or more; blank is fine. */
+const badOptional = (raw: string) => raw.trim() !== "" && parseAmount(raw) === null;
+
 /** The first failure in the mockup's order, or null (HE-08). */
 export function validate(form: EntryForm): string | null {
   if (form.name.trim() === "") return "Give it a name";
@@ -123,6 +126,8 @@ export function validate(form: EntryForm): string | null {
     return null;
   }
   if (parseAmount(form.value) === null) return "Enter the current value";
+  if (badOptional(form.costBasis)) return "Cost basis must be 0 or more";
+  if (form.classId === "metals" && badOptional(form.quantity)) return "Quantity must be 0 or more";
   return null;
 }
 

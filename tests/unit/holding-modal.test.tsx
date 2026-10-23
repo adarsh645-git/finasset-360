@@ -8,6 +8,8 @@ import { renderToStaticMarkup } from "react-dom/server";
 import {
   BUILTIN_MODES,
   closeHref,
+  errorFor,
+  modalKey,
   resolveModal,
   type ModeRow,
 } from "@/lib/views/modal-modes";
@@ -183,6 +185,22 @@ describe("modal frame", () => {
       </ModalFrame>,
     );
     expect(html).toMatch(/<button[^>]*type="submit"[^>]*disabled=""|<button[^>]*disabled=""[^>]*type="submit"/);
+  });
+});
+
+describe("footer error", () => {
+  const edit = () => open("modal=edit&holding=cash1")!;
+
+  it("HE-12 a rejected save's sentence shows while the same modal stays open", () => {
+    const stored = { key: modalKey(edit()), message: "Cost basis must be 0 or more" };
+    expect(errorFor(stored, modalKey(edit()))).toBe("Cost basis must be 0 or more");
+  });
+
+  it("HE-12 cancelling and reopening, or opening another modal, shows no old error", () => {
+    const stored = { key: modalKey(edit()), message: "Cost basis must be 0 or more" };
+    expect(errorFor(stored, null)).toBeNull();
+    expect(errorFor(stored, modalKey(open("modal=edit&holding=gold1")!))).toBeNull();
+    expect(errorFor(null, modalKey(edit()))).toBeNull();
   });
 });
 

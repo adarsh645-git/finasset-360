@@ -4,6 +4,13 @@ import type { AssetClassId, HoldingData, PortfolioData } from "@/lib/read-model/
 // out. Later changes append rows (add-liability, pass-summary, ...); a
 // combination no row claims opens nothing.
 
+/** Identifies one open modal; a different key means a different modal instance. */
+export const modalKey = (match: ModalMatch) => `${match.mode}:${match.holding?.id ?? ""}:${match.classId ?? ""}`;
+
+/** The footer error stored for `key`'s modal, or null once another modal (or none) is open. */
+export const errorFor = (stored: { key: string; message: string } | null, key: string | null) =>
+  stored && stored.key === key ? stored.message : null;
+
 /** The params the modal owns. Closing removes these and nothing else. */
 export const MODAL_PARAMS = ["modal", "holding", "class"] as const;
 

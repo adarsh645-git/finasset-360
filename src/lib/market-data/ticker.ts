@@ -19,6 +19,9 @@ const EXCHANGE_BY_MIC: Record<string, string> = {
   BATS: "Cboe",
 };
 
+/** The display form: no `.NS` / `.BO`. */
+export const shortTicker = (ticker: string): string => ticker.replace(/\.(NS|BO)$/i, "");
+
 /** Display label for a ticker's exchange: `.NS` is NSE, else the mic's friendly name, else the mic. */
 export function exchangeLabel(ticker: string, mic: string | null): string | null {
   if (ticker.endsWith(".NS")) return "NSE";

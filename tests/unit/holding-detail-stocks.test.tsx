@@ -89,6 +89,15 @@ describe("stocks detail", () => {
     ]);
   });
 
+  it("HD-14 an exact half still shows one decimal", () => {
+    const half = holding({
+      id: "h6",
+      assetClass: "stocks",
+      positions: [pos({ ticker: "AAPL", shares: 1, price: 100 }), pos({ ticker: "JPM", shares: 1, price: 100, sector: "Financials" })],
+    });
+    expect(detail(half).stocks!.sectors.map((s) => s.share)).toEqual(["50.0%", "50.0%"]);
+  });
+
   const indian = () =>
     holding({
       id: "h5",

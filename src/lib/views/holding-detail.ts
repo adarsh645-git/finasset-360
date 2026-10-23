@@ -5,11 +5,12 @@ import {
   staleness,
   twelveMonthChange,
   yearBefore,
-  type FxRate,
 } from "@/lib/calc";
 import { DASH, dayMonth, inr, monthLong, native, share, signed, signedPct, usd } from "@/lib/format";
 import type { AssetClassId, PortfolioData } from "@/lib/read-model/types";
 import { EXISTING_ROUTES, hrefFor, type RouteFamily } from "@/lib/views/links";
+import { shortTicker } from "@/lib/market-data/ticker";
+import { fxRatesOf } from "@/lib/views/fx";
 import { ageCue, updatedCue } from "@/lib/views/age-cue";
 import { calcClassId, calcCountry, historyItem } from "@/lib/views/shell";
 import { buildChart, buildValueLog, type HoldingChart, type ValueLog } from "@/lib/views/holding-history";
@@ -42,7 +43,7 @@ export type HoldingDetail = {
   valueLog: ValueLog;
 };
 
-export type PositionRow = {
+export type StocksPositionRow = {
   ticker: string;
   sector: string;
   /** "30 sh · Apple Inc.", plus " · price N days old" for a stale Hand Price. */
@@ -54,7 +55,7 @@ export type PositionRow = {
   href: string;
 };
 export type SectorRow = { sector: string; share: string; tickers: string };
-export type StocksSections = { subheading: string; positions: PositionRow[]; sectors: SectorRow[] };
+export type StocksSections = { subheading: string; positions: StocksPositionRow[]; sectors: SectorRow[] };
 
 const KIND: Record<AssetClassId, string> = {
   stocks: "Brokerage account",
@@ -66,8 +67,7 @@ const KIND: Record<AssetClassId, string> = {
 };
 
 const MINUS = "−";
-const shortTicker = (t: string) => t.replace(/\.(NS|BO)$/i, "");
-const oneDecimal = (n: number) => `${Math.round(n * 10) / 10}`;
+const oneDecimal = (n: number) => n.toFixed(1);
 const signedNative = (v: number, country: "US" | "IN") =>
   (v >= 0 ? "+" : MINUS) + native(Math.abs(v), calcCountry(country));
 
@@ -81,12 +81,7 @@ export function buildHoldingDetail(
   const { today } = data;
   const india = holding.country === "IN";
 
-  const rates: FxRate[] = [
-    ...data.fx.history,
-    ...(data.fx.today && !data.fx.history.some((r) => r.date === data.fx.today!.asOf)
-      ? [{ date: data.fx.today.asOf, rate: data.fx.today.rate }]
-      : []),
-  ];
+  const rates = fxRatesOf(data);
   const hasRate = !india || rates.length > 0;
   const rateNow = india && hasRate ? fxRateOn(rates, today) : null;
   const toUsd = (nativeAmount: number) => (rateNow ? nativeAmount / rateNow.rate : nativeAmount);

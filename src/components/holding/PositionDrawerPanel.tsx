@@ -1,25 +1,11 @@
 "use client";
 
 import Link from "next/link";
+import { MONO_LABEL, SECTOR_COLORS } from "@/components/holding/style";
 import { useEffect, useRef } from "react";
-import type { PositionDrawer } from "@/lib/views/position-drawer";
+import { escClosesDrawer, type PositionDrawer } from "@/lib/views/position-drawer";
 
-const SECTOR_COLORS: Record<string, string> = {
-  Technology: "#4f7cff",
-  Financials: "#2fa36b",
-  Healthcare: "#e0577d",
-  Energy: "#e08a2f",
-  "Consumer Discretionary": "#a463d9",
-  "Consumer Staples": "#7aa83a",
-  "Communication Services": "#27a5b8",
-  Industrials: "#8a7a5c",
-  Utilities: "#5c6fb0",
-  Materials: "#b8893a",
-  "Real Estate": "#c9524a",
-  Other: "#8b8f98",
-};
 
-const MONO_LABEL = "font-mono text-[11px] font-medium uppercase leading-tight tracking-[0.06em] text-ink3";
 
 // A right-side panel, 400px wide (full width on phone), over a dimmed backdrop.
 // The link to the account and the close controls all leave through URLs the
@@ -41,7 +27,8 @@ export function PositionDrawerPanel({
   useEffect(() => {
     panel.current?.focus();
     const onKey = (event: KeyboardEvent) => {
-      if (event.key === "Escape") close.current?.();
+      const modalOpen = document.querySelector("[data-modal-frame]") !== null;
+      if (escClosesDrawer({ key: event.key, modalOpen })) close.current?.();
     };
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
