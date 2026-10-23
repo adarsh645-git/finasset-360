@@ -11,6 +11,7 @@ import { stackSeries, type ChartSeries, type Point } from "@/lib/chart";
 import { monthLong, signed, usd } from "@/lib/format";
 import type { PortfolioData } from "@/lib/read-model/types";
 import { fxRatesOf, usableItems } from "@/lib/views/fx";
+import { buildWaterfall, type Waterfall } from "@/lib/views/growth-waterfall";
 import { ADDING, addAssetHref } from "@/lib/views/links";
 import { RANGES, parseRange, type Range } from "@/lib/views/overview";
 import { addMonths, calcAssumptions, projectFromToday } from "@/lib/views/projection";
@@ -101,6 +102,8 @@ export type Growth = {
   bases: { value: Basis; label: string; href: string; selected: boolean }[];
   header: GrowthHeader | null;
   chart: GrowthChart | null;
+  /** "Where the change came from"; null on the empty page. */
+  waterfall: Waterfall | null;
 };
 
 const CHART_HEIGHT = 300;
@@ -157,6 +160,7 @@ export function buildGrowth(
       bases,
       header: null,
       chart: null,
+      waterfall: null,
     };
   }
 
@@ -190,7 +194,19 @@ export function buildGrowth(
 
   const chart = buildChart({ data, view, countries, dates, held, owed, inScope });
 
-  return { view, empty, addHref: null, ranges, scopes, modes, bases, header, chart };
+  const waterfall = buildWaterfall({
+    held,
+    owed,
+    rates,
+    start,
+    today,
+    scope: countries,
+    only: view.scope === "all" ? null : SCOPE_LABEL[view.scope],
+    netThen,
+    netNow,
+  });
+
+  return { view, empty, addHref: null, ranges, scopes, modes, bases, header, chart, waterfall };
 }
 
 const COUNTRY_VIEW: Record<Country, { name: string; short: string; color: string }> = {

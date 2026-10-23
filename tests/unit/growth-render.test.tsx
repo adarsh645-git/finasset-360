@@ -39,3 +39,24 @@ describe("growth chart card", () => {
     expect(html).toContain("By country");
   });
 });
+
+describe("growth waterfall render", () => {
+  it("GR-13 draws the card with its subtitle and a bar per row", () => {
+    const data = portfolio({
+      today: "2026-10-13",
+      holdings: [
+        holding({
+          currentValue: 12_000,
+          valuations: [{ date: "2025-10-13", value: 10_000, source: "user" as const }],
+        }),
+      ],
+    });
+    const html = renderToStaticMarkup(
+      <GrowthPage growth={buildGrowth(data, parseGrowthView({ range: "1Y" }))} />,
+    );
+
+    expect(html).toContain("Where the change came from");
+    expect(html).toContain("Asset growth uses Oct 2025 exchange rates");
+    expect(html.match(/data-waterfall-bar/g)).toHaveLength(5);
+  });
+});

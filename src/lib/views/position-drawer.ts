@@ -1,4 +1,6 @@
-import { fxRateOn, type FxRate } from "@/lib/calc";
+import { fxRateOn } from "@/lib/calc";
+import { shortTicker } from "@/lib/market-data/ticker";
+import { fxRatesOf } from "@/lib/views/fx";
 import { DASH, dayMonth, inr, native, share, signedPct, usd } from "@/lib/format";
 import type { HoldingData, PortfolioData, PositionData } from "@/lib/read-model/types";
 import { withoutParams } from "@/lib/views/modal-modes";
@@ -23,6 +25,10 @@ export type PositionDrawer = {
   yahooHref: string | null;
   account: { name: string; label: string; href: string };
 };
+
+/** Esc closes the drawer unless a modal is open over it (the modal takes that Esc). */
+export const escClosesDrawer = ({ key, modalOpen }: { key: string; modalOpen: boolean }) =>
+  key === "Escape" && !modalOpen;
 
 const SUFFIX = /\.(NS|BO)$/i;
 const EXCHANGE_BY_SUFFIX: Record<string, string> = { NS: "NSE", BO: "BSE" };
@@ -50,12 +56,7 @@ export function buildPositionDrawer(
   const position = holding?.positions.find((p) => p.ticker === parsed.ticker);
   if (!holding || !position) return null;
 
-  const rates: FxRate[] = [
-    ...data.fx.history,
-    ...(data.fx.today && !data.fx.history.some((r) => r.date === data.fx.today!.asOf)
-      ? [{ date: data.fx.today.asOf, rate: data.fx.today.rate }]
-      : []),
-  ];
+  const rates = fxRatesOf(data);
   const rateOf = (h: HoldingData) =>
     h.country === "IN" ? (rates.length > 0 ? fxRateOn(rates, data.today).rate : null) : 1;
   const usdOf = (h: HoldingData, p: PositionData) => {
@@ -82,7 +83,7 @@ export function buildPositionDrawer(
   const name = position.name || position.ticker;
 
   return {
-    ticker: position.ticker.replace(SUFFIX, ""),
+    ticker: shortTicker(position.ticker),
     exchange: position.exchange ?? (suffix ? EXCHANGE_BY_SUFFIX[suffix] : DASH),
     identity: `${name} · ${position.sector} · held in ${holding.name}`,
     sector: position.sector,

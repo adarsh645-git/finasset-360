@@ -36,7 +36,10 @@ The old app had one dated Target Net Worth and a Required Contribution solver. T
 
 ### Modified Capabilities
 
-None (`openspec/specs/` is empty). The Overview card, the chart lines and the nav count sit on surfaces owned by `overview`, `charts` and `app-shell` (`redesign-shell-and-overview`). As the shared brief requires, their requirements live under `goals`.
+- `overview`: the Goals slot (OV-20) now renders nothing only when there are no Goals.
+- `app-shell`: the shell's page-exists rule (SH-08) now counts Goals as an existing page, so the Goals nav item is a link.
+
+Both are MODIFIED deltas copied from `redesign-shell-and-overview`'s specs, because `openspec/specs/` does not hold them yet (that change is not archived); archive it first. The Overview card, chart lines and nav count otherwise sit on surfaces owned by `overview`, `charts` and `app-shell`, and as the shared brief requires their new requirements live under `goals`.
 
 ## Impact
 

@@ -7,7 +7,7 @@ import { ModalFrame } from "@/components/modal/ModalFrame";
 import { UpdateValueForm } from "@/components/modal/UpdateValueForm";
 import type { PortfolioData } from "@/lib/read-model/types";
 import { defaultAfterSave } from "@/lib/views/holding-entry";
-import { BUILTIN_MODES, closeHref, resolveModal, type ModalMatch, type ModeRow } from "@/lib/views/modal-modes";
+import { BUILTIN_MODES, closeHref, errorFor, modalKey, resolveModal, type ModalMatch, type ModeRow } from "@/lib/views/modal-modes";
 
 /** What the host gives every form (design.md D19). */
 export type ModalFormProps = {
@@ -53,14 +53,16 @@ export function ModalHost({
   const pathname = usePathname();
   const router = useRouter();
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [stored, setStored] = useState<{ key: string; message: string } | null>(null);
 
   const match = resolveModal(data, new URLSearchParams(params.toString()), modes);
   const Form = match ? ({ ...BUILTIN_FORMS, ...forms }[match.mode] as ModalForm | undefined) : undefined;
   if (!match || !Form) return null;
 
   const close = () => router.replace(closeHref(pathname, params.toString()));
-  const key = `${match.mode}:${match.holding?.id ?? ""}:${match.classId ?? ""}`;
+  const key = modalKey(match);
+  const error = errorFor(stored, key);
+  const setError = (message: string | null) => setStored(message === null ? null : { key, message });
 
   return (
     <ModalFrame
