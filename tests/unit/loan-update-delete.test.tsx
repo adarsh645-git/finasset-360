@@ -37,7 +37,7 @@ const bodyOf = (fn: ReturnType<typeof mockFetch>["fn"], call = 0) => JSON.parse(
 describe("update balance", () => {
   it("LE-08 the modal reads the loan's name and the Was line", () => {
     const data = portfolio({ today: TODAY, fx, liabilities: [stale] });
-    const match = resolveModal(data, new URLSearchParams("modal=update-balance&liability=l1"));
+    const match = resolveModal(data, new URLSearchParams("modal=update&liability=l1"));
     expect(match).toMatchObject({ mode: "update-balance", title: "Update balance", saveLabel: "Save" });
     expect(match!.liability!.id).toBe("l1");
     const view = updateBalanceView(stale, TODAY);
@@ -51,7 +51,7 @@ describe("update balance", () => {
       today: TODAY,
       liabilities: [stale, liability({ id: "old", archivedAt: "2026-01-01T00:00:00Z" })],
     });
-    for (const qs of ["modal=update-balance&liability=old", "modal=update-balance&liability=zz", "modal=update-balance"]) {
+    for (const qs of ["modal=update&liability=old", "modal=update&liability=zz", "modal=update"]) {
       expect(resolveModal(data, new URLSearchParams(qs))).toBeNull();
     }
   });
@@ -111,7 +111,7 @@ describe("delete a loan", () => {
 
   it("LD-10 Loan detail renders Update balance and a Delete button", () => {
     const html = renderToStaticMarkup(<LoanDetail detail={detail} />);
-    expect(html).toContain('href="/liabilities/l1?modal=update-balance&amp;liability=l1"');
+    expect(html).toContain('href="/liabilities/l1?modal=update&amp;liability=l1"');
     expect(html).toContain(">Update balance<");
     expect(html).toContain(">Delete<");
   });

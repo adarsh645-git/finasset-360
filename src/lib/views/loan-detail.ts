@@ -169,7 +169,7 @@ export function buildLoanDetail(
     },
     stats,
     afterArchive: hrefFor({ kind: "liabilities" }, existing) ?? "/",
-    actions: { updateBalance: { href: `/liabilities/${loan.id}?modal=update-balance&liability=${loan.id}` } },
+    actions: { updateBalance: { href: `/liabilities/${loan.id}?modal=update&liability=${loan.id}` } },
     chart: buildChart(),
     securedAgainst: linked ? card() : null,
   };

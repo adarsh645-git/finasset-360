@@ -51,7 +51,7 @@ Examples:
 Projected payoff SHALL show the payoff month with sub "In ⟨duration⟩", plus " · ⟨term⟩-yr term" when a term is set. Interest remaining SHALL show the native total with sub "If paid on schedule". A Not on track loan SHALL read "Never" and "—", with sub "Payment doesn’t cover interest". A loan with balance 0 SHALL read "Paid off" and 0.
 
 #### Scenario: LD-04 An on-track loan with a term
-- **GIVEN** today is 2026-10-14 and a US loan with a 10-year term that the Projection pays off 46 months from now with $1,240 interest remaining
+- **GIVEN** today is 2026-10-14 and a US loan with balance $10,215, APR 6%, Monthly payment $250 and a 10-year term, which the Projection pays off 46 months from now with $1,240 interest remaining
 - **WHEN** its stats are shown
 - **THEN** Projected payoff reads "Aug 2030" with sub "In 3.8 yrs · 10-yr term"
 - **AND** Interest remaining reads "$1,240" with sub "If paid on schedule"

@@ -117,7 +117,7 @@ describe("liabilities stats", () => {
 
 describe("liability rows", () => {
   it("LB-06 a linked India loan's row", () => {
-    const TODAY = "2023-09-15";
+    const TODAY = "2026-10-14";
     const view = buildLiabilities(
       portfolio({
         today: TODAY,
@@ -147,7 +147,7 @@ describe("liability rows", () => {
       usd: "$41,127",
       native: "₹34,30,000",
       meta: "10% paid · 8.5% · ₹33,000/mo",
-      secondary: "Secures Pune apartment · Paid off Jun 2039",
+      secondary: "Secures Pune apartment · Paid off Jul 2042",
       href: "/liabilities/hdfc",
     });
   });

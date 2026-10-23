@@ -97,16 +97,16 @@ describe("loan detail paid-off bar and stats", () => {
   it("LD-04 an on-track loan with a term", () => {
     const d = detail(
       usLoan({
-        currentBalance: 12_100,
-        principal: 12_100,
+        currentBalance: 10_215,
+        principal: 10_215,
         apr: 6,
-        monthlyPayment: 300,
+        monthlyPayment: 250,
         termYears: 10,
-        valuations: [val(TODAY, 12_100)],
+        valuations: [val(TODAY, 10_215)],
       }),
     );
     expect(stat(d, "Projected payoff")).toMatchObject({ value: "Aug 2030", sub: "In 3.8 yrs · 10-yr term" });
-    expect(stat(d, "Interest remaining")).toMatchObject({ value: "$1,448", sub: "If paid on schedule" });
+    expect(stat(d, "Interest remaining")).toMatchObject({ value: "$1,240", sub: "If paid on schedule" });
   });
 
   it("LD-04 no term leaves the sub without a term", () => {
