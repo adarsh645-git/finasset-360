@@ -5,13 +5,13 @@
 Blocked by: none
 `/growth` exists. It shows the nominal Net Worth change for the range and Country scope, the controls (All | United States | India, range, projection toggle), and the chart card in Simple mode through the end of the horizon, with end labels and the legend below. An empty Portfolio gets the add link instead. The Growth nav item and the Equity built card now lead here (D1, D2, D3, D12, D13).
 
-- [ ] 1.1 Tests named GR-01, GR-02, GR-03, GR-04, GR-05, GR-16, GR-18, GR-19 written and failing (red)
-- [ ] 1.2 `growth` joins `EXISTING_ROUTES`, so the Growth nav item (all three nav forms) and the Equity built card link to `/growth` (GR-18, GR-19)
-- [ ] 1.3 `buildGrowth` reads range, scope, mode and basis from search params with defaults for missing or unknown values (GR-01)
-- [ ] 1.4 The header shows the scoped nominal change and "Net worth change since ⟨Mon YYYY⟩ · ⟨scope⟩ · $A → $B", with the start clamped to the earliest Valuation (GR-02, GR-03)
-- [ ] 1.5 The Simple chart has Net worth, Assets and Owed from the range start to the horizon's end, with `zero: true`, end labels and the legend below. The projection toggle trims the projected part (GR-04, GR-05)
-- [ ] 1.6 With no current Holdings or Liabilities, the page shows only the "Add an account or asset" card, with no controls, chart, waterfall or Year by year (GR-16)
-- [ ] 1.7 Tests named GR-01, GR-02, GR-03, GR-04, GR-05, GR-16, GR-18, GR-19 pass in CI suites; npm run spec:coverage passes
+- [x] 1.1 Tests named GR-01, GR-02, GR-03, GR-04, GR-05, GR-16, GR-18, GR-19 written and failing (red)
+- [x] 1.2 `growth` joins `EXISTING_ROUTES`, so the Growth nav item (all three nav forms) and the Equity built card link to `/growth` (GR-18, GR-19)
+- [x] 1.3 `buildGrowth` reads range, scope, mode and basis from search params with defaults for missing or unknown values (GR-01)
+- [x] 1.4 The header shows the scoped nominal change and "Net worth change since ⟨Mon YYYY⟩ · ⟨scope⟩ · $A → $B", with the start clamped to the earliest Valuation (GR-02, GR-03)
+- [x] 1.5 The Simple chart has Net worth, Assets and Owed from the range start to the horizon's end, with `zero: true`, end labels and the legend below. The projection toggle trims the projected part (GR-04, GR-05)
+- [x] 1.6 With no current Holdings or Liabilities, the page shows only the "Add an account or asset" card, with no controls, chart, waterfall or Year by year (GR-16)
+- [x] 1.7 Tests named GR-01, GR-02, GR-03, GR-04, GR-05, GR-16, GR-18, GR-19 pass in CI suites; npm run spec:coverage passes
 - [ ] 1.8 Checked by hand against the mockup's Growth header and chart card at 2000px, 800px and 390px
 
 ## 2. Chart modes and Today's dollars
