@@ -71,6 +71,7 @@ export function ModalFrame({
 
   return (
     <div
+      data-modal-frame=""
       className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 sm:items-start sm:pt-[6vh]"
       onMouseDown={(event) => {
         if (event.target === event.currentTarget) onClose();

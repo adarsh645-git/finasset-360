@@ -126,6 +126,27 @@ describe("validate and toRequest", () => {
     expect(validate(filled({ name: "Chase savings", value: "11,800" }))).toBeNull();
   });
 
+  it.each([
+    [filled({ name: "Chase", value: "100", costBasis: "-5" }), "Cost basis must be 0 or more"],
+    [filled({ name: "Chase", value: "100", costBasis: "abc" }), "Cost basis must be 0 or more"],
+    [{ ...initialAdd("metals"), name: "Gold", value: "100", quantity: "-2" }, "Quantity must be 0 or more"],
+    [{ ...initialAdd("metals"), name: "Gold", value: "100", quantity: "lots" }, "Quantity must be 0 or more"],
+  ])("HE-08 a typed optional amount that is not 0 or more is a footer error %#", (form, message) => {
+    expect(validate(form)).toBe(message);
+  });
+
+  it("HE-08 blank optional amounts are fine, and the value check comes first", () => {
+    expect(validate(filled({ name: "Chase", value: "100", costBasis: "  " }))).toBeNull();
+    expect(validate(filled({ name: "Chase", value: "", costBasis: "-5" }))).toBe("Enter the current value");
+  });
+
+  it("HE-12 a bad Cost basis on an edit sends nothing instead of clearing the saved one", async () => {
+    const fetchFn = vi.fn(reply(200, { id: "h1" }));
+    const saved = await saveHolding(fetchFn, filled({ name: "Chase", value: "100", costBasis: "-5" }), "h1");
+    expect(saved).toEqual({ ok: false, error: "Cost basis must be 0 or more" });
+    expect(fetchFn).not.toHaveBeenCalled();
+  });
+
   it("HE-09 amounts accept currency signs, commas and spaces", () => {
     const form = filled({ country: "IN", name: "SBI NRE", value: "₹6,40,000", costBasis: " 5,00,000 " });
     expect(toRequest(form).body).toMatchObject({ value: 640000, cost_basis: 500000 });
