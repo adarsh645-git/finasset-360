@@ -32,11 +32,11 @@ After the last item the pass ends on a summary instead of closing: "Net worth $X
 Blocked by: 1
 A Stocks Holding with a stale Hand Price opens Edit positions in the pass. Save & next sends `confirm_prices: true`, so confirming unchanged prices dates every Hand Price today and takes the Holding off the list. The plain Edit positions save outside a pass doesn't send it. Enter in the new-position row still adds a row rather than confirming the step (D5, D6).
 
-- [ ] 3.1 Tests named UP-14 written and failing (red)
-- [ ] 3.2 Route test: `PATCH /api/holdings/[id]` with the unchanged Positions and `confirm_prices: true` dates each Hand Price today with its price unchanged, and `GET /api/portfolio` shows the Holding fresh. The same PATCH without the flag leaves the dates and the Holding Stale (UP-14)
-- [ ] 3.3 In a pass, the Edit positions request carries `confirm_prices: true`, and outside a pass it doesn't (the form's request builder is checked for both cases under UP-14)
-- [ ] 3.4 The Edit positions step opens with focus on Save & next, and a successful save moves to the next step like any other
-- [ ] 3.5 Tests named UP-14 pass in CI suites; npm run spec:coverage passes
+- [x] 3.1 Tests named UP-14 written and failing (red)
+- [x] 3.2 Route test: `PATCH /api/holdings/[id]` with the unchanged Positions and `confirm_prices: true` dates each Hand Price today with its price unchanged, and `GET /api/portfolio` shows the Holding fresh. The same PATCH without the flag leaves the dates and the Holding Stale (UP-14)
+- [x] 3.3 In a pass, the Edit positions request carries `confirm_prices: true`, and outside a pass it doesn't (the form's request builder is checked for both cases under UP-14)
+- [x] 3.4 The Edit positions step opens with focus on Save & next, and a successful save moves to the next step like any other
+- [x] 3.5 Tests named UP-14 pass in CI suites; npm run spec:coverage passes
 - [ ] 3.6 Checked by hand at 2000px, 800px and 390px: Enter in the ticker, shares or avg cost inputs adds a row, Enter on Save & next confirms the step, the stale "price N days old" rows are visible before confirming
 
 ## Workflow follow-up

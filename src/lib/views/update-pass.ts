@@ -101,3 +101,16 @@ export function passStep(
     skipHref: nextHref,
   };
 }
+
+/**
+ * How a step's save differs inside a pass (design.md D5): only Edit positions
+ * confirms its Hand Prices, and only in a pass. Outside one the flag is never sent.
+ */
+export function stepSaveOptions(form: PassForm | string, inPass: boolean): { confirmPrices: boolean } {
+  return { confirmPrices: inPass && form === "edit-positions" };
+}
+
+/** Where focus lands when a step opens (design.md D6): Edit positions on Save & next, the rest on the first input. */
+export function stepFocus(form: PassForm | string, inPass: boolean): "save" | "input" {
+  return inPass && form === "edit-positions" ? "save" : "input";
+}
