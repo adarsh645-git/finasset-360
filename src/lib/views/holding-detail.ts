@@ -7,10 +7,10 @@ import {
   yearBefore,
   type FxRate,
 } from "@/lib/calc";
-import { DASH, dayMonth, inr, monthLong, native, signed, signedPct, usd } from "@/lib/format";
+import { DASH, dayMonth, inr, monthLong, native, share, signed, signedPct, usd } from "@/lib/format";
 import type { AssetClassId, PortfolioData } from "@/lib/read-model/types";
 import { EXISTING_ROUTES, hrefFor, type RouteFamily } from "@/lib/views/links";
-import { updatedCue } from "@/lib/views/age-cue";
+import { ageCue, updatedCue } from "@/lib/views/age-cue";
 import { calcClassId, calcCountry, historyItem } from "@/lib/views/shell";
 
 export type Crumb = { label: string; href: string | null };
@@ -34,7 +34,23 @@ export type HoldingDetail = {
   stats: DetailStat[];
   /** Slot for redesign-liabilities; always empty here. */
   linkedLoan: null;
+  /** "Positions in this account" and "By sector"; null for every class but Stocks. */
+  stocks: StocksSections | null;
 };
+
+export type PositionRow = {
+  ticker: string;
+  sector: string;
+  /** "30 sh · Apple Inc.", plus " · price N days old" for a stale Hand Price. */
+  line: string;
+  price: string;
+  value: string;
+  gain: string;
+  weight: string;
+  href: string;
+};
+export type SectorRow = { sector: string; share: string; tickers: string };
+export type StocksSections = { subheading: string; positions: PositionRow[]; sectors: SectorRow[] };
 
 const KIND: Record<AssetClassId, string> = {
   stocks: "Brokerage account",
@@ -46,6 +62,8 @@ const KIND: Record<AssetClassId, string> = {
 };
 
 const MINUS = "−";
+const shortTicker = (t: string) => t.replace(/\.(NS|BO)$/i, "");
+const oneDecimal = (n: number) => `${Math.round(n * 10) / 10}`;
 const signedNative = (v: number, country: "US" | "IN") =>
   (v >= 0 ? "+" : MINUS) + native(Math.abs(v), calcCountry(country));
 
@@ -109,14 +127,22 @@ export function buildHoldingDetail(
   if (holding.assetClass === "realestate" && (holding.propertyType || holding.city)) {
     stats.push({ label: "Property", value: holding.propertyType ?? DASH, sub: holding.city ?? "" });
   }
-  if (holding.costBasis !== null) {
-    const gain = holding.currentValue - holding.costBasis;
+  // A Stocks Holding's Cost Basis and value come from its Positions (HD-12).
+  const fromPositions = holding.assetClass === "stocks";
+  const costBasis = fromPositions
+    ? holding.positions.reduce((sum, p) => sum + p.shares * p.avgCost, 0)
+    : holding.costBasis;
+  const worth = fromPositions
+    ? holding.positions.reduce((sum, p) => sum + p.shares * p.price, 0)
+    : holding.currentValue;
+  if (costBasis !== null && (!fromPositions || holding.positions.length > 0)) {
+    const gain = worth - costBasis;
     stats.push({
       label: "Cost basis",
-      value: native(holding.costBasis, calcCountry(holding.country)),
-      sub: india ? `≈ ${usd(rateNow && toUsd(holding.costBasis))} today` : "What you paid",
+      value: native(costBasis, calcCountry(holding.country)),
+      sub: india ? `≈ ${usd(rateNow && toUsd(costBasis))} today` : "What you paid",
     });
-    const pct = holding.costBasis === 0 ? DASH : signedPct(gain / holding.costBasis);
+    const pct = costBasis === 0 ? DASH : signedPct(gain / costBasis);
     stats.push({
       label: "Unrealized gain",
       value: signedNative(gain, holding.country),
@@ -188,5 +214,51 @@ export function buildHoldingDetail(
     },
     stats,
     linkedLoan: null,
+    stocks: fromPositions ? stocksSections() : null,
   };
+
+  function stocksSections(): StocksSections {
+    const asOf = new Date(`${today}T00:00:00Z`);
+    const rows = holding!.positions
+      .map((p) => ({ p, usdValue: toUsd(p.shares * p.price) }))
+      .sort((a, b) => b.usdValue - a.usdValue);
+    const total = rows.reduce((sum, r) => sum + r.usdValue, 0);
+    const country = calcCountry(holding!.country);
+    const positions = rows.map(({ p, usdValue }) => {
+      const { ageDays } = staleness(
+        {
+          kind: "stocks",
+          positions: [{ handPriceDate: p.priceSource === "hand" ? (p.priceAsOf ?? undefined) : undefined }],
+        },
+        asOf,
+      );
+      const cue = ageCue("position", ageDays);
+      return {
+        ticker: shortTicker(p.ticker),
+        sector: p.sector,
+        line: `${p.shares} sh · ${p.name}${cue ? ` · ${cue}` : ""}`,
+        price: native(p.price, country),
+        value: usd(hasRate ? usdValue : null),
+        gain: p.avgCost === 0 ? DASH : signedPct((p.price - p.avgCost) / p.avgCost, 0),
+        weight: share(usdValue, total),
+        href: `${path}?position=${encodeURIComponent(`${holding!.id}~${p.ticker}`)}`,
+      };
+    });
+    const bySector = new Map<string, { value: number; tickers: string[] }>();
+    for (const { p, usdValue } of rows) {
+      const entry = bySector.get(p.sector) ?? { value: 0, tickers: [] };
+      entry.value += usdValue;
+      entry.tickers.push(shortTicker(p.ticker));
+      bySector.set(p.sector, entry);
+    }
+    const sectors = [...bySector]
+      .sort((a, b) => b[1].value - a[1].value)
+      .map(([sector, e]) => ({
+        sector,
+        share: total === 0 ? "0%" : `${oneDecimal((e.value / total) * 100)}%`,
+        tickers: e.tickers.join(", "),
+      }));
+    const n = positions.length;
+    return { subheading: `${n} position${n === 1 ? "" : "s"}`, positions, sectors };
+  }
 }
