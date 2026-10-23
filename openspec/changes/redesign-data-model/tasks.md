@@ -109,7 +109,7 @@ Blocked by: 5, 6, 7, 8
 Blocked by: 9
 `npm run seed` fills the dev User's Portfolio with the prototype's Holdings, Positions, loans and Goals, monthly Valuation history, US market data, Hand-Priced India Positions (one 47 days old) and some filled-in assumptions. Later UI changes can then be checked by hand before their forms exist (D20).
 
-- [ ] 10.1 The seed script wipes and reinserts the dev User's records on the new schema, fills an empty FX table from 2018-01-01, and prints the sign-in link; running it twice gives the same Portfolio
+- [x] 10.1 The seed script wipes and reinserts the dev User's records on the new schema, fills an empty FX table from 2018-01-01, and prints the sign-in link; running it twice gives the same Portfolio
 - [ ] 10.2 `GET /api/portfolio` for the dev User returns 14 Holdings, 4 Liabilities with the prototype's links, 4 Goals and Valuations back to each item's start month (checked with `curl` against `npm run dev`)
 
 ## 11. Production rollout
