@@ -1,9 +1,11 @@
 import Link from "next/link";
 import { Chart } from "@/components/chart/Chart";
 import { ProjectionToggle } from "@/components/chart/ProjectionProvider";
+import { AssumptionsCard } from "@/components/growth/AssumptionsCard";
 import { WaterfallCard } from "@/components/growth/WaterfallCard";
 import { YearsCard } from "@/components/growth/YearsCard";
 import type { Growth } from "@/lib/views/growth";
+import type { Assumptions } from "@/lib/views/projection-assumptions";
 
 const CARD = "rounded-[14px] border border-line bg-panel shadow-[var(--shadow)]";
 const TONE = { up: "text-pos", down: "text-neg" } as const;
@@ -36,8 +38,15 @@ function Segments({
 }
 
 // Renders what buildGrowth returns.
-export function GrowthPage({ growth }: { growth: Growth }) {
-  const { header, chart, empty, addHref, ranges, scopes } = growth;
+export function GrowthPage({
+  growth,
+  assumptions,
+}: {
+  growth: Growth;
+  assumptions?: Assumptions;
+}) {
+  const card = assumptions && <AssumptionsCard assumptions={assumptions} />;
+  const { header, chart, empty, addHref, ranges, scopes, modes, bases } = growth;
   if (empty || !header || !chart) {
     return (
       <div className="flex flex-col gap-4">
@@ -56,6 +65,7 @@ export function GrowthPage({ growth }: { growth: Growth }) {
             </Link>
           )}
         </section>
+        {card}
       </div>
     );
   }
@@ -83,6 +93,16 @@ export function GrowthPage({ growth }: { growth: Growth }) {
         </div>
       </div>
       <section className={`${CARD} px-5 pb-3 pt-5`}>
+        <div className="mb-3 flex flex-wrap items-start justify-between gap-3">
+          <div className="flex flex-col gap-0.5">
+            <h2 className="text-[15px] font-semibold">{chart.title}</h2>
+            <p className="text-[12.5px] text-ink3">{chart.subtitle}</p>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <Segments label="Chart mode" items={modes} />
+            <Segments label="Basis" items={bases} />
+          </div>
+        </div>
         <Chart
           series={chart.series}
           today={chart.today}
@@ -106,6 +126,7 @@ export function GrowthPage({ growth }: { growth: Growth }) {
           <YearsCard years={growth.years} />
         </div>
       )}
+      {card}
     </div>
   );
 }

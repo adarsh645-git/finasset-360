@@ -24,6 +24,22 @@ describe("growth render", () => {
   });
 });
 
+describe("growth chart card", () => {
+  it("GR-10 the card shows the title, subtitle and the mode and basis controls", () => {
+    const data = portfolio({
+      holdings: [holding({ currentValue: 5, valuations: [{ date: "2026-01-01", value: 5, source: "user" }] })],
+    });
+    const html = renderToStaticMarkup(
+      <GrowthPage growth={buildGrowth(data, parseGrowthView({ basis: "today" }))} />,
+    );
+
+    expect(html).toContain("In today&#x27;s dollars");
+    expect(html).toContain("Each country restated in");
+    expect(html).toContain("By asset class");
+    expect(html).toContain("By country");
+  });
+});
+
 describe("growth waterfall render", () => {
   it("GR-13 draws the card with its subtitle and a bar per row", () => {
     const data = portfolio({
