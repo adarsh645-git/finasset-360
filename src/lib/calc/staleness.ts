@@ -1,6 +1,6 @@
 import type { Staleness, StalenessInput } from "./types";
 
-const STALE_AFTER_DAYS = 30;
+export const STALE_AFTER_DAYS = 30;
 const MS_PER_DAY = 86_400_000;
 
 const utcDay = (date: string): number => Date.parse(`${date}T00:00:00Z`);

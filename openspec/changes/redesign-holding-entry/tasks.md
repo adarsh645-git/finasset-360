@@ -5,13 +5,13 @@
 Blocked by: none
 A User can open `/holdings/[id]` for any current Holding and see the breadcrumb, badges, kind tag, USD value, native line with the Stale cue, the three actions, and the stat cards (D10, D11). Overview's Equity and Needs updating rows link to it, the "+ Add" buttons appear, and the shared age cue exists (D12, D17, D18). Data comes from `npm run seed` until the modal lands.
 
-- [ ] 1.1 Tests named HD-01, HD-02, HD-03, HD-04, HD-05, HD-06, HD-08, HD-09, HD-10, HD-11, HD-17, HD-22, HD-23, HE-26, HE-27 written and failing (red)
-- [ ] 1.2 `links.ts` registers the `holding` family and sets `ADDING = true`. Overview Equity rows and Needs updating Holding rows link to `/holdings/[id]`, Liability rows stay plain text, and every "+ Add" points to `?modal=add-asset` on the current path (HD-22, HE-26, HE-27)
-- [ ] 1.3 `buildHoldingDetail` returns `null` for archived, unknown or foreign ids, and the page calls `notFound()` (HD-01)
-- [ ] 1.4 Header: breadcrumb crumbs through `hrefFor(assets)` / `hrefFor(assetClass(id))`, kind tag by class, Country and currency badges, USD value, and native line with FX "as of" (HD-02, HD-03, HD-04)
-- [ ] 1.5 `ageCue` and `updatedCue` exist, and the native line ends with the Stale cue. `formatDay` and `formatDayMonth` are added to `src/lib/format/` without changing existing helpers (HD-05, HD-23)
-- [ ] 1.6 Action targets: "Update value" / "Edit positions" and "Edit" point at the modal params, and the stats follow D11, with "—" / "Added Mon YYYY" for items under a year old and an empty "Your equity" slot (HD-06, HD-08…HD-11, HD-17)
-- [ ] 1.7 Tests named HD-01, HD-02, HD-03, HD-04, HD-05, HD-06, HD-08, HD-09, HD-10, HD-11, HD-17, HD-22, HD-23, HE-26, HE-27 pass in CI suites; npm run spec:coverage passes
+- [x] 1.1 Tests named HD-01, HD-02, HD-03, HD-04, HD-05, HD-06, HD-08, HD-09, HD-10, HD-11, HD-17, HD-22, HD-23, HE-26, HE-27 written and failing (red)
+- [x] 1.2 `links.ts` registers the `holding` family and sets `ADDING = true`. Overview Equity rows and Needs updating Holding rows link to `/holdings/[id]`, Liability rows stay plain text, and every "+ Add" points to `?modal=add-asset` on the current path (HD-22, HE-26, HE-27)
+- [x] 1.3 `buildHoldingDetail` returns `null` for archived, unknown or foreign ids, and the page calls `notFound()` (HD-01)
+- [x] 1.4 Header: breadcrumb crumbs through `hrefFor(assets)` / `hrefFor(assetClass(id))`, kind tag by class, Country and currency badges, USD value, and native line with FX "as of" (HD-02, HD-03, HD-04)
+- [x] 1.5 `ageCue` and `updatedCue` exist, and the native line ends with the Stale cue. `formatDay` and `formatDayMonth` are added to `src/lib/format/` without changing existing helpers (HD-05, HD-23)
+- [x] 1.6 Action targets: "Update value" / "Edit positions" and "Edit" point at the modal params, and the stats follow D11, with "—" / "Added Mon YYYY" for items under a year old and an empty "Your equity" slot (HD-06, HD-08…HD-11, HD-17)
+- [x] 1.7 Tests named HD-01, HD-02, HD-03, HD-04, HD-05, HD-06, HD-08, HD-09, HD-10, HD-11, HD-17, HD-22, HD-23, HE-26, HE-27 pass in CI suites; npm run spec:coverage passes
 - [ ] 1.8 Checked by hand against the mockup's account detail at 2000px, 800px and 390px (header wrap, stat cards reflow)
 
 ## 2. Value over time and the Value log

@@ -15,7 +15,7 @@ const { holding, portfolio } = await import("../fixtures/portfolio");
 const user = { email: "a@example.test", user_metadata: { full_name: "Adarsh Reddy" } };
 function render(data: ReturnType<typeof portfolio>): string {
   return renderToStaticMarkup(
-    <ShellFrame shell={buildShell({ user, portfolio: data }, { pathname: null })} theme="light">
+    <ShellFrame shell={buildShell({ user, portfolio: data }, { pathname: null, adding: false })} theme="light">
       <p>page</p>
     </ShellFrame>,
   );
