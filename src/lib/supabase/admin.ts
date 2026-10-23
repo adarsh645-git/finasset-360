@@ -3,8 +3,8 @@ import { supabaseUrl } from "./env";
 
 // The service-role key bypasses RLS entirely, so this client must never be
 // reachable from a client-authenticated request path with anything the
-// caller controls. Its two users: the cron refresh route
-// (src/app/api/cron/refresh-prices/route.ts), gated on CRON_SECRET, and
+// caller controls. Its two users: the daily cron route
+// (src/app/api/cron/daily/route.ts), gated on CRON_SECRET, and
 // `ensurePriceCached` (src/lib/market-data/refresh-price.ts), which only
 // ever fills a missing `price_cache` row from what the provider returns —
 // the caller's symbol only chooses which provider quote is fetched, and no
