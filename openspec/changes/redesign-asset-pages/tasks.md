@@ -31,15 +31,15 @@ The class tiles filter the list, and selecting the selected tile again clears it
 Blocked by: 1
 `/assets/[class]` for the six Asset Classes. Each page has the breadcrumb, a header with total, 12-month change, share and projected rate(s), the projection toggle, "+ Add to ⟨class⟩", the class chart, the Holdings table and the empty state. Unknown slugs are a 404. The `assetClass` route family joins the registry, which turns on the sidebar class rows, the Allocation rows and the Holding detail breadcrumb (D2, D6, D11, D12, D13, D14).
 
-- [ ] 3.1 Tests named AC-01, AC-02, AC-03, AC-04, AC-05, AC-06, AC-07, AC-08, AC-19, AC-20, AC-21, AC-22 written and failing (red)
-- [ ] 3.2 The six slugs render and any other is not found (AC-01)
-- [ ] 3.3 The header gives the total, the set 12-month change or "—", the share of total assets, and the resolved rate per Country or shared (AC-02, AC-03, AC-04)
-- [ ] 3.4 "+ Add to ⟨class⟩" and the empty state's Add open the add-asset modal with the class preselected. An empty class shows "No ⟨plural noun⟩ in ⟨class⟩ yet" and no chart (AC-05, AC-08)
-- [ ] 3.5 The chart runs from the class's first Valuation to today, then over the horizon from the class Projection (AC-06)
-- [ ] 3.6 The Holdings table lists only this class, largest first, with rows from the shared builder (AC-07)
-- [ ] 3.7 `assetClass` is in `EXISTING_ROUTES`. Sidebar class rows link and show selected, Allocation rows link, and Holding detail's "Assets" and class crumbs link (AC-19, AC-20, AC-21)
-- [ ] 3.8 Holding detail's Delete, once confirmed, archives and goes to the Holding's class page instead of the Overview, through the after-archive target of holding-entry's `ConfirmDeleteButton` (AC-22)
-- [ ] 3.9 Tests named AC-01, AC-02, AC-03, AC-04, AC-05, AC-06, AC-07, AC-08, AC-19, AC-20, AC-21, AC-22 pass in CI suites; npm run spec:coverage passes
+- [x] 3.1 Tests named AC-01, AC-02, AC-03, AC-04, AC-05, AC-06, AC-07, AC-08, AC-19, AC-20, AC-21, AC-22 written and failing (red)
+- [x] 3.2 The six slugs render and any other is not found (AC-01)
+- [x] 3.3 The header gives the total, the set 12-month change or "—", the share of total assets, and the resolved rate per Country or shared (AC-02, AC-03, AC-04)
+- [x] 3.4 "+ Add to ⟨class⟩" and the empty state's Add open the add-asset modal with the class preselected. An empty class shows "No ⟨plural noun⟩ in ⟨class⟩ yet" and no chart (AC-05, AC-08)
+- [x] 3.5 The chart runs from the class's first Valuation to today, then over the horizon from the class Projection (AC-06)
+- [x] 3.6 The Holdings table lists only this class, largest first, with rows from the shared builder (AC-07)
+- [x] 3.7 `assetClass` is in `EXISTING_ROUTES`. Sidebar class rows link and show selected, Allocation rows link, and Holding detail's "Assets" and class crumbs link (AC-19, AC-20, AC-21)
+- [x] 3.8 Holding detail's Delete, once confirmed, archives and goes to the Holding's class page instead of the Overview, through the after-archive target of holding-entry's `ConfirmDeleteButton` (AC-22)
+- [x] 3.9 Tests named AC-01, AC-02, AC-03, AC-04, AC-05, AC-06, AC-07, AC-08, AC-19, AC-20, AC-21, AC-22 pass in CI suites; npm run spec:coverage passes
 - [ ] 3.10 Checked by hand against the mockup's Cash and Crypto class screens at 2000px, 800px and 390px (chart phone rules, table drops Where, Native and Gain on phone)
 
 ## 4. Stocks Positions card

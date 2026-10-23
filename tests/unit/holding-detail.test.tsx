@@ -210,7 +210,7 @@ describe("holding detail render", () => {
 
   it("HD-04 the breadcrumb is plain text while those pages don't exist, links after", () => {
     const h = chase();
-    const plain = render(h);
+    const plain = render(h, new Set(["overview", "holding"]));
     expect(plain).toContain("Chase Checking");
     expect(plain).not.toMatch(/<a [^>]*href="\/assets\//);
     const linked = render(h, new Set(["assets", "assetClass"]));

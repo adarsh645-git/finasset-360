@@ -30,6 +30,8 @@ export type ClassRow = {
   dot: string;
   value: string;
   href: string | null;
+  /** The class page being viewed. */
+  selected: boolean;
 };
 
 export type NetWorthBlock = {
@@ -80,7 +82,12 @@ export function activeNavKey(pathname: string | null): NavKey | null {
 
 export function markActive(shell: Shell, pathname: string | null): Shell {
   const active = activeNavKey(pathname);
-  return { ...shell, items: shell.items.map((item) => ({ ...item, active: item.key === active })) };
+  const slug = pathname?.match(/^\/assets\/([^/?#]+)/)?.[1];
+  return {
+    ...shell,
+    items: shell.items.map((item) => ({ ...item, active: item.key === active })),
+    classes: shell.classes.map((row) => ({ ...row, selected: row.id === slug })),
+  };
 }
 
 type ShellUser = { email?: string; user_metadata: Record<string, unknown> };
@@ -161,6 +168,7 @@ export function buildShell(
         dot: CLASS_TOKENS[id].cssVar,
         value: compact(worth(inClass.map(historyItem), [])),
         href: hrefFor({ kind: "assetClass", id: slug }, existing),
+        selected: false,
       },
     ];
   });

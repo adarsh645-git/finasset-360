@@ -20,11 +20,11 @@ describe("shell view", () => {
   });
 
   it("SH-10 the registry has the Overview, Holding detail and Goals on, adding on, and the shell knows the first name", () => {
-    expect([...EXISTING_ROUTES]).toEqual(["overview", "assets", "holding", "growth", "goals"]);
+    expect([...EXISTING_ROUTES]).toEqual(["overview", "assets", "assetClass", "holding", "growth", "goals"]);
     expect(ADDING).toBe(true);
     expect(hrefFor({ kind: "overview" })).toBe("/");
     expect(hrefFor({ kind: "assets" })).toBe("/assets");
-    expect(hrefFor({ kind: "assetClass", id: "cash" })).toBeNull();
+    expect(hrefFor({ kind: "assetClass", id: "cash" })).toBe("/assets/cash");
     expect(buildShell({ user, portfolio: data }, { pathname: "/" }).userName).toBe("Adarsh");
   });
 });
