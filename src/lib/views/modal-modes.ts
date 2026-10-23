@@ -116,7 +116,7 @@ const editLiability: ModeRow = {
 const updateBalance: ModeRow = {
   id: "update-balance",
   match(params, data) {
-    if (params.get("modal") !== "update-balance") return null;
+    if (params.get("modal") !== "update") return null;
     const id = params.get("liability");
     const liability = (id && data.liabilities.find((l) => l.id === id && l.archivedAt === null)) || null;
     if (!liability) return null;
