@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Chart } from "@/components/chart/Chart";
 import { ProjectionToggle } from "@/components/chart/ProjectionProvider";
+import { WaterfallCard } from "@/components/growth/WaterfallCard";
 import type { Growth } from "@/lib/views/growth";
 
 const CARD = "rounded-[14px] border border-line bg-panel shadow-[var(--shadow)]";
@@ -98,6 +99,7 @@ export function GrowthPage({ growth }: { growth: Growth }) {
           }
         />
       </section>
+      {growth.waterfall && <WaterfallCard waterfall={growth.waterfall} />}
     </div>
   );
 }

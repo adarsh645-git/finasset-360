@@ -3,6 +3,7 @@ import type { ChartSeries, Point } from "@/lib/chart";
 import { monthLong, signed, usd } from "@/lib/format";
 import type { PortfolioData } from "@/lib/read-model/types";
 import { fxRatesOf, usableItems } from "@/lib/views/fx";
+import { buildWaterfall, type Waterfall } from "@/lib/views/growth-waterfall";
 import { ADDING, addAssetHref } from "@/lib/views/links";
 import { RANGES, parseRange, type Range } from "@/lib/views/overview";
 import { addMonths, projectFromToday } from "@/lib/views/projection";
@@ -80,6 +81,8 @@ export type Growth = {
   scopes: { value: Scope; label: string; href: string; selected: boolean }[];
   header: GrowthHeader | null;
   chart: GrowthChart | null;
+  /** "Where the change came from"; null on the empty page. */
+  waterfall: Waterfall | null;
 };
 
 const CHART_HEIGHT = 300;
@@ -122,6 +125,7 @@ export function buildGrowth(
       scopes,
       header: null,
       chart: null,
+      waterfall: null,
     };
   }
 
@@ -152,6 +156,18 @@ export function buildGrowth(
     tone: Math.round(diff) === 0 ? null : diff > 0 ? "up" : "down",
     line: `Net worth change since ${monthLong(start)} · ${SCOPE_LABEL[view.scope]} · ${usd(netThen)} → ${usd(netNow)}`,
   };
+
+  const waterfall = buildWaterfall({
+    held,
+    owed,
+    rates,
+    start,
+    today,
+    scope: countries,
+    only: view.scope === "all" ? null : SCOPE_LABEL[view.scope],
+    netThen,
+    netNow,
+  });
 
   // History, then the Projection month by month over the horizon (today is already in history).
   const projection = projectFromToday(data);
@@ -204,5 +220,5 @@ export function buildGrowth(
     ],
   };
 
-  return { view, empty, addHref: null, ranges, scopes, header, chart };
+  return { view, empty, addHref: null, ranges, scopes, header, chart, waterfall };
 }
