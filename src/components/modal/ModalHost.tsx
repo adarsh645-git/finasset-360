@@ -141,10 +141,12 @@ export function ModalHost({
             router.refresh();
             return;
           }
-          router.refresh();
+          // Navigate first: a refresh queued after the push re-renders the new route's
+          // layout too, so the shell totals pick up the save.
           const next = afterSave ? afterSave(result) : defaultAfterSave(match.mode, result);
           if (next) router.push(next);
           else close();
+          router.refresh();
         }}
       />
     </ModalFrame>

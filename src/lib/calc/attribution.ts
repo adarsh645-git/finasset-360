@@ -10,9 +10,13 @@ export function attributeChange(
   today: string,
   scope: readonly Country[],
 ): ChangeAttribution {
-  const fxThen = fxRateOn(rates, t0).rate;
-  const fxNow = fxRateOn(rates, today).rate;
   const inScope = (items: readonly HistoryItem[]) => items.filter((i) => scope.includes(i.country));
+  // A USD-only scope never converts, so it needs no FX Rate.
+  const needsFx = [...inScope(portfolio.holdings), ...inScope(portfolio.liabilities)].some(
+    (i) => i.country !== "US",
+  );
+  const fxThen = needsFx ? fxRateOn(rates, t0).rate : 1;
+  const fxNow = needsFx ? fxRateOn(rates, today).rate : 1;
   const fx = (item: HistoryItem, rate: number) => (item.country === "US" ? 1 : rate);
 
   let assetGrowth = 0;

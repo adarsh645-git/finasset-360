@@ -175,6 +175,15 @@ describe("change attribution", () => {
     expect(r.assetGrowth + r.debtPaidDown + r.currencyEffect).toBeCloseTo(change, 2);
   });
 
+  it("NH-13 a USD-only Portfolio attributes its change without any FX Rate", () => {
+    const portfolio = {
+      holdings: [us([val(t0, 50_000), val("2026-09-01", 62_000)])],
+      liabilities: [us([val(t0, 30_000), val("2026-09-01", 26_000)])],
+    };
+    const r = attributeChange(portfolio, [], t0, today, ["US", "India"]);
+    expect(r).toEqual({ assetGrowth: 12_000, debtPaidDown: 4_000, currencyEffect: 0 });
+  });
+
   it("NH-14 a weaker rupee shows as a negative Currency effect", () => {
     const r = attributeChange(
       { holdings: [india([val(t0, 8_340_000)])], liabilities: [] },
