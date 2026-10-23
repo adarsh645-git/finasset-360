@@ -27,6 +27,13 @@
   --country-us: oklch(0.62 0.1 250);
   --country-in: oklch(0.72 0.12 60);
 
+  /* Loan colours, assigned by creation order (the prototype's LOAN_COLORS). */
+  --loan-1: oklch(0.62 0.15 28);
+  --loan-2: oklch(0.72 0.12 50);
+  --loan-3: oklch(0.55 0.12 5);
+  --loan-4: oklch(0.78 0.09 70);
+  --loan-5: oklch(0.66 0.10 340);
+
   --radius-card: 14px;
   --radius-inner: 12px;
   --radius-btn: 9px;
@@ -46,6 +53,11 @@
   --pos: oklch(0.74 0.14 150);
   --neg: oklch(0.71 0.15 28);
   --shadow: none;
+  --loan-1: oklch(0.71 0.15 28);
+  --loan-2: oklch(0.78 0.12 50);
+  --loan-3: oklch(0.66 0.12 5);
+  --loan-4: oklch(0.82 0.09 70);
+  --loan-5: oklch(0.74 0.10 340);
 }
 
 @custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *));
@@ -70,6 +82,11 @@
   --color-cls-other: var(--cls-other);
   --color-country-us: var(--country-us);
   --color-country-in: var(--country-in);
+  --color-loan-1: var(--loan-1);
+  --color-loan-2: var(--loan-2);
+  --color-loan-3: var(--loan-3);
+  --color-loan-4: var(--loan-4);
+  --color-loan-5: var(--loan-5);
   --shadow-card: var(--shadow);
   --radius-card: 14px;
   --radius-inner: 12px;

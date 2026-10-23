@@ -9,3 +9,4 @@ export * from "./goal-status";
 export * from "./staleness";
 export * from "./equity";
 export type * from "./types";
+export * from "./loans";
