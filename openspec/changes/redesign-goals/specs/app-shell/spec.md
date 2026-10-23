@@ -1,10 +1,10 @@
 ## MODIFIED Requirements
 
 ### Requirement: The shell links only to pages that exist
-A nav item, class row or card row SHALL be a link only when its target page exists in the app. Otherwise it SHALL be plain text with the same content. In this change only the Overview and Goals exist. The "+ Add" buttons SHALL be absent until adding exists.
+A nav item, class row or card row SHALL be a link only when its target page exists in the app. Otherwise it SHALL be plain text with the same content. The "+ Add" buttons SHALL be absent until adding exists. Pages exist as the link registry (`src/lib/views/links.ts`) lists them: the Overview from `redesign-shell-and-overview`, Holding detail pages from `redesign-holding-entry`, the Goals page from `redesign-goals`, and later pages as their changes land. Adding exists from `redesign-holding-entry`, which turns the "+ Add" buttons on.
 
 #### Scenario: SH-08 Pages that don't exist yet are plain text
-- **GIVEN** an app where only the Overview and Goals pages exist, and a Portfolio with Stocks Holdings
+- **GIVEN** a link registry where only the Overview and Goals pages exist and adding is off, and a Portfolio with Stocks Holdings
 - **WHEN** the shell is rendered
 - **THEN** Overview is a link to `/` and Goals is a link to `/goals`; Assets, Liabilities, Growth and the Stocks class row are plain text; and there is no "+ Add" button
 
