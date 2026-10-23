@@ -114,3 +114,42 @@ describe("assumptions card tab", () => {
     expect(buildAssumptions(held(), next).tabs.find((t) => t.selected)?.value).toBe(tab);
   });
 });
+
+describe("assumptions card footer", () => {
+  const withHoldings = () =>
+    portfolio({
+      today: "2026-10-13",
+      fx: { today: { rate: 83.4, asOf: "2026-10-13" }, history: [] },
+      holdings: [
+        holding({ id: "h-us", assetClass: "stocks", country: "US", currentValue: 100_000 }),
+        holding({ id: "h-in", assetClass: "stocks", country: "IN", currency: "INR", currentValue: 8_340_000 }),
+      ],
+    });
+
+  it.each([
+    ["us", "Projection for United States", "$196,715", "$146,375", "$50,341"],
+    ["in", "Projection for India", "$283,942", "$174,316", "$109,626"],
+    ["all", "Projection for all countries", "$480,657", "$320,690", "$159,967"],
+  ])("PA-12 scope %s reads %s", (scope, label, nominal, real, lost) => {
+    const { footer } = buildAssumptions(withHoldings(), view({ scope }));
+    expect(footer).toEqual({ label, month: "Oct 2036", nominal, real, lost });
+  });
+
+  it("PA-12 the footer ignores the chart's basis", () => {
+    const a = buildAssumptions(withHoldings(), view({ scope: "us", basis: "today" }));
+    expect(a.footer.nominal).toBe("$196,715");
+  });
+
+  it("PA-13 the footer counts Monthly savings with nothing held", () => {
+    const data = portfolio({ today: "2026-10-13" });
+    data.assumptions.byCountry.US.monthlySavings = 1000;
+    const { footer } = buildAssumptions(data, view());
+    expect(footer).toMatchObject({ month: "Oct 2036", nominal: "$171,052", real: "$127,279", lost: "$43,773" });
+  });
+
+  it("PA-14 a horizon of 15 moves the footer to Oct 2041", () => {
+    const data = withHoldings();
+    data.assumptions.horizonYears = 15;
+    expect(buildAssumptions(data, view()).footer.month).toBe("Oct 2041");
+  });
+});
