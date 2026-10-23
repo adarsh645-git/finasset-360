@@ -73,9 +73,9 @@ describe("modal mode table", () => {
     expect(closeHref("/holdings/h1", "modal=update&holding=h1")).toBe("/holdings/h1");
   });
 
-  it("HE-03 pass and from survive a close", () => {
-    expect(closeHref("/update", "pass=1&from=%2Fgoals&modal=update&holding=h1")).toBe(
-      "/update?pass=1&from=%2Fgoals",
+  it("UP-11 pass and from go with the modal on a close", () => {
+    expect(closeHref("/update", "pass=1&from=5&modal=update&holding=h1&position=h1%7EAAPL")).toBe(
+      "/update?position=h1~AAPL",
     );
   });
 

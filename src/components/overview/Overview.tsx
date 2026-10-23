@@ -247,7 +247,13 @@ export function Overview({ overview }: { overview: OverviewView }) {
               <section className={`${CARD} flex flex-col gap-3 p-5`}>
                 <div className="flex items-center justify-between gap-3">
                   <h2 className="text-[15px] font-semibold">{needsUpdating.title}</h2>
-                  <span data-slot="needs-updating-action" className="empty:hidden" />
+                  <span data-slot="needs-updating-action" className="empty:hidden">
+                    {needsUpdating.updateAll && (
+                      <Link href={needsUpdating.updateAll.href} className="text-[12.5px] font-medium text-ink2">
+                        {needsUpdating.updateAll.label}
+                      </Link>
+                    )}
+                  </span>
                 </div>
                 <div className="flex flex-col">
                   {needsUpdating.rows.map((r) => (
