@@ -109,3 +109,144 @@ describe("growth chart", () => {
     expect(chart!.legend.map((l) => l.name)).toEqual(["Net worth", "Assets", "Owed"]);
   });
 });
+
+const at = (s: { points: { date: string; value: number }[] }, date: string) =>
+  s.points.find((p) => p.date === date)!.value;
+const tipAt = (
+  s: { tip?: { date: string; value: number }[]; points: { date: string; value: number }[] },
+  date: string,
+) => (s.tip ?? s.points).find((p) => p.date === date)!.value;
+
+describe("growth chart modes", () => {
+  it.each([
+    ["all", ["Real estate", "Cash"], ["Real estate", "Cash", "Owed", "Net worth"]],
+    ["us", ["Cash"], ["Cash", "Owed", "Net worth"]],
+    ["in", ["Real estate"], ["Real estate", "Owed", "Net worth"]],
+  ])("GR-06 By asset class, scope %s stacks %j and the legend reads %j", (scope, layers, legend) => {
+    const { chart } = buildGrowth(twoCountry(), view({ range: "1Y", scope, mode: "class" }));
+    const names = chart!.series.map((s) => s.name);
+
+    expect(names).toEqual([...layers, "Owed", "Net worth"]);
+    expect(chart!.legend.map((l) => l.name)).toEqual(legend);
+    expect(chart!.series.find((s) => s.name === "Net worth")!.bold).toBe(true);
+    expect(chart!.series.filter((s) => s.endLabel).map((s) => s.name)).toEqual(["Owed", "Net worth"]);
+  });
+
+  it("GR-06 each layer's tip is its own class's value, not the stacked total", () => {
+    const { chart } = buildGrowth(twoCountry(), view({ range: "1Y", mode: "class" }));
+    const [realEstate, cash] = chart!.series;
+
+    expect(Math.round(tipAt(realEstate!, TODAY))).toBe(110_000);
+    expect(Math.round(tipAt(cash!, TODAY))).toBe(100_000);
+    expect(Math.round(at(cash!, TODAY))).toBe(210_000);
+    expect(cash!.base).toEqual(realEstate!.points);
+  });
+
+  it("GR-07 Monthly savings add a Stocks layer even with no Stocks Holding", () => {
+    const base = portfolio();
+    const data = portfolio({
+      today: TODAY,
+      holdings: [holding({ assetClass: "cash", currentValue: 5_000, valuations: [val("2026-01-01", 5_000)] })],
+      assumptions: {
+        ...base.assumptions,
+        byCountry: {
+          ...base.assumptions.byCountry,
+          US: { ...base.assumptions.byCountry.US, monthlySavings: 1_000 },
+        },
+      },
+    });
+    const { chart } = buildGrowth(data, view({ mode: "class" }));
+    const stocks = chart!.series.find((s) => s.name === "Stocks")!;
+
+    expect(stocks).toBeDefined();
+    const projected = stocks.tip!.filter((p) => p.date > TODAY);
+    expect(stocks.tip!.filter((p) => p.date <= TODAY).every((p) => p.value === 0)).toBe(true);
+    expect(projected[0]!.value).toBeCloseTo(1_000, 6);
+    expect(projected.at(-1)!.value).toBeGreaterThan(100_000);
+  });
+
+  it.each([
+    ["all", ["Total net worth", "US net worth", "India net worth"], [151_000, 55_000, 96_000]],
+    ["in", ["India net worth"], [96_000]],
+  ])("GR-08 By country, scope %s draws %j", (scope, lines, values) => {
+    const { chart } = buildGrowth(twoCountry(), view({ range: "1Y", scope, mode: "country" }));
+
+    expect(chart!.series.map((s) => s.name)).toEqual(lines);
+    expect(chart!.legend.map((l) => l.name)).toEqual(lines);
+    expect(chart!.series.map((s) => Math.round(at(s, TODAY)))).toEqual(values);
+    expect(chart!.series.every((s) => s.endLabel)).toBe(true);
+    if (scope === "all") {
+      expect(chart!.series.map((s) => s.endName)).toEqual(["Total", "US", "India"]);
+      expect(chart!.series[0]!.bold).toBe(true);
+    } else {
+      expect(chart!.series[0]!.endName).toBe("India");
+    }
+  });
+
+  it("GR-09 Today's dollars restates the past upward", () => {
+    const data = portfolio({
+      today: TODAY,
+      holdings: [
+        holding({ assetClass: "cash", currentValue: 100_000, valuations: [val("2024-10-13", 100_000)] }),
+      ],
+    });
+    const { chart } = buildGrowth(data, view({ basis: "today" }));
+    const net = chart!.series[0]!;
+
+    expect(net.points[0]!.date).toBe("2024-10-13");
+    expect(net.points[0]!.value).toBeCloseTo(106_090, 4);
+    expect(at(net, TODAY)).toBeCloseTo(100_000, 6);
+  });
+
+  it("GR-09 the header stays nominal when the basis is Today's dollars", () => {
+    const { header } = buildGrowth(twoCountry(), view({ range: "1Y", basis: "today" }));
+    expect(header!.change).toBe("+$41,000");
+  });
+
+  it.each([
+    ["nominal", "all", "What you own, what you owe", "Nominal dollars, not adjusted for inflation"],
+    ["nominal", "in", "What you own, what you owe · India", "Nominal dollars, not adjusted for inflation"],
+    [
+      "today",
+      "all",
+      "In today's dollars",
+      "Each country restated in Oct 2026 dollars at its own inflation: US 2.5%, India 5.0%",
+    ],
+    [
+      "today",
+      "us",
+      "In today's dollars · United States",
+      "Each country restated in Oct 2026 dollars at its own inflation: US 2.5%",
+    ],
+  ])("GR-10 basis %s, scope %s titles the chart %s", (basis, scope, title, subtitle) => {
+    const base = portfolio();
+    const data = twoCountry();
+    data.assumptions = {
+      ...base.assumptions,
+      byCountry: {
+        ...base.assumptions.byCountry,
+        US: { ...base.assumptions.byCountry.US, inflation: 2.5 },
+      },
+    };
+    const { chart } = buildGrowth(data, view({ basis, scope }));
+
+    expect(chart!.title).toBe(title);
+    expect(chart!.subtitle).toBe(subtitle);
+  });
+
+  it("GR-06/GR-09 mode and basis controls keep the rest of the view state", () => {
+    const g = buildGrowth(twoCountry(), view({ range: "3Y", mode: "class" }));
+
+    expect(g.modes.map((m) => [m.label, m.selected])).toEqual([
+      ["Simple", false],
+      ["By asset class", true],
+      ["By country", false],
+    ]);
+    expect(g.modes[2]!.href).toBe("/growth?range=3Y&mode=country");
+    expect(g.bases.map((b) => [b.label, b.selected])).toEqual([
+      ["Nominal", true],
+      ["Today's dollars", false],
+    ]);
+    expect(g.bases[1]!.href).toBe("/growth?range=3Y&mode=class&basis=today");
+  });
+});
