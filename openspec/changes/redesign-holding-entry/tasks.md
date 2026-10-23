@@ -44,12 +44,12 @@ The layout-level modal host opens from the URL as a dialog or a phone bottom she
 Blocked by: 3
 A User can add a Real estate, Cash, Crypto, Metals or Vehicles & other Holding from any "+ Add" and land on its detail page, and edit it with class and Country left out (D3–D6, D8).
 
-- [ ] 4.1 Tests named HE-04, HE-05, HE-06, HE-07, HE-08, HE-09, HE-10, HE-11, HE-12 written and failing (red)
-- [ ] 4.2 The asset form: class chips, Name label and placeholder by class, Held in, Description, Property type + city, Quantity + unit, and Current value + Cost basis, with the defaults and kept fields across class switches (HE-04, HE-05, HE-06)
-- [ ] 4.3 The edit form is pre-filled, with no class chips and no Held in (HE-07)
-- [ ] 4.4 `validate` and `toRequest` give the mockup's messages and amount parsing, leave blank optional fields out, and send `POST /api/holdings` or `PATCH /api/holdings/[id]` (HE-08, HE-09, HE-10)
-- [ ] 4.5 Success refreshes, and an add goes to `/holdings/⟨new id⟩`. A rejected save shows the route's sentence and keeps the form (HE-11, HE-12)
-- [ ] 4.6 Tests named HE-04, HE-05, HE-06, HE-07, HE-08, HE-09, HE-10, HE-11, HE-12 pass in CI suites; npm run spec:coverage passes
+- [x] 4.1 Tests named HE-04, HE-05, HE-06, HE-07, HE-08, HE-09, HE-10, HE-11, HE-12 written and failing (red)
+- [x] 4.2 The asset form: class chips, Name label and placeholder by class, Held in, Description, Property type + city, Quantity + unit, and Current value + Cost basis, with the defaults and kept fields across class switches (HE-04, HE-05, HE-06)
+- [x] 4.3 The edit form is pre-filled, with no class chips and no Held in (HE-07)
+- [x] 4.4 `validate` and `toRequest` give the mockup's messages and amount parsing, leave blank optional fields out, and send `POST /api/holdings` or `PATCH /api/holdings/[id]` (HE-08, HE-09, HE-10)
+- [x] 4.5 Success refreshes, and an add goes to `/holdings/⟨new id⟩`. A rejected save shows the route's sentence and keeps the form (HE-11, HE-12)
+- [x] 4.6 Tests named HE-04, HE-05, HE-06, HE-07, HE-08, HE-09, HE-10, HE-11, HE-12 pass in CI suites; npm run spec:coverage passes
 - [ ] 4.7 Checked by hand against the mockup's add/edit modal for each class at 2000px, 800px and 390px
 
 ## 5. Stocks accounts: the positions editor and Hand Prices
@@ -57,13 +57,13 @@ A User can add a Real estate, Cash, Crypto, Metals or Vehicles & other Holding f
 Blocked by: 4
 A User can add a Stocks Holding, with each Position previewed from the ticker lookup, `.NS` for India, and the Hand Price path for tickers without market data. Edit positions updates a Hand Price by re-typing its ticker; only a changed price is re-dated (D7, D8, D9).
 
-- [ ] 5.1 Tests named HE-13, HE-14, HE-15, HE-16, HE-17, HE-18, HE-19, HE-20, HE-21, HE-24, HE-25 written and failing (red)
-- [ ] 5.2 `positionsReducer` with the ticker key rule, the debounced lookup applied only for the current key, and the preview copy (HE-13, HE-14)
-- [ ] 5.3 The unknown-ticker path: price, Sector (default Other) and name pre-filled from the lookup (HE-15)
-- [ ] 5.4 Add (button or Enter) checks in order, defaults avg cost to the price, replaces a same-ticker row and clears the entry row. Re-typing a listed ticker pre-fills it (HE-16…HE-19)
-- [ ] 5.5 Rows, ×, the running native total, and the "· price N days old" cue (HE-20, HE-21)
-- [ ] 5.6 Stocks create and Edit positions send the full Positions list, with Hand Price, Sector and name only for tickers without market data. Save is blocked with "Add ⟨ticker⟩ or clear it first" while a ticker is typed but not added (HE-24, HE-25, HE-08)
-- [ ] 5.7 Tests named HE-13, HE-14, HE-15, HE-16, HE-17, HE-18, HE-19, HE-20, HE-21, HE-24, HE-25 pass in CI suites; npm run spec:coverage passes
+- [x] 5.1 Tests named HE-13, HE-14, HE-15, HE-16, HE-17, HE-18, HE-19, HE-20, HE-21, HE-24, HE-25 written and failing (red)
+- [x] 5.2 `positionsReducer` with the ticker key rule, the debounced lookup applied only for the current key, and the preview copy (HE-13, HE-14)
+- [x] 5.3 The unknown-ticker path: price, Sector (default Other) and name pre-filled from the lookup (HE-15)
+- [x] 5.4 Add (button or Enter) checks in order, defaults avg cost to the price, replaces a same-ticker row and clears the entry row. Re-typing a listed ticker pre-fills it (HE-16…HE-19)
+- [x] 5.5 Rows, ×, the running native total, and the "· price N days old" cue (HE-20, HE-21)
+- [x] 5.6 Stocks create and Edit positions send the full Positions list, with Hand Price, Sector and name only for tickers without market data. Save is blocked with "Add ⟨ticker⟩ or clear it first" while a ticker is typed but not added (HE-24, HE-25, HE-08)
+- [x] 5.7 Tests named HE-13, HE-14, HE-15, HE-16, HE-17, HE-18, HE-19, HE-20, HE-21, HE-24, HE-25 pass in CI suites; npm run spec:coverage passes
 - [ ] 5.8 Checked by hand against the mockup's Stocks modal at 2000px, 800px and 390px (Enter adds, preview while typing, entry row fits on phone)
 
 ## 6. Stocks detail: Positions in this account and By sector

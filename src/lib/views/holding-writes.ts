@@ -39,10 +39,11 @@ async function errorOf(response: Response): Promise<string> {
   return "Something went wrong. Try again.";
 }
 
-async function post(fetchFn: FetchFn, url: string, body?: unknown): Promise<SaveResult> {
+/** Sends a JSON request and turns the answer into a SaveResult. */
+export async function send(fetchFn: FetchFn, method: string, url: string, body?: unknown): Promise<SaveResult> {
   try {
     const response = await fetchFn(url, {
-      method: "POST",
+      method,
       headers: { "content-type": "application/json" },
       body: JSON.stringify(body ?? {}),
     });
@@ -52,6 +53,8 @@ async function post(fetchFn: FetchFn, url: string, body?: unknown): Promise<Save
     return { ok: false, error: "Couldn't reach the server. Try again." };
   }
 }
+
+const post = (fetchFn: FetchFn, url: string, body?: unknown) => send(fetchFn, "POST", url, body);
 
 /**
  * Update value: always posts, so an unchanged value still records today's
