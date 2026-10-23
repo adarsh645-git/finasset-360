@@ -38,12 +38,12 @@ Blocked by: 1
 Blocked by: 3
 The shared modal gains the Asset | Liability toggle and the loan form, with defaults, the escrow hint, Borrowed in, the revolving checkbox, the linked Holding picker and the prototype's validation copy. Adding opens the new Loan detail, and Edit loan on Loan detail saves today's balance. "+ Add loan", the empty state's "Add loan" and the first-run "or a loan" link open it (D3, D4, D13, D14, D15).
 
-- [ ] 4.1 Tests named LE-01, LE-02, LE-03, LE-04, LE-05, LE-06, LE-07, LE-09 written and failing (red)
-- [ ] 4.2 `loan-form.ts` builds the initial state, validates in the prototype's order, builds the create and edit bodies, and lists link options (LE-03, LE-04, LE-06)
-- [ ] 4.3 The toggle shows only in add mode and keeps Name and Held in, and Held in is disabled in edit (LE-01, LE-02, LE-07)
-- [ ] 4.4 Add pushes the new Loan detail; edit closes and refreshes; route errors show in the footer (LE-05, LE-07)
-- [ ] 4.5 The "or a loan" add link is turned on in `links.ts`, and every add-loan link opens `?modal=add-liability` (LE-09)
-- [ ] 4.6 Tests named LE-01, LE-02, LE-03, LE-04, LE-05, LE-06, LE-07, LE-09 pass in CI suites; npm run spec:coverage passes
+- [x] 4.1 Tests named LE-01, LE-02, LE-03, LE-04, LE-05, LE-06, LE-07, LE-09 written and failing (red)
+- [x] 4.2 `loan-form.ts` builds the initial state, validates in the prototype's order, builds the create and edit bodies, and lists link options (LE-03, LE-04, LE-06)
+- [x] 4.3 The toggle shows only in add mode and keeps Name and Held in, and Held in is disabled in edit (LE-01, LE-02, LE-07)
+- [x] 4.4 Add pushes the new Loan detail; edit closes and refreshes; route errors show in the footer (LE-05, LE-07)
+- [x] 4.5 The "or a loan" add link is turned on in `links.ts`, and every add-loan link opens `?modal=add-liability` (LE-09)
+- [x] 4.6 Tests named LE-01, LE-02, LE-03, LE-04, LE-05, LE-06, LE-07, LE-09 pass in CI suites; npm run spec:coverage passes
 - [ ] 4.7 Checked by hand against the mockup's add/edit modal (Liability side) at 2000px, 800px and 390px (bottom sheet)
 
 ## 5. Update balance and Delete

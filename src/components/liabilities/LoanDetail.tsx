@@ -6,7 +6,7 @@ import type { LoanDetail as LoanDetailView } from "@/lib/views/loan-detail";
 
 const CARD = "rounded-[14px] border border-line bg-panel shadow-[var(--shadow)]";
 
-// Renders what buildLoanDetail returns. Update balance, Edit and Delete arrive with tickets 4 and 5.
+// Renders what buildLoanDetail returns. Edit is here (ticket 4); Update balance and Delete arrive with ticket 5.
 export function LoanDetail({ detail }: { detail: LoanDetailView }) {
   const card = detail.securedAgainst;
   return (
@@ -38,6 +38,14 @@ export function LoanDetail({ detail }: { detail: LoanDetailView }) {
           {detail.usd}
         </span>
         <span className="text-[13.5px] text-ink2">{detail.nativeLine}</span>
+        <div className="flex flex-wrap gap-2">
+          <Link
+            href={`/liabilities/${detail.id}?modal=edit&liability=${detail.id}`}
+            className="flex h-10 items-center rounded-lg border border-line px-3.5 text-[13.5px] font-medium hover:bg-hover"
+          >
+            Edit
+          </Link>
+        </div>
       </header>
 
       <section className={`${CARD} flex flex-col gap-2 p-4`} aria-label="Paid off">

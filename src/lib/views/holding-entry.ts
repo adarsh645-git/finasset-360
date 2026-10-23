@@ -184,5 +184,8 @@ export async function saveHolding(
 
 /** Where a save goes: an add opens the new Holding (HE-11); an edit closes in place. */
 export function defaultAfterSave(mode: string, result: Record<string, unknown>): string | null {
-  return mode === "add-asset" && typeof result.id === "string" ? `/holdings/${result.id}` : null;
+  if (typeof result.id !== "string") return null;
+  if (mode === "add-asset") return `/holdings/${result.id}`;
+  if (mode === "add-liability") return `/liabilities/${result.id}`;
+  return null;
 }

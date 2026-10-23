@@ -50,7 +50,6 @@ describe("modal mode table", () => {
   it.each([
     "modal=edit&holding=old1",
     "modal=update&holding=someone-elses",
-    "modal=add-liability",
     "modal=nonsense",
     "holding=cash1",
     "",
