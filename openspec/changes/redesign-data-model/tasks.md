@@ -85,24 +85,24 @@ A User can add and remove Goals and set or clear any Projection Assumption, Mont
 Blocked by: 5
 One daily cron route stores today's FX Rate and fills any gap (from 2018-01-01 on an empty table). It refreshes prices for held US tickers, then records today's Valuation for every active Stocks Holding, marked automatic, using the last cached price when a quote fails (D14, D16).
 
-- [ ] 8.1 Tests named MD-10, MD-11, MD-12, MD-13, MD-14, MD-15, MD-16, MD-17, MD-18, MD-19 written and failing (red)
-- [ ] 8.2 The FX step requests Frankfurter's range from the day after the latest stored date (or 2018-01-01) and upserts each date; an outage writes nothing and the later steps still run (MD-10…MD-13)
-- [ ] 8.3 The price step quotes only distinct listed tickers in active Stocks Holdings and keeps the last price on failure (MD-14, MD-15)
-- [ ] 8.4 The snapshot step upserts today's Valuation for every active Stocks Holding across Users, marked automatic, keeps a same-day user-entered mark, and is safe to rerun (MD-16…MD-19)
-- [ ] 8.5 `vercel.json` schedules `/api/cron/daily` at 13:00 UTC and keeps the weekly symbol refresh; `/api/cron/refresh-prices` is gone
-- [ ] 8.6 Tests named MD-10, MD-11, MD-12, MD-13, MD-14, MD-15, MD-16, MD-17, MD-18, MD-19 pass in CI suites; npm run spec:coverage passes
+- [x] 8.1 Tests named MD-10, MD-11, MD-12, MD-13, MD-14, MD-15, MD-16, MD-17, MD-18, MD-19 written and failing (red)
+- [x] 8.2 The FX step requests Frankfurter's range from the day after the latest stored date (or 2018-01-01) and upserts each date; an outage writes nothing and the later steps still run (MD-10…MD-13)
+- [x] 8.3 The price step quotes only distinct listed tickers in active Stocks Holdings and keeps the last price on failure (MD-14, MD-15)
+- [x] 8.4 The snapshot step upserts today's Valuation for every active Stocks Holding across Users, marked automatic, keeps a same-day user-entered mark, and is safe to rerun (MD-16…MD-19)
+- [x] 8.5 `vercel.json` schedules `/api/cron/daily` at 13:00 UTC and keeps the weekly symbol refresh; `/api/cron/refresh-prices` is gone
+- [x] 8.6 Tests named MD-10, MD-11, MD-12, MD-13, MD-14, MD-15, MD-16, MD-17, MD-18, MD-19 pass in CI suites; npm run spec:coverage passes
 
 ## 9. Read model and GET /api/portfolio
 
 Blocked by: 5, 6, 7, 8
 `loadPortfolio(supabase, today)` returns one User's whole Portfolio in one load: Holdings with Positions, price sources, Hand Price dates, current values and Cost Basis; Liabilities with current balances and links; every Valuation with who recorded it; archived items; today's FX Rate with its date and the FX history; assumptions with blanks kept; and Goals. It's served as `GET /api/portfolio` (D17).
 
-- [ ] 9.1 Tests named RM-01, RM-02, RM-03, RM-04, RM-05, RM-06, RM-07, RM-08, RM-09, RM-10, RM-11, RM-12, MD-09, DM-02 written and failing (red)
-- [ ] 9.2 `loadPortfolio` is a plain async function in `src/lib/read-model/` returning the `PortfolioData` shape in the design, under the User's session (RM-01, RM-02, RM-03, DM-02)
-- [ ] 9.3 Current value and Cost Basis follow the price precedence (market data beats a Hand Price), and liabilities show their recorded balance (RM-04, RM-05, RM-06, MD-09)
-- [ ] 9.4 Archived items, Valuation sources, FX today with its as-of date, and the FX history from the earliest Valuation are included (RM-07, RM-08, RM-09, RM-12)
-- [ ] 9.5 Assumptions come back as stored with the Country defaults beside them, and Goals sorted by target (RM-10, RM-11)
-- [ ] 9.6 Tests named RM-01, RM-02, RM-03, RM-04, RM-05, RM-06, RM-07, RM-08, RM-09, RM-10, RM-11, RM-12, MD-09, DM-02 pass in CI suites; npm run spec:coverage passes
+- [x] 9.1 Tests named RM-01, RM-02, RM-03, RM-04, RM-05, RM-06, RM-07, RM-08, RM-09, RM-10, RM-11, RM-12, MD-09, DM-02 written and failing (red)
+- [x] 9.2 `loadPortfolio` is a plain async function in `src/lib/read-model/` returning the `PortfolioData` shape in the design, under the User's session (RM-01, RM-02, RM-03, DM-02)
+- [x] 9.3 Current value and Cost Basis follow the price precedence (market data beats a Hand Price), and liabilities show their recorded balance (RM-04, RM-05, RM-06, MD-09)
+- [x] 9.4 Archived items, Valuation sources, FX today with its as-of date, and the FX history from the earliest Valuation are included (RM-07, RM-08, RM-09, RM-12)
+- [x] 9.5 Assumptions come back as stored with the Country defaults beside them, and Goals sorted by target (RM-10, RM-11)
+- [x] 9.6 Tests named RM-01, RM-02, RM-03, RM-04, RM-05, RM-06, RM-07, RM-08, RM-09, RM-10, RM-11, RM-12, MD-09, DM-02 pass in CI suites; npm run spec:coverage passes
 
 ## 10. Seed data close to the prototype
 

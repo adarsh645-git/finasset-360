@@ -1,5 +1,13 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import { PATCH as editHolding } from "@/app/api/holdings/[id]/route";
+import { POST as archiveHolding } from "@/app/api/holdings/[id]/archive/route";
+import { POST as updateValue } from "@/app/api/holdings/[id]/valuations/route";
+import { PATCH as editLiability } from "@/app/api/liabilities/[id]/route";
+import { POST as archiveLiability } from "@/app/api/liabilities/[id]/archive/route";
+import { POST as updateBalance } from "@/app/api/liabilities/[id]/valuations/route";
+import { DELETE as deleteGoal } from "@/app/api/goals/[id]/route";
+import { jsonBody, requestAs } from "../fixtures/http";
 import { createTestUser, deleteTestUser, type TestUser } from "../fixtures/users";
 
 // Seam 1 (design.md Testing Decisions): direct reads and writes under each
@@ -25,7 +33,7 @@ async function insertedId(
   return data.id;
 }
 
-type Seeded = { holdingId: string; liabilityId: string };
+type Seeded = { holdingId: string; liabilityId: string; goalId: string };
 
 // One Holding, Position, Liability, pair of Valuations and Goal, written
 // through the User's own session so the policies are what let it in.
@@ -82,10 +90,10 @@ async function seedRecords(user: TestUser): Promise<Seeded> {
       .select("id")
       .single(),
   );
-  await insertedId(
+  const goalId = await insertedId(
     db.from("goal").insert({ user_id: user.id, name: "Retire", target_usd: 1_000_000 }).select("id").single(),
   );
-  return { holdingId, liabilityId };
+  return { holdingId, liabilityId, goalId };
 }
 
 describe("portfolio records isolation", () => {
@@ -113,6 +121,37 @@ describe("portfolio records isolation", () => {
     // B sees their own row, so a clean result is RLS at work, not an empty table.
     expect(data!.length).toBeGreaterThan(0);
     expect(data!.every((row) => row.user_id === userB.id)).toBe(true);
+  });
+
+  it("DM-02 another User's records can't be changed", async () => {
+    const base = "http://localhost:3000/api";
+    const ctx = (id: string) => ({ params: Promise.resolve({ id }) });
+    const { holdingId, liabilityId, goalId } = seededA;
+    const send = (url: string, method: string, body: unknown = {}) =>
+      requestAs(userB, `${base}${url}`, { method, ...jsonBody(body) });
+
+    const attempts = [
+      await editHolding(send(`/holdings/${holdingId}`, "PATCH", { name: "Hijacked" }), ctx(holdingId)),
+      await updateValue(send(`/holdings/${holdingId}/valuations`, "POST", { value: 1 }), ctx(holdingId)),
+      await archiveHolding(send(`/holdings/${holdingId}/archive`, "POST"), ctx(holdingId)),
+      await editLiability(send(`/liabilities/${liabilityId}`, "PATCH", { name: "Hijacked" }), ctx(liabilityId)),
+      await updateBalance(send(`/liabilities/${liabilityId}/valuations`, "POST", { balance: 1 }), ctx(liabilityId)),
+      await archiveLiability(send(`/liabilities/${liabilityId}/archive`, "POST"), ctx(liabilityId)),
+      await deleteGoal(send(`/goals/${goalId}`, "DELETE"), ctx(goalId)),
+    ];
+    expect(attempts.map((r) => r.status)).toEqual(attempts.map(() => 404));
+
+    const db = sessionFor(userA);
+    const holding = await db.from("holding").select("name, archived_at").eq("id", holdingId).single();
+    expect(holding.data).toEqual({ name: "Brokerage", archived_at: null });
+    const liability = await db.from("liability").select("name, archived_at").eq("id", liabilityId).single();
+    expect(liability.data).toEqual({ name: "Car loan", archived_at: null });
+    const valuations = await db.from("holding_valuation").select("value").eq("holding_id", holdingId);
+    expect(valuations.data).toEqual([{ value: 200 }]);
+    const balances = await db.from("liability_valuation").select("balance").eq("liability_id", liabilityId);
+    expect(balances.data).toEqual([{ balance: 5000 }]);
+    const goal = await db.from("goal").select("id").eq("id", goalId);
+    expect(goal.data).toHaveLength(1);
   });
 
   it("DM-03 a Valuation can't point at another User's Holding", async () => {
