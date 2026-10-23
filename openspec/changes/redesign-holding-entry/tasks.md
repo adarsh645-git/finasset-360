@@ -19,10 +19,10 @@ A User can open `/holdings/[id]` for any current Holding and see the breadcrumb,
 Blocked by: 1
 The detail page shows the Holding's USD value over time (history, then its Projection, trimmed by the projection toggle) and the Value log: every Valuation for manual Holdings, and monthly rows plus today for Stocks (D14).
 
-- [ ] 2.1 Tests named HD-18, HD-19, HD-20, HD-21 written and failing (red)
-- [ ] 2.2 Chart series come from calc history (month-ends plus today, from the first Valuation, each date's FX Rate) and the calc Projection, with the title and sub-title by Country, and an overridable `chart.series` (D19) (HD-18, HD-19)
-- [ ] 2.3 The Value log lists rows newest first with "+amount · +%" change, "· added" on the oldest row, every Valuation for manual Holdings, and the last Valuation per earlier month plus today's current value for Stocks (HD-20, HD-21)
-- [ ] 2.4 Tests named HD-18, HD-19, HD-20, HD-21 pass in CI suites; npm run spec:coverage passes
+- [x] 2.1 Tests named HD-18, HD-19, HD-20, HD-21 written and failing (red)
+- [x] 2.2 Chart series come from calc history (month-ends plus today, from the first Valuation, each date's FX Rate) and the calc Projection, with the title and sub-title by Country, and an overridable `chart.series` (D19) (HD-18, HD-19)
+- [x] 2.3 The Value log lists rows newest first with "+amount · +%" change, "· added" on the oldest row, every Valuation for manual Holdings, and the last Valuation per earlier month plus today's current value for Stocks (HD-20, HD-21)
+- [x] 2.4 Tests named HD-18, HD-19, HD-20, HD-21 pass in CI suites; npm run spec:coverage passes
 - [ ] 2.5 Checked by hand against the mockup's account detail chart and Value log at 2000px, 800px and 390px (chart phone rules, touch tooltip at 390px)
 
 ## 3. The modal frame, Update value and Delete

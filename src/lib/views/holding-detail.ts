@@ -12,6 +12,7 @@ import type { AssetClassId, PortfolioData } from "@/lib/read-model/types";
 import { EXISTING_ROUTES, hrefFor, type RouteFamily } from "@/lib/views/links";
 import { ageCue, updatedCue } from "@/lib/views/age-cue";
 import { calcClassId, calcCountry, historyItem } from "@/lib/views/shell";
+import { buildChart, buildValueLog, type HoldingChart, type ValueLog } from "@/lib/views/holding-history";
 
 export type Crumb = { label: string; href: string | null };
 export type DetailStat = { label: string; value: string; sub: string };
@@ -36,6 +37,9 @@ export type HoldingDetail = {
   linkedLoan: null;
   /** "Positions in this account" and "By sector"; null for every class but Stocks. */
   stocks: StocksSections | null;
+  // Value over time and the Value log (ticket 2).
+  chart: HoldingChart;
+  valueLog: ValueLog;
 };
 
 export type PositionRow = {
@@ -215,6 +219,8 @@ export function buildHoldingDetail(
     stats,
     linkedLoan: null,
     stocks: fromPositions ? stocksSections() : null,
+    chart: buildChart(data, holding, rates, hasRate),
+    valueLog: buildValueLog(holding, today),
   };
 
   function stocksSections(): StocksSections {
